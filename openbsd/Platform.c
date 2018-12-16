@@ -41,6 +41,7 @@ struct proc;
 #include <string.h>
 #include <kvm.h>
 #include <limits.h>
+#include <math.h>
 
 /*{
 #include "bsd/Platform.h"
@@ -51,56 +52,6 @@ struct proc;
 extern ProcessFieldData Process_fields[];
 
 }*/
-
-#define MAXCPU 256
-// XXX: probably should be a struct member
-static uint64_t old_v[1+MAXCPU][5];
-
-/*
- * Copyright (c) 1984, 1989, William LeFebvre, Rice University
- * Copyright (c) 1989, 1990, 1992, William LeFebvre, Northwestern University
- *
- * Taken directly from OpenBSD's top(1).
- *
- * percentages(cnt, out, new, old, diffs) - calculate percentage change
- * between array "old" and "new", putting the percentages in "out".
- * "cnt" is size of each array and "diffs" is used for scratch space.
- * The array "old" is updated on each call.
- * The routine assumes modulo arithmetic.  This function is especially
- * useful on BSD machines for calculating cpu state percentages.
- */
-static void percentages(int cnt, uint64_t *out, uint64_t *new, uint64_t *old, uint64_t *diffs) {
-   uint64_t change, total_change, *dp, half_total;
-   int i;
-
-   /* initialization */
-   total_change = 0;
-   dp = diffs;
-
-   /* calculate changes for each state and the overall change */
-   for (i = 0; i < cnt; i++) {
-      if(*new < *old) {
-         /* this only happens when the counter wraps */
-         change = UINT64_MAX - *old + *new;
-      } else {
-         change = (int64_t)(*new - *old);
-      }
-      total_change += (*dp++ = change);
-      *old++ = *new++;
-   }
-
-   /* avoid divide by zero potential */
-   if (total_change == 0)
-      total_change = 1;
-
-   /* calculate percentages based on overall change, rounding up */
-   half_total = total_change / 2l;
-   for (i = 0; i < cnt; i++)
-      *out++ = ((*diffs++ * 1000 + half_total) / total_change);
-
-   /* return the total in case the caller wants to use it */
-   //return (total_change);
-}
 
 ProcessField Platform_defaultFields[] = { PID, EFFECTIVE_USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
 
@@ -204,43 +155,33 @@ int Platform_getMaxPid() {
 }
 
 double Platform_setCPUValues(Meter *meter, int cpu) {
-   int i;
-   OpenBSDProcessList* pl = (OpenBSDProcessList*)meter->pl;
-   CPUData* cpuData = pl->cpus + cpu;
-   uint64_t new_v[CPUSTATES], diff_v[CPUSTATES], scratch_v[CPUSTATES];
+   const OpenBSDProcessList* pl = (OpenBSDProcessList* )meter->pl;
+   const CPUData* cpuData = pl->cpus + cpu;
+   double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
+   double totalPercent;
    double *v = meter->values;
-   if(cpu) {
-      int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
-      size_t size = sizeof new_v;
-      if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) return 0;
+
+   v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
+   v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
+   if (meter->pl->settings->detailedCPUTime) {
+      v[CPU_METER_KERNEL]  = cpuData->sysPeriod / total * 100.0;
+      v[CPU_METER_IRQ]     = cpuData->intrPeriod / total * 100.0;
+      v[CPU_METER_SOFTIRQ] = 0.0;
+      v[CPU_METER_STEAL]   = 0.0;
+      v[CPU_METER_GUEST]   = 0.0;
+      v[CPU_METER_IOWAIT]  = 0.0;
+      Meter_setItems(meter, 8);
+      totalPercent = v[0]+v[1]+v[2]+v[3];
    } else {
-      int mib[] = { CTL_KERN, KERN_CPTIME };
-      long int new_avg_v[CPUSTATES];
-      size_t size = sizeof new_avg_v;
-      if(sysctl(mib, 2, new_avg_v, &size, NULL, 0) < 0) return 0;
-      for(i = 0; i < CPUSTATES; i++) new_v[i] = new_avg_v[i];
+      v[2] = cpuData->sysAllPeriod / total * 100.0;
+      v[3] = 0.0; // No steal nor guest on OpenBSD
+      totalPercent = v[0]+v[1]+v[2];
+      Meter_setItems(meter, 4);
    }
 
-   // XXX: why?
-   cpuData->totalPeriod = 1;
-
-   percentages(CPUSTATES, diff_v, new_v,
-         old_v[cpu], scratch_v);
-
-   for (i = 0; i < CPUSTATES; i++) {
-      old_v[cpu][i] = new_v[i];
-      v[i] = diff_v[i] / 10.;
-   }
-
-   Meter_setItems(meter, 4);
-
-   double perc = v[0] + v[1] + v[2] + v[3];
-
-   if (perc <= 100. && perc >= 0.) {
-      return perc;
-   } else {
-      return 0.;
-   }
+   totalPercent = CLAMP(totalPercent, 0.0, 100.0);
+   if (isnan(totalPercent)) totalPercent = 0.0;
+   return totalPercent;
 }
 
 void Platform_setMemoryValues(Meter* this) {
