@@ -30,7 +30,6 @@ struct proc;
 #ifdef SAFE_TO_DEFINE_KERNEL
 #undef _KERNEL
 #endif
-#include <sys/sched.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/swap.h>
