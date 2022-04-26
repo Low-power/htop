@@ -298,6 +298,11 @@ then
    ])
 fi
 
+AC_ARG_ENABLE(truss-strsize, [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], , test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no)
+if test "x$enable_truss_strsize" = xyes; then
+	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size])
+fi
+
 
 # Bail out on errors.
 # ----------------------------------------------------------------------

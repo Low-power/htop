@@ -26,6 +26,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <errno.h>
 
 /*{
 #include "InfoScreen.h"
@@ -90,7 +91,6 @@ void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   char buffer[1001];
    int error = pipe(this->fdpair);
    if (error == -1) return false;
    this->child = fork();
@@ -98,15 +98,23 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    if (this->child == 0) {
       CRT_dropPrivileges();
       dup2(this->fdpair[1], STDERR_FILENO);
-      int ok = fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK);
-      if (ok != -1) {
-         xSnprintf(buffer, sizeof(buffer), "%d", this->super.process->pid);
+      const char *message;
+      if(fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK) == -1) {
+         message = strerror(errno);
+      } else {
+         char buffer[22];
+         xSnprintf(buffer, sizeof(buffer), "%d", (int)this->super.process->pid);
          execlp("strace", "strace", "-s", "512", "-p", buffer, NULL);
+#ifdef TRUSS_SUPPORT_STRING_SIZE
+         execlp("truss", "truss", "-s", "512", "-p", buffer, NULL);
+#else
+         execlp("truss", "truss", "-p", buffer, NULL);
+#endif
+         message = "Could not execute 'strace' or 'truss'. Please make sure it is available in your $PATH.";
       }
-      const char* message = "Could not execute 'strace'. Please make sure it is available in your $PATH.";
       ssize_t written = write(this->fdpair[1], message, strlen(message));
       (void) written;
-      exit(1);
+      _exit(1);
    }
    int ok = fcntl(this->fdpair[0], F_SETFL, O_NONBLOCK);
    if (ok == -1) return false;
