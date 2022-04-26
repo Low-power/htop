@@ -24,7 +24,7 @@ in the source distribution for its full text.
 #ifndef PAGE_SIZE
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
 #endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
+#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_BINARY_K )
 
 #include "Object.h"
 
@@ -35,7 +35,7 @@ in the source distribution for its full text.
 typedef enum ProcessFields {
    NULL_PROCESSFIELD = 0,
    PID = 1,
-   COMM = 2,
+   NAME = 2,
    STATE = 3,
    PPID = 4,
    PGRP = 5,
@@ -57,6 +57,7 @@ typedef enum ProcessFields {
    TIME = 50,
    NLWP = 51,
    TGID = 52,
+   COMM = 99
 } ProcessField;
 
 typedef struct ProcessPidColumn_ {
@@ -73,6 +74,7 @@ typedef struct Process_ {
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
+   char *name;
    char* comm;
    int commLen;
    int indent;
@@ -163,9 +165,9 @@ typedef struct ProcessClass_ {
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
 
-#define ONE_K 1024L
-#define ONE_M (ONE_K * ONE_K)
-#define ONE_G (ONE_M * ONE_K)
+#define ONE_BINARY_K 1024L
+#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
+#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
 
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)

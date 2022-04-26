@@ -106,7 +106,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       pageSize = PAGE_SIZE;
       pageSizeKb = PAGE_SIZE_KB;
    } else {
-      pageSizeKb = pageSize / ONE_K;
+      pageSizeKb = pageSize / ONE_BINARY_K;
    }
 
    // usable page count vm.stats.vm.v_page_count
@@ -316,29 +316,30 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->sharedMem = 0;  // currently unused
 }
 
-char* DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+   *name = xStrdup(kproc->kp_comm);
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
-      return xStrdup(kproc->kp_comm);
+      *command = xStrdup(kproc->kp_comm);
+      return;
    }
    int len = 0;
    for (int i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
-   char* comm = xMalloc(len);
-   char* at = comm;
+   *command = xMalloc(len);
+   char* at = *command;
    *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {
       at = stpcpy(at, argv[i]);
       if (!*basenameEnd) {
-         *basenameEnd = at - comm;
+         *basenameEnd = at - *command;
       }
       *at = ' ';
       at++;
    }
    at--;
    *at = '\0';
-   return comm;
 }
 
 static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {
@@ -456,7 +457,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
 
          ProcessList_add((ProcessList*)this, proc);
-         proc->comm = DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->basenameOffset);
+         DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
          proc->processor = kproc->kp_lwp.kl_cpuid;
@@ -473,8 +474,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
+            free(proc->name);
             free(proc->comm);
-            proc->comm = DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->basenameOffset);
+            DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          }
       }
 

@@ -823,6 +823,8 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       unsigned int tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
          goto errorReadingProcess;
+      free(proc->name);
+      proc->name = xStrdup(command);
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(lp->ttyDevice);
          lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);

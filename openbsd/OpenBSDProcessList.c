@@ -164,10 +164,12 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    */
 }
 
-char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
-   char *s, **arg;
+void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+   char **arg;
    size_t len = 0, n;
    int i;
+
+   *name = xStrdup(kproc->p_comm);
 
    /*
     * Like OpenBSD's top(1), we try to fall back to the command name
@@ -176,30 +178,30 @@ char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, in
    arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL || *arg == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      *command = xStrdup(kproc->p_comm);
+      return;
    }
    for (i = 0; arg[i] != NULL; i++) {
       len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
    }
    /* don't use xMalloc here - we want to handle huge argv's gracefully */
-   if ((s = malloc(len)) == NULL) {
+   if ((*command = malloc(len)) == NULL) {
       *basenameEnd = strlen(kproc->p_comm);
-      return xStrdup(kproc->p_comm);
+      *command = xStrdup(kproc->p_comm);
+      return;
    }
 
-   *s = '\0';
+   *command = '\0';
 
    for (i = 0; arg[i] != NULL; i++) {
-      n = strlcat(s, arg[i], len);
+      n = strlcat(*command, arg[i], len);
       if (i == 0) {
          /* TODO: rename all basenameEnd to basenameLen, make size_t */
          *basenameEnd = MINIMUM(n, len-1);
       }
       /* the trailing space should get truncated anyway */
-      strlcat(s, " ", len);
+      strlcat(*command, " ", len);
    }
-
-   return s;
 }
 
 /*
@@ -257,13 +259,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->starttime_ctime = kproc->p_ustart_sec;
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
-         proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
+         OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
          strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
       } else {
          if (settings->updateProcessNames) {
+            free(proc->name);
             free(proc->comm);
-            proc->comm = OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->basenameOffset);
+            OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          }
       }
 

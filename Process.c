@@ -45,7 +45,7 @@ in the source distribution for its full text.
 #ifndef PAGE_SIZE
 #define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
 #endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_K )
+#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_BINARY_K )
 
 /*{
 #include "Object.h"
@@ -57,7 +57,7 @@ in the source distribution for its full text.
 typedef enum ProcessFields {
    NULL_PROCESSFIELD = 0,
    PID = 1,
-   COMM = 2,
+   NAME = 2,
    STATE = 3,
    PPID = 4,
    PGRP = 5,
@@ -79,6 +79,7 @@ typedef enum ProcessFields {
    TIME = 50,
    NLWP = 51,
    TGID = 52,
+   COMM = 99
 } ProcessField;
 
 typedef struct ProcessPidColumn_ {
@@ -95,6 +96,7 @@ typedef struct Process_ {
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
+   char *name;
    char* comm;
    int commLen;
    int indent;
@@ -188,9 +190,9 @@ typedef struct ProcessClass_ {
 
 static int Process_getuid = -1;
 
-#define ONE_K 1024L
-#define ONE_M (ONE_K * ONE_K)
-#define ONE_G (ONE_M * ONE_K)
+#define ONE_BINARY_K 1024L
+#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
+#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
 
 #define ONE_DECIMAL_K 1000L
 #define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
@@ -228,25 +230,25 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
    if(number >= (10 * ONE_DECIMAL_M)) {
       #ifdef __LP64__
       if(number >= (100 * ONE_DECIMAL_G)) {
-         len = snprintf(buffer, 10, "%4luT ", number / ONE_G);
+         len = snprintf(buffer, 10, "%4luT ", number / ONE_BINARY_G);
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_G);
+         len = snprintf(buffer, 10, "%4.1lfT ", (double)number / ONE_BINARY_G);
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
-         len = snprintf(buffer, 10, "%4luG ", number / ONE_M);
+         len = snprintf(buffer, 10, "%4luG ", number / ONE_BINARY_M);
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
-      len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_M);
+      len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_BINARY_M);
       RichString_appendn(str, largeNumberColor, buffer, len);
       return;
    } else if (number >= 100000) {
-      len = snprintf(buffer, 10, "%4luM ", number / ONE_K);
+      len = snprintf(buffer, 10, "%4luM ", number / ONE_BINARY_K);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       return;
    } else if (number >= 1000) {
@@ -355,17 +357,17 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    if (rate == -1) {
       int len = snprintf(buffer, n, "    no perm ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
-   } else if (rate < ONE_K) {
+   } else if (rate < ONE_BINARY_K) {
       int len = snprintf(buffer, n, "%7.2f B/s ", rate);
       RichString_appendn(str, processColor, buffer, len);
-   } else if (rate < ONE_K * ONE_K) {
-      int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_K);
+   } else if (rate < ONE_BINARY_K * ONE_BINARY_K) {
+      int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_BINARY_K);
       RichString_appendn(str, processColor, buffer, len);
-   } else if (rate < ONE_K * ONE_K * ONE_K) {
-      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_K / ONE_K);
+   } else if (rate < ONE_BINARY_K * ONE_BINARY_K * ONE_BINARY_K) {
+      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_BINARY_K / ONE_BINARY_K);
       RichString_appendn(str, processMegabytesColor, buffer, len);
    } else {
-      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_K / ONE_K / ONE_K);
+      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_BINARY_K / ONE_BINARY_K / ONE_BINARY_K);
       RichString_appendn(str, largeNumberColor, buffer, len);
    }
 }
@@ -396,6 +398,9 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
+   case NAME:
+      xSnprintf(buffer, n, "%-15s ", this->name);
+      break;
    case COMM: {
       if (this->settings->highlightThreads && Process_isThread(this)) {
          attr = CRT_colors[PROCESS_THREAD];
@@ -511,6 +516,7 @@ void Process_display(Object* cast, RichString* out) {
 
 void Process_done(Process* this) {
    assert (this != NULL);
+   free(this->name);
    free(this->comm);
 }
 
@@ -580,6 +586,8 @@ long Process_compare(const void* v1, const void* v2) {
       return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
    case PERCENT_MEM:
       return (p2->m_resident - p1->m_resident);
+   case NAME:
+      return strcmp(p1->name, p2->name);
    case COMM:
       return strcmp(p1->comm, p2->comm);
    case MAJFLT:

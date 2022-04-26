@@ -58,6 +58,7 @@ ProcessFieldData Process_fields[] = {
       .title = "    PID ",
       .description = "Process/thread ID",
       .flags = 0, },
+   [NAME] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
    [COMM] = {
       .name = "Command",
       .title = "Command ",

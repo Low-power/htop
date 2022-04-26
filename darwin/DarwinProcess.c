@@ -247,6 +247,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
 
       DarwinProcess_setStartTime(proc, ep, now);
+      proc->name = xStrdup(ps->kp_proc.p_comm);
       proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
    }
 

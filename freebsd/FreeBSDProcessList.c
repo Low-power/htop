@@ -103,7 +103,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       pageSize = PAGE_SIZE;
       pageSizeKb = PAGE_SIZE_KB;
    } else {
-      pageSizeKb = pageSize / ONE_K;
+      pageSizeKb = pageSize / ONE_BINARY_K;
    }
 
    // usable page count vm.stats.vm.v_page_count
@@ -349,29 +349,30 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->sharedMem = 0;  // currently unused
 }
 
-char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd) {
+void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+   *name = xStrdup(kproc->ki_comm);
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
-      return xStrdup(kproc->ki_comm);
+      *command = xStrdup(kproc->ki_comm);
+      return;
    }
    int len = 0;
    for (int i = 0; argv[i]; i++) {
       len += strlen(argv[i]) + 1;
    }
-   char* comm = xMalloc(len);
-   char* at = comm;
+   *command = xMalloc(len);
+   char* at = *command;
    *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {
       at = stpcpy(at, argv[i]);
       if (!*basenameEnd) {
-         *basenameEnd = at - comm;
+         *basenameEnd = at - *command;
       }
       *at = ' ';
       at++;
    }
    at--;
    *at = '\0';
-   return comm;
 }
 
 char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
@@ -455,7 +456,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
-         proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+         FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
          if(fp->jid != kproc->ki_jid) {
@@ -474,8 +475,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          }
          if (settings->updateProcessNames) {
+            free(proc->name);
             free(proc->comm);
-            proc->comm = FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->basenameOffset);
+            FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          }
       }
 
