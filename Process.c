@@ -247,19 +247,19 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
       len = snprintf(buffer, 10, "%4.1lfG ", (double)number / ONE_BINARY_M);
       RichString_appendn(str, largeNumberColor, buffer, len);
       return;
-   } else if (number >= 100000) {
+   } else if (number >= 10000) {
       len = snprintf(buffer, 10, "%4luM ", number / ONE_BINARY_K);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       return;
    } else if (number >= 1000) {
-      len = snprintf(buffer, 10, "%2lu", number/1000);
+      len = snprintf(buffer, 10, "%1lu", number/1000);
       RichString_appendn(str, processMegabytesColor, buffer, len);
       number %= 1000;
-      len = snprintf(buffer, 10, "%03lu ", number);
+      len = snprintf(buffer, 10, "%03luK ", number);
       RichString_appendn(str, processColor, buffer, len);
       return;
    }
-   len = snprintf(buffer, 10, "%5lu ", number);
+   len = snprintf(buffer, 10, "%4luK ", number);
    RichString_appendn(str, processColor, buffer, len);
 }
 
@@ -358,16 +358,16 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
       int len = snprintf(buffer, n, "    no perm ");
       RichString_appendn(str, CRT_colors[PROCESS_SHADOW], buffer, len);
    } else if (rate < ONE_BINARY_K) {
-      int len = snprintf(buffer, n, "%7.2f B/s ", rate);
+      int len = snprintf(buffer, n, "%8.2fB/s ", rate);
       RichString_appendn(str, processColor, buffer, len);
    } else if (rate < ONE_BINARY_K * ONE_BINARY_K) {
-      int len = snprintf(buffer, n, "%7.2f K/s ", rate / ONE_BINARY_K);
+      int len = snprintf(buffer, n, "%6.1fKiB/s ", rate / ONE_BINARY_K);
       RichString_appendn(str, processColor, buffer, len);
    } else if (rate < ONE_BINARY_K * ONE_BINARY_K * ONE_BINARY_K) {
-      int len = snprintf(buffer, n, "%7.2f M/s ", rate / ONE_BINARY_K / ONE_BINARY_K);
+      int len = snprintf(buffer, n, "%6.1fMiB/s ", rate / ONE_BINARY_K / ONE_BINARY_K);
       RichString_appendn(str, processMegabytesColor, buffer, len);
    } else {
-      int len = snprintf(buffer, n, "%7.2f G/s ", rate / ONE_BINARY_K / ONE_BINARY_K / ONE_BINARY_K);
+      int len = snprintf(buffer, n, "%6.1fGiB/s ", rate / ONE_BINARY_K / ONE_BINARY_K / ONE_BINARY_K);
       RichString_appendn(str, largeNumberColor, buffer, len);
    }
 }

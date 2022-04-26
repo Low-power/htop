@@ -168,7 +168,7 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size) {
          break;
    }
 
-   written = snprintf(buffer, size, "%.*f%c",
+   written = snprintf(buffer, size, "%.*f%ci",
       precision, (double) value / powi, *prefix);
 
    return written;
