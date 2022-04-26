@@ -5,7 +5,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 bin_PROGRAMS = htop
 
 dist_man_MANS = htop.1
-EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.py \
+EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.sh \
 install-sh autogen.sh missing
 applicationsdir = $(datadir)/applications
 applications_DATA = htop.desktop
@@ -205,7 +205,7 @@ coverage:
 	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
 
 .c.h:
-	@srcdir@/scripts/MakeHeader.py $<
+	@srcdir@/scripts/MakeHeader.sh $< > $@
 
 cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
