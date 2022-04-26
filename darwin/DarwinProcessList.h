@@ -9,7 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-struct kern;
 
 /* compare the given os version with the one installed returns:
 0 if equals the installed version

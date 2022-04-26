@@ -53,6 +53,9 @@ while read -r line; do case "$state" in
 			*"htop - "*.c)
 				printf %s\\n "${line%c}h"
 				;;
+			"struct "*|"typedef "*)
+				[ "${line%\{}" = "$line" ] && state=skipone || state=skip
+				;;
 			*"static "*)
 				if [ "${line%\{}" != "$line" ]; then
 					state=skip
@@ -68,11 +71,6 @@ while read -r line; do case "$state" in
 				static=
 				is_blank=
 				printf 'extern %s;\n' "${line%?= \{}"
-				state=skip
-				;;
-			"typedef "*"{")
-				static=
-				is_blank=
 				state=skip
 				;;
 			*"{")
