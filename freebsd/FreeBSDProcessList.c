@@ -349,7 +349,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->sharedMem = 0;  // currently unused
 }
 
-void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+static void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
    *name = xStrdup(kproc->ki_comm);
    char** argv = kvm_getargv(kd, kproc, 0);
    if (!argv) {
@@ -375,7 +375,7 @@ void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, cha
    *at = '\0';
 }
 
-char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
+static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
    int    jid;
    struct iovec jiov[6];
    char*  jname;

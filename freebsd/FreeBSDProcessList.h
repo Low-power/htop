@@ -59,10 +59,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
-char* FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
-
-char* FreeBSDProcessList_readJailName(struct kinfo_proc* kproc);
-
 void ProcessList_goThroughEntries(ProcessList* this);
 
 #endif

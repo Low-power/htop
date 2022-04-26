@@ -9,6 +9,13 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+struct kern;
+
+/* compare the given os version with the one installed returns:
+0 if equals the installed version
+positive value if less than the installed version
+negative value if more than the installed version
+*/
 #include "ProcessList.h"
 #include <mach/mach_host.h>
 #include <sys/sysctl.h>
@@ -26,15 +33,6 @@ typedef struct DarwinProcessList_ {
 } DarwinProcessList;
 
 
-void ProcessList_getHostInfo(host_basic_info_data_t *p);
-
-void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p);
-
-unsigned ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p);
-
-void ProcessList_getVMStats(vm_statistics_t p);
-
-struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count);
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 

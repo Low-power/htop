@@ -164,7 +164,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    */
 }
 
-void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
    char **arg;
    size_t len = 0, n;
    int i;
@@ -207,7 +207,7 @@ void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, cha
 /*
  * Taken from OpenBSD's ps(1).
  */
-double getpcpu(const struct kinfo_proc *kp) {
+static double getpcpu(const struct kinfo_proc *kp) {
    if (fscale == 0)
       return (0.0);
 

@@ -46,13 +46,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
-char *OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, int* basenameEnd);
-
 /*
  * Taken from OpenBSD's ps(1).
  */
-double getpcpu(const struct kinfo_proc *kp);
-
 void ProcessList_goThroughEntries(ProcessList* this);
 
 #endif
