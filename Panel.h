@@ -87,7 +87,7 @@ void Panel_setSelectionColor(Panel* this, int color);
 
 RichString* Panel_getHeader(Panel* this);
 
-extern void Panel_setHeader(Panel* this, const char* header);
+void Panel_setHeader(Panel* this, const char* header);
 
 void Panel_move(Panel* this, int x, int y);
 

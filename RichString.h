@@ -69,7 +69,7 @@ typedef struct RichString_ {
 
 #ifdef HAVE_LIBNCURSESW
 
-extern void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
+void RichString_setAttrn(RichString* this, int attrs, int start, int finish);
 
 int RichString_findChar(RichString* this, char c, int start);
 

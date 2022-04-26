@@ -46,8 +46,6 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
 
-extern char Process_pidFormat[20];
-
 int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);

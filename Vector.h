@@ -62,7 +62,7 @@ void Vector_set(Vector* this, int idx, void* data_);
 
 #ifdef DEBUG
 
-extern Object* Vector_get(Vector* this, int idx);
+Object* Vector_get(Vector* this, int idx);
 
 #else
 
@@ -72,7 +72,7 @@ extern Object* Vector_get(Vector* this, int idx);
 
 #ifdef DEBUG
 
-extern int Vector_size(Vector* this);
+int Vector_size(Vector* this);
 
 #else
 
@@ -86,6 +86,6 @@ extern int Vector_size(Vector* this);
 
 void Vector_add(Vector* this, void* data_);
 
-extern int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
+int Vector_indexOf(Vector* this, void* search_, Object_Compare compare);
 
 #endif

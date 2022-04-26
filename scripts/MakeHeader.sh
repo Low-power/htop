@@ -61,18 +61,16 @@ while read -r line; do case "$state" in
 					state=skipone
 				fi
 				;;
+			*"extern "*\;*)
+				state=skipone
+				;;
 			*"= {")
 				static=
 				is_blank=
 				printf 'extern %s;\n' "${line%?= \{}"
 				state=skip
 				;;
-			*" = "*)
-				static=
-				is_blank=
-				printf 'extern %s;\n' "${line%% = *}"
-				;;
-			"typedef struct"*)
+			"typedef "*"{")
 				static=
 				is_blank=
 				state=skip
@@ -80,8 +78,24 @@ while read -r line; do case "$state" in
 			*"{")
 				static=
 				is_blank=
-				printf '%s;\n' "${line%?\{}" | sed s/inline/extern/
+				#printf 'extern %s;\n' "${line%\)*\{})" | sed -E "s/ (extern|inline)//g"
+				printf '%s;\n' "${line%\)*\{})" | sed -E "s/(extern|inline) //g"
 				state=skip
+				;;
+			*" = "*)
+				static=
+				is_blank=
+				printf 'extern %s;\n' "${line%% = *}"
+				;;
+			*[_a-zA-Z0-9]\;|*\[*\]\;)
+				static=
+				is_blank=
+				printf 'extern %s\n' "$line"
+				;;
+			*[_a-zA-Z0-9]"; /*"*"*/")
+				static=
+				is_blank=
+				printf 'extern %s;\n' "${line%%;*}"
 				;;
 			??*)
 				static=

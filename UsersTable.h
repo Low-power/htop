@@ -21,6 +21,6 @@ void UsersTable_delete(UsersTable* this);
 
 char* UsersTable_getRef(UsersTable* this, unsigned int uid);
 
-extern void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData);
+void UsersTable_foreach(UsersTable* this, Hashtable_PairFunction f, void* userData);
 
 #endif
