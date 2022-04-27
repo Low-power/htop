@@ -34,10 +34,9 @@ in the source distribution for its full text.
 typedef struct TraceScreen_ {
    InfoScreen super;
    bool tracing;
-   int fdpair[2];
    int child;
-   FILE* strace;
-   int fd_strace;
+   FILE *trace_f;
+   int trace_fd;
    bool contLine;
    bool follow;
 } TraceScreen;
@@ -76,7 +75,7 @@ void TraceScreen_delete(Object* cast) {
    if (this->child > 0) {
       kill(this->child, SIGTERM);
       waitpid(this->child, NULL, 0);
-      fclose(this->strace);
+      fclose(this->trace_f);
    }
    CRT_enableDelay();
    free(InfoScreen_done((InfoScreen*)cast));
@@ -91,15 +90,17 @@ void TraceScreen_draw(InfoScreen* this) {
 }
 
 bool TraceScreen_forkTracer(TraceScreen* this) {
-   int error = pipe(this->fdpair);
-   if (error == -1) return false;
+   int fdpair[2];
+   if(pipe(fdpair) < 0) return false;
    this->child = fork();
    if (this->child == -1) return false;
    if (this->child == 0) {
       CRT_dropPrivileges();
-      dup2(this->fdpair[1], STDERR_FILENO);
+      close(fdpair[0]);
+      dup2(fdpair[1], STDERR_FILENO);
+      if(fdpair[1] != STDERR_FILENO) close(fdpair[1]);
       const char *message;
-      if(fcntl(this->fdpair[1], F_SETFL, O_NONBLOCK) == -1) {
+      if(fcntl(STDERR_FILENO, F_SETFL, O_NONBLOCK) == -1) {
          message = strerror(errno);
       } else {
          char buffer[22];
@@ -112,14 +113,14 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
 #endif
          message = "Could not execute 'strace' or 'truss'. Please make sure it is available in your $PATH.";
       }
-      ssize_t written = write(this->fdpair[1], message, strlen(message));
+      ssize_t written = write(STDERR_FILENO, message, strlen(message));
       (void) written;
       _exit(1);
    }
-   int ok = fcntl(this->fdpair[0], F_SETFL, O_NONBLOCK);
-   if (ok == -1) return false;
-   this->strace = fdopen(this->fdpair[0], "r");
-   this->fd_strace = fileno(this->strace);
+   close(fdpair[1]);
+   if(fcntl(fdpair[0], F_SETFL, O_NONBLOCK) == -1) return false;
+   this->trace_f = fdopen(fdpair[0], "r");
+   this->trace_fd = fileno(this->trace_f);
    return true;
 }
 
@@ -128,14 +129,14 @@ void TraceScreen_updateTrace(InfoScreen* super) {
    char buffer[1001];
    fd_set fds;
    FD_ZERO(&fds);
-// FD_SET(STDIN_FILENO, &fds);
-   FD_SET(this->fd_strace, &fds);
+   FD_SET(this->trace_fd, &fds);
    struct timeval tv;
    tv.tv_sec = 0; tv.tv_usec = 500;
-   int ready = select(this->fd_strace+1, &fds, NULL, NULL, &tv);
+   int ready = select(this->trace_fd + 1, &fds, NULL, NULL, &tv);
    int nread = 0;
-   if (ready > 0 && FD_ISSET(this->fd_strace, &fds))
-      nread = fread(buffer, 1, 1000, this->strace);
+   if (ready > 0 && FD_ISSET(this->trace_fd, &fds)) {
+      nread = fread(buffer, 1, 1000, this->trace_f);
+   }
    if (nread && this->tracing) {
       char* line = buffer;
       buffer[nread] = '\0';
@@ -156,8 +157,9 @@ void TraceScreen_updateTrace(InfoScreen* super) {
          buffer[nread] = '\0';
          this->contLine = true;
       }
-      if (this->follow)
+      if (this->follow) {
          Panel_setSelected(this->super.display, Panel_size(this->super.display)-1);
+      }
    }
 }
 
@@ -166,9 +168,10 @@ bool TraceScreen_onKey(InfoScreen* super, int ch) {
    switch(ch) {
       case 'f':
       case KEY_F(8):
-         this->follow = !(this->follow);
-         if (this->follow)
+         this->follow = !this->follow;
+         if (this->follow) {
             Panel_setSelected(super->display, Panel_size(super->display)-1);
+         }
          return true;
       case 't':
       case KEY_F(9):

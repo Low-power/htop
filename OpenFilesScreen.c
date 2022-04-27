@@ -88,25 +88,26 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
    }
    pid_t child = fork();
    if (child == -1) {
+      close(fdpair[0]);
+      close(fdpair[1]);
       pdata->error = 1;
       return pdata;
    }
    if (child == 0) {
       close(fdpair[0]);
       dup2(fdpair[1], STDOUT_FILENO);
-      close(fdpair[1]);
-      int fdnull = open("/dev/null", O_WRONLY);
-      if (fdnull < 0)
-         exit(1);
-      dup2(fdnull, STDERR_FILENO);
-      close(fdnull);
+      if(fdpair[1] != STDOUT_FILENO) close(fdpair[1]);
+      int fd = open("/dev/null", O_WRONLY);
+      if(fd == -1) _exit(1);
+      dup2(fd, STDERR_FILENO);
+      if(fd != STDERR_FILENO) close(fd);
       execlp("lsof", "lsof", "-P", "-p", buffer, "-F", NULL);
-      exit(127);
+      _exit(127);
    }
    close(fdpair[1]);
-   FILE* fd = fdopen(fdpair[0], "r");
+   FILE *f = fdopen(fdpair[0], "r");
    for (;;) {
-      char* line = String_readLine(fd);
+      char* line = String_readLine(f);
       if (!line) {
          break;
       }
@@ -124,22 +125,21 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       item->data[cmd] = xStrdup(line + 1);
       free(line);
    }
+   fclose(f);
    int wstatus;
    if (waitpid(child, &wstatus, 0) == -1) {
       pdata->error = 1;
       return pdata;
    }
-   if (!WIFEXITED(wstatus))
-      pdata->error = 1;
-   else
-      pdata->error = WEXITSTATUS(wstatus);
+   if (!WIFEXITED(wstatus)) pdata->error = 1;
+   else pdata->error = WEXITSTATUS(wstatus);
    return pdata;
 }
 
 static inline void OpenFiles_Data_clear(OpenFiles_Data* data) {
-   for (int i = 0; i < 255; i++)
-      if (data->data[i])
-         free(data->data[i]);
+   for (int i = 0; i < 255; i++) {
+      free(data->data[i]);
+   }
 }
 
 void OpenFilesScreen_scan(InfoScreen* this) {

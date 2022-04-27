@@ -31,6 +31,6 @@ void String_freeArray(char** s);
 
 char* String_getToken(const char* line, const unsigned short int numMatch);
 
-char* String_readLine(FILE* fd);
+char* String_readLine(FILE *f);
 
 #endif

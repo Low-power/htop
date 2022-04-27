@@ -129,13 +129,13 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
    return((char*)xStrdup(match));
 }
 
-char* String_readLine(FILE* fd) {
+char* String_readLine(FILE *f) {
    const int step = 1024;
    int bufSize = step;
    char* buffer = xMalloc(step + 1);
    char* at = buffer;
    for (;;) {
-      char* ok = fgets(at, step + 1, fd);
+      char* ok = fgets(at, step + 1, f);
       if (!ok) {
          free(buffer);
          return NULL;
@@ -145,7 +145,7 @@ char* String_readLine(FILE* fd) {
          *newLine = '\0';
          return buffer;
       } else {
-         if (feof(fd)) {
+         if (feof(f)) {
             return buffer;
          }
       }

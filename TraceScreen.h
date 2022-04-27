@@ -14,10 +14,9 @@ in the source distribution for its full text.
 typedef struct TraceScreen_ {
    InfoScreen super;
    bool tracing;
-   int fdpair[2];
    int child;
-   FILE* strace;
-   int fd_strace;
+   FILE *trace_f;
+   int trace_fd;
    bool contLine;
    bool follow;
 } TraceScreen;

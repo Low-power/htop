@@ -164,18 +164,15 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
 }
 
 static bool Settings_read(Settings* this, const char* fileName) {
-   FILE* fd;
-   
    CRT_dropPrivileges();
-   fd = fopen(fileName, "r");
+   FILE *f = fopen(fileName, "r");
    CRT_restorePrivileges();
-   if (!fd)
-      return false;
+   if (!f) return false;
    
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
-      char* line = String_readLine(fd);
+      char* line = String_readLine(f);
       if (!line) {
          break;
       }
@@ -247,80 +244,78 @@ static bool Settings_read(Settings* this, const char* fileName) {
       }
       String_freeArray(option);
    }
-   fclose(fd);
+   fclose(f);
    if (!didReadMeters) {
       Settings_defaultMeters(this);
    }
    return didReadFields;
 }
 
-static void writeFields(FILE* fd, ProcessField* fields, const char* name) {
-   fprintf(fd, "%s=", name);
+static void writeFields(FILE *f, ProcessField* fields, const char* name) {
+   fprintf(f, "%s=", name);
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
       // This "-1" is for compatibility with the older enum format.
-      fprintf(fd, "%s%d", sep, (int) fields[i]-1);
+      fprintf(f, "%s%d", sep, (int) fields[i]-1);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc('\n', f);
 }
 
-static void writeMeters(Settings* this, FILE* fd, int column) {
+static void writeMeters(Settings* this, FILE *f, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%s", sep, this->columns[column].names[i]);
+      fprintf(f, "%s%s", sep, this->columns[column].names[i]);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc('\n', f);
 }
 
-static void writeMeterModes(Settings* this, FILE* fd, int column) {
+static void writeMeterModes(Settings* this, FILE *f, int column) {
    const char* sep = "";
    for (int i = 0; i < this->columns[column].len; i++) {
-      fprintf(fd, "%s%d", sep, this->columns[column].modes[i]);
+      fprintf(f, "%s%d", sep, this->columns[column].modes[i]);
       sep = " ";
    }
-   fprintf(fd, "\n");
+   fputc('\n', f);
 }
 
 bool Settings_write(Settings* this) {
-   FILE* fd;
-
    CRT_dropPrivileges();
-   fd = fopen(this->filename, "w");
+   FILE *f = fopen(this->filename, "w");
    CRT_restorePrivileges();
 
-   if (fd == NULL) {
+   if (f == NULL) {
       return false;
    }
-   fprintf(fd, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
-   fprintf(fd, "# The parser is also very primitive, and not human-friendly.\n");
-   writeFields(fd, this->fields, "fields");
+   fprintf(f, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
+   fprintf(f, "# The parser is also very primitive, and not human-friendly.\n");
+   writeFields(f, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
-   fprintf(fd, "sort_key=%d\n", (int) this->sortKey-1);
-   fprintf(fd, "sort_direction=%d\n", (int) this->direction);
-   fprintf(fd, "hide_threads=%d\n", (int) this->hideThreads);
-   fprintf(fd, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
-   fprintf(fd, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
-   fprintf(fd, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
-   fprintf(fd, "show_thread_names=%d\n", (int) this->showThreadNames);
-   fprintf(fd, "show_program_path=%d\n", (int) this->showProgramPath);
-   fprintf(fd, "highlight_base_name=%d\n", (int) this->highlightBaseName);
-   fprintf(fd, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
-   fprintf(fd, "highlight_threads=%d\n", (int) this->highlightThreads);
-   fprintf(fd, "tree_view=%d\n", (int) this->treeView);
-   fprintf(fd, "header_margin=%d\n", (int) this->headerMargin);
-   fprintf(fd, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
-   fprintf(fd, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
-   fprintf(fd, "update_process_names=%d\n", (int) this->updateProcessNames);
-   fprintf(fd, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
-   fprintf(fd, "color_scheme=%d\n", (int) this->colorScheme);
-   fprintf(fd, "delay=%d\n", (int) this->delay);
-   fprintf(fd, "left_meters="); writeMeters(this, fd, 0);
-   fprintf(fd, "left_meter_modes="); writeMeterModes(this, fd, 0);
-   fprintf(fd, "right_meters="); writeMeters(this, fd, 1);
-   fprintf(fd, "right_meter_modes="); writeMeterModes(this, fd, 1);
-   fclose(fd);
+   fprintf(f, "sort_key=%d\n", (int) this->sortKey-1);
+   fprintf(f, "sort_direction=%d\n", (int) this->direction);
+   fprintf(f, "hide_threads=%d\n", (int) this->hideThreads);
+   fprintf(f, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
+   fprintf(f, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
+   fprintf(f, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
+   fprintf(f, "show_thread_names=%d\n", (int) this->showThreadNames);
+   fprintf(f, "show_program_path=%d\n", (int) this->showProgramPath);
+   fprintf(f, "highlight_base_name=%d\n", (int) this->highlightBaseName);
+   fprintf(f, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
+   fprintf(f, "highlight_threads=%d\n", (int) this->highlightThreads);
+   fprintf(f, "tree_view=%d\n", (int) this->treeView);
+   fprintf(f, "header_margin=%d\n", (int) this->headerMargin);
+   fprintf(f, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
+   fprintf(f, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
+   fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
+   fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
+   fprintf(f, "color_scheme=%d\n", (int) this->colorScheme);
+   fprintf(f, "delay=%d\n", (int) this->delay);
+   fprintf(f, "left_meters="); writeMeters(this, f, 0);
+   fprintf(f, "left_meter_modes="); writeMeterModes(this, f, 0);
+   fprintf(f, "right_meters="); writeMeters(this, f, 1);
+   fprintf(f, "right_meter_modes="); writeMeterModes(this, f, 1);
+   fclose(f);
    return true;
 }
 
@@ -423,8 +418,5 @@ Settings* Settings_new(int cpuCount) {
 }
 
 void Settings_invertSortOrder(Settings* this) {
-   if (this->direction == 1)
-      this->direction = -1;
-   else
-      this->direction = 1;
+   this->direction = (this->direction == 1) ? -1 : 1;
 }
