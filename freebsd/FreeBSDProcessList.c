@@ -27,9 +27,6 @@ in the source distribution for its full text.
 #include <sys/uio.h>
 #include <sys/resource.h>
 
-#define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
-
 typedef struct CPUData_ {
 
    double userPercent;
@@ -65,7 +62,6 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 }*/
-
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
@@ -375,11 +371,14 @@ static void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpr
    *at = '\0';
 }
 
+#define JAIL_ERRMSGLEN 1024
+
 static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
    int    jid;
    struct iovec jiov[6];
    char*  jname;
    char   jnamebuf[MAXHOSTNAMELEN];
+   char   errmsg[JAIL_ERRMSGLEN];
 
    if (kproc->ki_jid != 0 ){
       memset(jnamebuf, 0, sizeof(jnamebuf));
@@ -393,18 +392,18 @@ static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
       jiov[3].iov_len = sizeof(jnamebuf);
       *(const void **)&jiov[4].iov_base = "errmsg";
       jiov[4].iov_len = sizeof("errmsg");
-      jiov[5].iov_base = jail_errmsg;
+      jiov[5].iov_base = errmsg;
       jiov[5].iov_len = JAIL_ERRMSGLEN;
-      jail_errmsg[0] = 0;
+      errmsg[0] = 0;
       jid = jail_get(jiov, 6, 0);
       if (jid < 0) {
-         if (!jail_errmsg[0])
-            xSnprintf(jail_errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
-            return NULL;
+         if (!errmsg[0]) {
+            xSnprintf(errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
+            // TODO: Make use of errmsg
+         }
+         return NULL;
       } else if (jid == kproc->ki_jid) {
          jname = xStrdup(jnamebuf);
-         if (jname == NULL)
-            strerror_r(errno, jail_errmsg, JAIL_ERRMSGLEN);
          return jname;
       } else {
          return NULL;

@@ -16,9 +16,6 @@ in the source distribution for its full text.
 #include <sys/uio.h>
 #include <sys/resource.h>
 
-#define JAIL_ERRMSGLEN	1024
-char jail_errmsg[JAIL_ERRMSGLEN];
-
 typedef struct CPUData_ {
 
    double userPercent;
@@ -58,6 +55,8 @@ typedef struct FreeBSDProcessList_ {
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
+
+#define JAIL_ERRMSGLEN 1024
 
 void ProcessList_goThroughEntries(ProcessList* this);
 
