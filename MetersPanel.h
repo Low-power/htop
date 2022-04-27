@@ -33,7 +33,6 @@ struct MetersPanel_ {
 // terminals, breaking our aligning.
 // In <http://unicode.org/reports/tr11/>, arrows (U+2019..U+2199) are
 // considered "Ambiguous characters".
-
 void MetersPanel_setMoving(MetersPanel* this, bool moving);
 
 extern PanelClass MetersPanel_class;

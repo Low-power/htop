@@ -61,7 +61,7 @@ while read -r line; do case "$state" in
 					state=skip
 					static=1
 				else
-					state=skipone
+					is_blank=1
 				fi
 				;;
 			*"extern "*\;*)
@@ -123,10 +123,16 @@ while read -r line; do case "$state" in
 		;;
 	skip)
 		is_blank=
-		if [ "${line#\}}" != "$line" ]; then
-			[ -n "$static" ] && state=skipone || state=any
-			static=
-		fi
+		case "$line" in
+			"} "*" = {")
+				;;
+			"}"*)
+				#[ -n "$static" ] && state=skipone || state=any
+				[ -n "$static" ] && is_blank=1
+				state=any
+				static=
+				;;
+		esac
 		;;
 	skipone)
 		is_blank=

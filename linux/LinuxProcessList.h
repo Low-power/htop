@@ -102,7 +102,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* pl);
 
-
 #ifdef HAVE_TASKSTATS
 
 #endif

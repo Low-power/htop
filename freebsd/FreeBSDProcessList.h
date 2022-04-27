@@ -31,13 +31,11 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   int zfsArcEnabled;
-
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   unsigned long long int memZfsArc;
+   uint64_t memZfsArc;
 
 
    CPUData* cpus;
@@ -49,7 +47,6 @@ typedef struct FreeBSDProcessList_ {
    unsigned long  *cp_times_n;
 
 } FreeBSDProcessList;
-
 
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);

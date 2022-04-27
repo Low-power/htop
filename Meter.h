@@ -133,7 +133,6 @@ ListItem* Meter_toListItem(Meter* this, bool moving);
 #endif
 
 #define PIXPERROW_ASCII 2
-
 /* ---------- LEDMeterMode ---------- */
 
 #ifdef HAVE_LIBNCURSESW

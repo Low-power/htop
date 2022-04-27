@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
-
+#include "KStat.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -42,13 +42,11 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
    kvm_t* kd;
 
-   int zfsArcEnabled;
-
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   unsigned long long int memZfsArc;
+   uint64_t memZfsArc;
 
 
    CPUData* cpus;
@@ -75,8 +73,6 @@ static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
 
 static int MIB_vfs_bufspace[2];
-
-static int MIB_kstat_zfs_misc_arcstats_size[5];
 
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
@@ -113,16 +109,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
-
-   len = sizeof(fpl->memZfsArc);
-   if (sysctlbyname("kstat.zfs.misc.arcstats.size", &fpl->memZfsArc, &len,
-	    NULL, 0) == 0 && fpl->memZfsArc != 0) {
-      sysctlnametomib("kstat.zfs.misc.arcstats.size", MIB_kstat_zfs_misc_arcstats_size, &len);
-		  fpl->zfsArcEnabled = 1;
-   } else {
-		  fpl->zfsArcEnabled = 0;
-   }
-
 
    int smp = 0;
    len = sizeof(smp);
@@ -313,9 +299,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= pageSizeKb;
 
-   if (fpl->zfsArcEnabled) {
-      len = sizeof(fpl->memZfsArc);
-      sysctl(MIB_kstat_zfs_misc_arcstats_size, 5, &(fpl->memZfsArc), &len , NULL, 0);
+   if(read_kstat(KSTAT_ZFS_ARCSTATS, KSTAT_ZFS_ARCSTATS_SIZE, KSTAT_DATA_UINT64, &fpl->memZfsArc) == 0) {
       fpl->memZfsArc /= 1024;
       fpl->memWire -= fpl->memZfsArc;
       pl->cachedMem += fpl->memZfsArc;
