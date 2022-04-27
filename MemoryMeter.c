@@ -21,12 +21,13 @@ in the source distribution for its full text.
 }*/
 
 int MemoryMeter_attributes[] = {
-   MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE
+   MEMORY_USED, MEMORY_BUFFERS, MEMORY_CACHE, MEMORY_ZFS_ARC
 };
 
 static void MemoryMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;
    Platform_setMemoryValues(this);
+   this->values[3] = this->pl->zfs_arc_size;
 
    written = Meter_humanUnit(buffer, this->values[0], size);
    buffer += written;
@@ -52,6 +53,11 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    Meter_humanUnit(buffer, this->values[2], 50);
    RichString_append(out, CRT_colors[METER_TEXT], " cache:");
    RichString_append(out, CRT_colors[MEMORY_CACHE], buffer);
+   if(this->values[3] > 0) {
+      Meter_humanUnit(buffer, this->values[3], 50);
+      RichString_append(out, CRT_colors[METER_TEXT], " zfs arc:");
+      RichString_append(out, CRT_colors[MEMORY_ZFS_ARC], buffer);
+   }
 }
 
 MeterClass MemoryMeter_class = {
@@ -62,7 +68,7 @@ MeterClass MemoryMeter_class = {
    },
    .updateValues = MemoryMeter_updateValues, 
    .defaultMode = BAR_METERMODE,
-   .maxItems = 3,
+   .maxItems = 4,
    .total = 100.0,
    .attributes = MemoryMeter_attributes,
    .name = "Memory",

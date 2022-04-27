@@ -10,7 +10,7 @@ in the source distribution for its full text.
 
 #include "CRT.h"
 #include "StringUtils.h"
-
+#include "KStat.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -21,6 +21,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Process.h"
 #include "Settings.h"
+#include <stdint.h>
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
@@ -64,6 +65,7 @@ typedef struct ProcessList_ {
    unsigned long long int sharedMem;
    unsigned long long int buffersMem;
    unsigned long long int cachedMem;
+   uint64_t zfs_arc_size;
    unsigned long long int totalSwap;
    unsigned long long int usedSwap;
    unsigned long long int freeSwap;
@@ -338,6 +340,15 @@ Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting,
    return proc;
 }
 
+static void read_zfs_arc_size(ProcessList *this) {
+	if(read_kstat(KSTAT_ZFS_ARCSTATS, KSTAT_ZFS_ARCSTATS_SIZE, KSTAT_DATA_UINT64, &this->zfs_arc_size) < 0) {
+		this->zfs_arc_size = 0;
+	} else {
+		this->zfs_arc_size /= 1024;
+		this->usedMem -= this->zfs_arc_size;
+	}
+}
+
 void ProcessList_scan(ProcessList* this) {
 
    // mark all process as "dirty"
@@ -353,7 +364,7 @@ void ProcessList_scan(ProcessList* this) {
    this->runningTasks = 0;
 
    ProcessList_goThroughEntries(this);
-   
+   read_zfs_arc_size(this);
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       if (p->updated == false)

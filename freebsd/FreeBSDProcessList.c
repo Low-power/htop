@@ -8,7 +8,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
-#include "KStat.h"
+//#include "KStat.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -299,13 +299,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
    pl->cachedMem *= pageSizeKb;
 
-   if(read_kstat(KSTAT_ZFS_ARCSTATS, KSTAT_ZFS_ARCSTATS_SIZE, KSTAT_DATA_UINT64, &fpl->memZfsArc) == 0) {
-      fpl->memZfsArc /= 1024;
-      fpl->memWire -= fpl->memZfsArc;
-      pl->cachedMem += fpl->memZfsArc;
-      // maybe when we learn how to make custom memory meter
-      // we could do custom arc breakdown?
-   }
+   // ZFS ARC size is now handled in ProcessList.c
 
    pl->usedMem = fpl->memActive + fpl->memWire;
 

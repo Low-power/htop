@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Process.h"
 #include "Settings.h"
+#include <stdint.h>
 
 #ifdef HAVE_LIBHWLOC
 #include <hwloc.h>
@@ -58,6 +59,7 @@ typedef struct ProcessList_ {
    unsigned long long int sharedMem;
    unsigned long long int buffersMem;
    unsigned long long int cachedMem;
+   uint64_t zfs_arc_size;
    unsigned long long int totalSwap;
    unsigned long long int usedSwap;
    unsigned long long int freeSwap;
