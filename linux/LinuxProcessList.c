@@ -62,7 +62,6 @@ typedef struct CPUData_ {
    unsigned long long int softIrqTime;
    unsigned long long int stealTime;
    unsigned long long int guestTime;
-   
    unsigned long long int totalPeriod;
    unsigned long long int userPeriod;
    unsigned long long int systemPeriod;
@@ -86,10 +85,8 @@ typedef struct TtyDriver_ {
 
 typedef struct LinuxProcessList_ {
    ProcessList super;
-   
    CPUData* cpus;
    TtyDriver* ttyDrivers;
-   
    #ifdef HAVE_DELAYACCT
    struct nl_sock *netlink_socket;
    int netlink_family;
@@ -114,6 +111,10 @@ typedef struct LinuxProcessList_ {
 
 #ifndef PROC_LINE_LENGTH
 #define PROC_LINE_LENGTH 4096
+#endif
+
+#ifndef SYS_SYSTEM_CPU_DIR
+#define SYS_SYSTEM_CPU_DIR "/sys/devices/system/cpu/"
 #endif
 
 }*/
@@ -241,29 +242,47 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    #endif
 
    // Update CPU count:
+   unsigned int cpu_count = 0;
+   unsigned int max_cpu_i = 0;
+
+   DIR *dir = opendir(SYS_SYSTEM_CPU_DIR);
+   if(dir) {
+      struct dirent *e;
+      while((e = readdir(dir))) {
+         char *end_p;
+         if(!String_startsWith(e->d_name, "cpu")) continue;
+         unsigned int cpu_i = strtoul(e->d_name + 3, &end_p, 10);
+         if(*end_p) continue;
+         cpu_count++;
+         if(cpu_i > max_cpu_i) max_cpu_i = cpu_i;
+      }
+   }
+
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   int cpus = 0;
    do {
       char buffer[PROC_LINE_LENGTH + 1];
       if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
          CRT_fatalError("No btime in " PROCSTATFILE);
-      } else if (String_startsWith(buffer, "cpu")) {
-         cpus++;
+      } else if (!cpu_count && String_startsWith(buffer, "cpu") && buffer[3] != ' ') {
+         char *end_p;
+         unsigned int cpu_i = strtoul(buffer + 3, &end_p, 10);
+         if(*end_p != ' ') continue;
+         cpu_count++;
+         if(cpu_i > max_cpu_i) max_cpu_i = cpu_i;
       } else if (String_startsWith(buffer, "btime ")) {
          sscanf(buffer, "btime %lld\n", &btime);
          break;
       }
    } while(true);
-
    fclose(file);
 
-   pl->cpuCount = MAX(cpus - 1, 1);
-   this->cpus = xCalloc(cpus, sizeof(CPUData));
-
-   for (int i = 0; i < cpus; i++) {
+   if(cpu_count <= max_cpu_i) cpu_count = max_cpu_i + 1;
+   pl->cpuCount = MAX(cpu_count, 1);
+   this->cpus = xCalloc(cpu_count + 1, sizeof(CPUData));
+   for (unsigned int i = 0; i < cpu_count + 1; i++) {
       this->cpus[i].totalTime = 1;
       this->cpus[i].totalPeriod = 1;
    }
@@ -972,24 +991,24 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    if (file == NULL) {
       CRT_fatalError("Cannot open " PROCSTATFILE);
    }
-   int cpus = this->super.cpuCount;
-   assert(cpus > 0);
-   for (int i = 0; i <= cpus; i++) {
-      char buffer[PROC_LINE_LENGTH + 1];
+   char offline_cpu_map[this->super.cpuCount];
+   memset(offline_cpu_map, 1, this->super.cpuCount);
+   unsigned int i = 0;
+   char buffer[PROC_LINE_LENGTH + 1];
+   while(fgets(buffer, PROC_LINE_LENGTH + 1, file)) {
+      int cpuid = -1;
       unsigned long long int usertime, nicetime, systemtime, idletime;
       unsigned long long int ioWait, irq, softIrq, steal, guest, guestnice;
       ioWait = irq = softIrq = steal = guest = guestnice = 0;
       // Depending on your kernel version,
       // 5, 7, 8 or 9 of these fields will be set.
       // The rest will remain at zero.
-      char* ok = fgets(buffer, PROC_LINE_LENGTH, file);
-      if (!ok) buffer[0] = '\0';
-      if (i == 0)
-         sscanf(buffer,   "cpu  %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu",         &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
-      else {
-         int cpuid;
+      if(!String_startsWith(buffer, "cpu")) continue;
+      if(i++ == 0) {
+         sscanf(buffer, "cpu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
+      } else {
          sscanf(buffer, "cpu%4d %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu %16llu", &cpuid, &usertime, &nicetime, &systemtime, &idletime, &ioWait, &irq, &softIrq, &steal, &guest, &guestnice);
-         assert(cpuid == i - 1);
+         offline_cpu_map[cpuid] = 0;
       }
       // Guest time is already accounted in usertime
       usertime = usertime - guest;
@@ -1000,7 +1019,17 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       unsigned long long int systemalltime = systemtime + irq + softIrq;
       unsigned long long int virtalltime = guest + guestnice;
       unsigned long long int totaltime = usertime + nicetime + systemalltime + idlealltime + steal + virtalltime;
-      CPUData* cpuData = &(this->cpus[i]);
+      if(this->super.cpuCount <= cpuid) {
+         this->cpus = xRealloc(this->cpus, (cpuid + 2) * sizeof(CPUData));
+/*
+         if(this->super.cpuCount < cpuid) {
+            memset(this->cpus + this->super.cpuCount + 1, 0, (cpuid - this->super.cpuCount) * sizeof(CPUData));
+         }
+*/
+         memset(this->cpus + this->super.cpuCount + 1, 0, (cpuid - this->super.cpuCount + 1) * sizeof(CPUData));
+         this->super.cpuCount = cpuid + 1;
+      }
+      CPUData *cpuData = this->cpus + cpuid + 1;
       // Since we do a subtraction (usertime - guest) and cputime64_to_clock_t()
       // used in /proc/stat rounds down numbers, it can lead to a case where the
       // integer overflow.
@@ -1031,7 +1060,10 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
    }
-   double period = (double)this->cpus[0].totalPeriod / cpus;
+   for(i = 0; i < (unsigned int)this->super.cpuCount; i++) {
+      if(offline_cpu_map[i]) memset(this->cpus + i + 1, 0, sizeof(CPUData));
+   }
+   double period = (double)this->cpus[0].totalPeriod / this->super.cpuCount;
    fclose(file);
    return period;
 }
