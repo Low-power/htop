@@ -191,7 +191,7 @@ static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpr
       return;
    }
 
-   *command = '\0';
+   **command = 0;
 
    for (i = 0; arg[i] != NULL; i++) {
       n = strlcat(*command, arg[i], len);
