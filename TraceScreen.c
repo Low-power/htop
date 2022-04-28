@@ -105,13 +105,13 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
       } else {
          char buffer[22];
          xSnprintf(buffer, sizeof(buffer), "%d", (int)this->super.process->pid);
-         execlp("strace", "strace", "-s", "512", "-p", buffer, NULL);
 #ifdef TRUSS_SUPPORT_STRING_SIZE
          execlp("truss", "truss", "-s", "512", "-p", buffer, NULL);
 #else
          execlp("truss", "truss", "-p", buffer, NULL);
 #endif
-         message = "Could not execute 'strace' or 'truss'. Please make sure it is available in your $PATH.";
+         execlp("strace", "strace", "-s", "512", "-p", buffer, NULL);
+         message = "Could not execute 'truss' or 'strace'. Please make sure it is available in your $PATH.";
       }
       ssize_t written = write(STDERR_FILENO, message, strlen(message));
       (void) written;

@@ -435,8 +435,8 @@ static const struct { const char* key; const char* info; } helpRight[] = {
 #endif
    { .key = "      e: ", .info = "show process environment" },
    { .key = "      i: ", .info = "set IO priority" },
-   { .key = "      l: ", .info = "list open files with lsof" },
-   { .key = "      s: ", .info = "trace syscalls with strace" },
+   { .key = "      l: ", .info = "list open files with lsof(8)" },
+   { .key = "      s: ", .info = "trace syscalls with truss(1) or strace(1)" },
    { .key = "         ", .info = "" },
    { .key = " F2 C S: ", .info = "setup" },
    { .key = "   F1 h: ", .info = "show this help screen" },
