@@ -29,7 +29,7 @@ in the source distribution for its full text.
 #define USE_LIBKSTAT
 #elif defined __linux__
 #define USE_SPL_KSTAT
-#elif defined BSD || defined __FreeBSD_kernel__
+#elif (defined BSD || defined __FreeBSD_kernel__) && !defined __OpenBSD__
 #define USE_SYSCTL_KSTAT
 #endif
 
