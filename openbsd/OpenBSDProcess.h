@@ -25,7 +25,7 @@ typedef struct OpenBSDProcess_ {
 #endif
 
 #ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
+#define Process_isUserlandThread(_process) (0)
 #endif
 
 

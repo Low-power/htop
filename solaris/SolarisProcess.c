@@ -204,12 +204,5 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
 
 bool Process_isThread(Process* this) {
    SolarisProcess* fp = (SolarisProcess*) this;
-
-   if (fp->kernel == 1 ) {
-      return 1;
-   } else if (fp->is_lwp) {
-      return 1;
-   } else {
-      return 0;
-   }
+   return fp->is_lwp;
 }

@@ -40,8 +40,7 @@ typedef struct DragonFlyBSDProcess_ {
 #endif
 
 #ifndef Process_isUserlandThread
-//#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#define Process_isUserlandThread(_process) (_process->nlwp > 1)
+#define Process_isUserlandThread(_process) (0)
 #endif
 
 }*/
@@ -158,10 +157,5 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
 }
 
 bool Process_isThread(Process* this) {
-   DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
-
-   if (fp->kernel == 1 )
-      return 1;
-   else
-      return (Process_isUserlandThread(this));
+	return false;
 }
