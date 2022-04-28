@@ -9,6 +9,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifndef __ANDROID__
+#endif
 #if HAVE_SETUID_ENABLED
 #endif
 

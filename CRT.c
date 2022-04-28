@@ -17,7 +17,9 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#ifndef __ANDROID__
 #include <langinfo.h>
+#endif
 #if HAVE_SETUID_ENABLED
 #include <unistd.h>
 #include <sys/types.h>
