@@ -185,32 +185,33 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
 
    unsigned long int totalFull = 0;
    unsigned long int totalRemain = 0;
+   unsigned int total_capacity = 0;
+   unsigned int battery_count = 0;
 
    for (;;) {
-      struct dirent* dirEntry = readdir((DIR *) dir);
-      if (!dirEntry)
-         break;
-      char* entryName = (char *) dirEntry->d_name;
+      struct dirent* dirEntry = readdir(dir);
+      if (!dirEntry) break;
+      const char *entryName = dirEntry->d_name;
+      if(*entryName == '.') continue;
       const char filePath[50];
-
-      if (entryName[0] == 'B' && entryName[1] == 'A' && entryName[2] == 'T') {
-         
+      xSnprintf((char *)filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
+      FILE *f = fopen(filePath, "r");
+      if(!f) continue;
+      char *line = String_readLine(f);
+      fclose(f);
+      if(!line) continue;
+      if(strcmp(line, "Battery") == 0) {
+         free(line);
          xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
          int fd = open(filePath, O_RDONLY);
-         if (fd == -1) {
-            closedir(dir);
-            return;
-         }
+         if (fd == -1) continue;
          char buffer[1024];
          ssize_t buflen = xread(fd, buffer, 1023);
          close(fd);
-         if (buflen < 1) {
-            closedir(dir);
-            return;
-         }
+         if (buflen < 1) continue;
          buffer[buflen] = '\0';
          char *buf = buffer;
-         char *line = NULL;
+         line = NULL;
          bool full = false;
          bool now = false;
          while ((line = strsep(&buf, "\n")) != NULL) {
@@ -225,6 +226,8 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                energy = match(ps, "CHARGE_");
             }
             if (!energy) {
+               const char *capacity = match(ps, "CAPACITY=");
+               if(capacity) total_capacity += atoi(capacity);
                continue;
             }
             const char* value = (!full) ? match(energy, "FULL=") : NULL;
@@ -242,34 +245,33 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
                continue;
             }
          }
+         line = NULL;
+         battery_count++;
    #undef match
-      } else if (entryName[0] == 'A') {
-         if (*isOnAC != AC_ERROR) {
-            continue;
-         }
-      
+      } else if((strcmp(line, "Mains") == 0 || strcmp(line, "USB") == 0) && *isOnAC != AC_PRESENT) {
+         free(line);
+         line = NULL;
          xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
          int fd = open(filePath, O_RDONLY);
-         if (fd == -1) {
-            closedir(dir);
-            return;
-         }
-         char buffer[2] = "";
-         for(;;) {
-            ssize_t res = read(fd, buffer, 1);
-            if (res == -1 && errno == EINTR) continue;
-            break;
-         }
+         if (fd == -1) continue;
+         char b = 0;
+         while(read(fd, &b, 1) < 0 && errno == EINTR);
          close(fd);
-         if (buffer[0] == '0') {
-            *isOnAC = AC_ABSENT;
-         } else if (buffer[0] == '1') {
-            *isOnAC = AC_PRESENT;
+         switch(b) {
+            case '0': *isOnAC = AC_ABSENT; break;
+            case '1': *isOnAC = AC_PRESENT; break;
          }
       }
+      free(line);
    }
    closedir(dir);
-   *level = totalFull > 0 ? ((double) totalRemain * 100) / (double) totalFull : 0;
+   if(totalFull > 0) {
+      *level = ((double) totalRemain * 100) / (double) totalFull;
+   } else if(battery_count > 0) {
+      *level = (double)total_capacity / (double)battery_count;
+   } else {
+      *level = 0;
+   }
 }
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Battery_method = BAT_PROC;
