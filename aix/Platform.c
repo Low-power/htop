@@ -41,8 +41,6 @@ extern int getkerninfo(int, char*, int*, int32long64_t);
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-unsigned long long avenrun [3];
-
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",    .number =  0 },
    { .name = " 1 SIGHUP",      .number =  1 },
@@ -154,6 +152,7 @@ int Platform_getUptime() {
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 #ifndef __PASE__
+   unsigned long long int avenrun[3];
    int size = sizeof (avenrun);
    if (getkerninfo(KINFO_GET_AVENRUN, (char*)avenrun, &size, 0) != -1) {
       // apply float scaling factor

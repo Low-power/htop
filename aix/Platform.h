@@ -25,8 +25,6 @@ extern int getkerninfo(int, char*, int*, int32long64_t);
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-extern unsigned long long avenrun [3];
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
