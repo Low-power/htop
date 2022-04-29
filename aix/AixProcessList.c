@@ -166,19 +166,21 @@ static void AixProcessList_scanMemoryInfo (ProcessList *pl) {
 #endif
 }
 
-static char *AixProcessList_readProcessName (struct procentry64 *pe) {
-	char argvbuf [0x100000]; // completely arbitrary
-	int i;
-	// if empty fall back
-	if (getargs (pe, sizeof (struct procentry64), argvbuf, 0x100000) == 0 && *argvbuf) {
+static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, char **command) {
+	*name = xStrdup(pe->pi_comm);
+
+	char argvbuf[256];
+	if (getargs(pe, sizeof (struct procentry64), argvbuf, sizeof argvbuf) == 0 && *argvbuf) {
 		// args are seperated by NUL, double NUL terminates
-		for (i = 0; i < 0x100000; i++) {
-			if (argvbuf [i] == '\0' && argvbuf [i + 1] != '\0')
-				argvbuf [i] = ' ';
+		unsigned int i = 0;
+		while(argvbuf[i] || argvbuf[i + 1]) {
+			if(!argvbuf[i]) argvbuf[i] = ' ';
+			if(++i >= sizeof argvbuf - 2) {
+				argvbuf[i] = 0;
+			}
 		}
-		return xStrdup (argvbuf);
+		*command = xStrdup(argvbuf);
 	}
-	return xStrdup (pe->pi_comm);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
@@ -243,7 +245,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             proc->starttime_ctime = pe->pi_start;
             proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
             ProcessList_add((ProcessList*)super, proc);
-            proc->comm = AixProcessList_readProcessName (pe);
+            AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
             // copy so localtime_r works properly
             pt = pe->pi_start;
             (void) localtime_r((time_t*) &pt, &date);
@@ -251,7 +253,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 	} else {
             if (settings->updateProcessNames) {
                 free(proc->comm);
-                proc->comm = AixProcessList_readProcessName (pe);
+                AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
             }
         }
 

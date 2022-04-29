@@ -130,10 +130,6 @@ int Platform_numberOfFields = 101;
 
 extern char Process_pidFormat[20];
 
-//ProcessPidColumn Process_pidColumns[] = {
-//   { .id = 0, .label = NULL },
-//};
-
 // identical to Solaris, thanks System V
 int Platform_getUptime() {
 #ifndef __PASE__

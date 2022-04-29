@@ -23,7 +23,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
-#include <stdbool.h>
 #include <pwd.h>
 #include <time.h>
 #include <assert.h>
@@ -51,6 +50,7 @@ in the source distribution for its full text.
 #include "Object.h"
 
 #include <sys/types.h>
+#include <stdbool.h>
 
 #define PROCESS_FLAG_IO 0x0001
 

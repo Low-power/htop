@@ -25,7 +25,7 @@ extern int getkerninfo(int, char*, int*, int32long64_t);
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-unsigned long long avenrun [3];
+extern unsigned long long avenrun [3];
 
 extern const SignalItem Platform_signals[];
 
@@ -33,21 +33,16 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern ProcessField Platform_defaultFields[];
 
-extern ProcessFieldData Process_fields[];
-
 extern MeterClass* Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
 
-extern char Process_pidFormat[20];
-
-extern //ProcessPidColumn Process_pidColumns[];
+// identical to Solaris, thanks System V
+int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
-
-int Platform_getUptime();
 
 int Platform_getMaxPid();
 

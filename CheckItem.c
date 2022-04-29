@@ -15,6 +15,8 @@ in the source distribution for its full text.
 /*{
 #include "Object.h"
 
+#include <stdbool.h>
+
 typedef struct CheckItem_ {
    Object super;
    char* text;
