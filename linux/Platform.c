@@ -131,10 +131,10 @@ MeterClass* Platform_meterTypes[] = {
 
 int Platform_getUptime() {
    double uptime = 0;
-   FILE* fd = fopen(PROCDIR "/uptime", "r");
-   if (fd) {
-      int n = fscanf(fd, "%64lf", &uptime);
-      fclose(fd);
+   FILE *f = fopen(PROCDIR "/uptime", "r");
+   if (f) {
+      int n = fscanf(f, "%64lf", &uptime);
+      fclose(f);
       if (n <= 0) return 0;
    }
    return (int) floor(uptime);
@@ -143,13 +143,13 @@ int Platform_getUptime() {
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    int activeProcs, totalProcs, lastProc;
    *one = 0; *five = 0; *fifteen = 0;
-   FILE *fd = fopen(PROCDIR "/loadavg", "r");
-   if (fd) {
-      int total = fscanf(fd, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
+   FILE *f = fopen(PROCDIR "/loadavg", "r");
+   if (f) {
+      int total = fscanf(f, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
          &activeProcs, &totalProcs, &lastProc);
       (void) total;
       assert(total == 6);
-      fclose(fd);
+      fclose(f);
    }
 }
 
@@ -214,19 +214,19 @@ void Platform_setSwapValues(Meter* this) {
 }
 
 char* Platform_getProcessEnv(pid_t pid) {
-   char procname[32+1];
-   xSnprintf(procname, 32, "/proc/%d/environ", pid);
-   FILE* fd = fopen(procname, "r");
+   char path[32];
+   xSnprintf(path, sizeof path, PROCDIR "/%d/environ", (int)pid);
+   FILE *f = fopen(path, "r");
    char *env = NULL;
-   if (fd) {
+   if (f) {
       size_t capacity = 4096, size = 0, bytes;
       env = xMalloc(capacity);
-      while (env && (bytes = fread(env+size, 1, capacity-size, fd)) > 0) {
+      while (env && (bytes = fread(env+size, 1, capacity-size, f)) > 0) {
          size += bytes;
          capacity *= 2;
          env = xRealloc(env, capacity);
       }
-      fclose(fd);
+      fclose(f);
       if (size < 2 || env[size-1] || env[size-2]) {
          if (size + 2 < capacity) {
             env = xRealloc(env, capacity+2);
