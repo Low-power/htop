@@ -26,6 +26,8 @@ in the source distribution for its full text.
 #include <procinfo.h>
 
 /*{
+#define _LARGE_FILE_API
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"

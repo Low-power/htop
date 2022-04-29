@@ -11,6 +11,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#define _LARGE_FILE_API
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"

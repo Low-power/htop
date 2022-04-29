@@ -12,9 +12,9 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-AM_CFLAGS = -pedantic -Wall $(wextra_flag) -std=c99 -D_XOPEN_SOURCE_EXTENDED -DSYSCONFDIR=\"$(sysconfdir)\" -I"$(top_srcdir)/$(my_htop_platform)"
+AM_CFLAGS = -Wall $(wextra_flag) -std=c99 -D _XOPEN_SOURCE_EXTENDED=1 -D SYSCONFDIR=\"$(sysconfdir)\" -I "$(top_srcdir)/$(my_htop_platform)"
 AM_LDFLAGS =
-AM_CPPFLAGS = -DNDEBUG
+AM_CPPFLAGS = -D NDEBUG=1
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
 ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c MainPanel.c \
