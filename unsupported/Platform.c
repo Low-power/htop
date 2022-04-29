@@ -127,7 +127,7 @@ bool Process_isThread(Process* this) {
    return false;
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(pid_t pid) {
    (void) pid;
    return NULL;
 }

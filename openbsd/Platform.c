@@ -297,20 +297,18 @@ void Platform_setTasksValues(Meter* this) {
    // TODO
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(pid_t pid) {
    char errbuf[_POSIX2_LINE_MAX];
-   char *env;
    char **ptr;
    int count;
    kvm_t *kt;
    struct kinfo_proc *kproc;
-   size_t capacity = 4096, size = 0;
 
    if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
       return NULL;
 
    if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid,
-                             sizeof(struct kinfo_proc), &count)) == NULL) {\
+                             sizeof(struct kinfo_proc), &count)) == NULL) {
       (void) kvm_close(kt);
       return NULL;
    }
@@ -320,26 +318,11 @@ char* Platform_getProcessEnv(pid_t pid) {
       return NULL;
    }
 
-   env = xMalloc(capacity);
-   for (char **p = ptr; *p; p++) {
-      size_t len = strlen(*p) + 1;
-
-      if (size + len > capacity) {
-         capacity *= 2;
-         env = xRealloc(env, capacity);
-      }
-
-      strlcpy(env + size, *p, len);
-      size += len;
-   }
-
-   if (size < 2 || env[size - 1] || env[size - 2]) {
-       if (size + 2 < capacity)
-           env = xRealloc(env, capacity + 2);
-       env[size] = 0;
-       env[size+1] = 0;
-   }
-
+   count = 0;
+   while(ptr[count]) count++;
+   char **env = xMalloc((count + 1) * sizeof(char *));
+   env[count] = NULL;
+   while(count-- > 0) env[count] = xStrdup(ptr[count]);
    (void) kvm_close(kt);
    return env;
 }

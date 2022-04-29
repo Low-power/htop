@@ -224,7 +224,7 @@ bool Process_isThread(Process* this) {
    return false;
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(pid_t pid) {
    char* buf;
    struct procentry64 pe;
    /* we only need to fill in the pid, it seems */
@@ -234,5 +234,16 @@ char* Platform_getProcessEnv(pid_t pid) {
       free (buf);
       return NULL;
    }
-   return buf;
+   char **env = xMalloc(sizeof(char *));
+   unsigned int i = 0;
+   char *p = buf;
+   while(*p) {
+      size_t len = strlen(p) + 1;
+      env[i] = xMalloc(len);
+      memcpy(env[i], p, len);
+      env = xRealloc(env, (++i + 1) * sizeof(char *));
+      p += len;
+   }
+   env[i] = NULL;
+   return env;
 }

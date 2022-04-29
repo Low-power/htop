@@ -242,53 +242,49 @@ void Platform_setSwapValues(Meter* mtr) {
   mtr->values[0] = swapused.xsu_used / 1024;
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
-   char* env = NULL;
-
+char **Platform_getProcessEnv(pid_t pid) {
+   int mib[3] = { CTL_KERN, KERN_ARGMAX };
    int argmax;
    size_t bufsz = sizeof(argmax);
-
-   int mib[3];
-   mib[0] = CTL_KERN;
-   mib[1] = KERN_ARGMAX;
-   if (sysctl(mib, 2, &argmax, &bufsz, 0, 0) == 0) {
-      char* buf = xMalloc(argmax);
-      if (buf) {
-         mib[0] = CTL_KERN;
-         mib[1] = KERN_PROCARGS2;
-         mib[2] = pid;
-         size_t bufsz = argmax;
-         if (sysctl(mib, 3, buf, &bufsz, 0, 0) == 0) {
-            if (bufsz > sizeof(int)) {
-               char *p = buf, *endp = buf + bufsz;
-               int argc = *(int*)p;
-               p += sizeof(int);
-
-               // skip exe
-               p = strchr(p, 0)+1;
-
-               // skip padding
-               while(!*p && p < endp)
-                  ++p;
-
-               // skip argv
-               for (; argc-- && p < endp; p = strrchr(p, 0)+1)
-                  ;
-
-               // skip padding
-               while(!*p && p < endp)
-                  ++p;
-
-               size_t size = endp - p;
-               env = xMalloc(size+2);
-               memcpy(env, p, size);
-               env[size] = 0;
-               env[size+1] = 0;
-            }
-         }
-         free(buf);
-      }
+   if (sysctl(mib, 2, &argmax, &bufsz, 0, 0) < 0) return NULL;
+   mib[1] = KERN_PROCARGS2;
+   mib[2] = pid;
+   char *buf = xMalloc(argmax);
+   bufsz = argmax;
+   if (sysctl(mib, 3, buf, &bufsz, 0, 0) < 0 || bufsz <= sizeof(int)) {
+      free(buf);
+      return NULL;
    }
 
+   char **env = xMalloc(sizeof(char *));
+   unsigned int i = 0;
+
+   char *p = buf, *endp = buf + bufsz;
+   int argc = *(int*)p;
+   p += sizeof(int);
+
+   // skip exe
+   p = strchr(p, 0)+1;
+
+   // skip padding
+   while(!*p && p < endp) ++p;
+
+   // skip argv
+   while(argc-- && p < endp) p = strrchr(p, 0) + 1;
+
+   // skip padding
+   while(!*p && p < endp) ++p;
+
+   while(p < endp && *p) {
+      size_t len = strlen(p) + 1;
+      env[i] = xMalloc(len);
+      memcpy(env[i], p, len);
+      env = xRealloc(env, (++i + 1) * sizeof(char *));
+      p += len;
+   }
+
+   free(buf);
+
+   env[i] = NULL;
    return env;
 }

@@ -54,6 +54,6 @@ void Platform_setSwapValues(Meter* this);
 
 bool Process_isThread(Process* this);
 
-char* Platform_getProcessEnv(pid_t pid);
+char **Platform_getProcessEnv(pid_t pid);
 
 #endif

@@ -48,6 +48,6 @@ void Platform_setMemoryValues(Meter* mtr);
 
 void Platform_setSwapValues(Meter* mtr);
 
-char* Platform_getProcessEnv(pid_t pid);
+char **Platform_getProcessEnv(pid_t pid);
 
 #endif

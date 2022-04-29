@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <vm/vm_param.h>
+#include <string.h>
 #include <time.h>
 #include <math.h>
 
@@ -201,7 +202,30 @@ void Platform_setTasksValues(Meter* this) {
    // TODO
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
-   // TODO
-   return NULL;
+char **Platform_getProcessEnv(pid_t pid) {
+#ifdef KERN_PROC_ENV
+	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ENV, pid };
+	char *buffer = xMalloc(ARG_MAX);
+	size_t len = ARG_MAX;
+	if(sysctl(mib, 4, buffer, &len, NULL, 0) < 0) {
+		free(buffer);
+		return NULL;
+	}
+	char *p = buffer;
+	char *end_p = p + len;
+	char **env = xMalloc(sizeof(char *));
+	unsigned int i = 0;
+	while(p < end_p && *p) {
+		len = strlen(p) + 1;
+		env[i] = xMalloc(len);
+		memcpy(env[i], p, len);
+		env = xRealloc(env, (++i + 1) * sizeof(char *));
+		p += len;
+	}
+	free(buffer);
+	env[i] = NULL;
+	return env;
+#else
+	return NULL;
+#endif
 }

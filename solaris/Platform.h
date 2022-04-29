@@ -24,13 +24,6 @@ in the source distribution for its full text.
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
 
-typedef struct envAccum_ {
-   size_t capacity;
-   size_t size;
-   size_t bytes; 
-   char *env;
-} envAccum;
-
 
 extern double plat_loadavg[3];
 
@@ -58,6 +51,7 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-char* Platform_getProcessEnv(pid_t pid);
+
+char **Platform_getProcessEnv(pid_t pid);
 
 #endif

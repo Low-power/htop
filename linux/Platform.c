@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "LinuxProcess.h"
-
+#include <string.h>
 #include <math.h>
 #include <assert.h>
 #include <limits.h>
@@ -213,27 +213,27 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char* Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(pid_t pid) {
    char path[32];
    xSnprintf(path, sizeof path, PROCDIR "/%d/environ", (int)pid);
    FILE *f = fopen(path, "r");
-   char *env = NULL;
-   if (f) {
-      size_t capacity = 4096, size = 0, bytes;
-      env = xMalloc(capacity);
-      while (env && (bytes = fread(env+size, 1, capacity-size, f)) > 0) {
-         size += bytes;
-         capacity *= 2;
-         env = xRealloc(env, capacity);
+   if(!f) return NULL;
+   char **env = xMalloc(sizeof(char *));
+   unsigned int i = 0;
+   char buffer[4096];
+   int c;
+   do {
+      size_t len = 0;
+      while((c = fgetc(f)) != EOF && c) {
+         if(len < sizeof buffer) buffer[len++] = c;
       }
-      fclose(f);
-      if (size < 2 || env[size-1] || env[size-2]) {
-         if (size + 2 < capacity) {
-            env = xRealloc(env, capacity+2);
-         }
-         env[size] = 0;
-         env[size+1] = 0;
-      }
-   }
+      if(!len) continue;
+      env[i] = xMalloc(len + 1);
+      memcpy(env[i], buffer, len);
+      env[i][len] = 0;
+      env = xRealloc(env, (++i + 1) * sizeof(char *));
+   } while(c != EOF);
+   fclose(f);
+   env[i] = NULL;
    return env;
 }

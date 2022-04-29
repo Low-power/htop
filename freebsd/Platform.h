@@ -46,6 +46,6 @@ void Platform_setSwapValues(Meter* this);
 
 void Platform_setTasksValues(Meter* this);
 
-char* Platform_getProcessEnv(pid_t pid);
+char **Platform_getProcessEnv(pid_t pid);
 
 #endif
