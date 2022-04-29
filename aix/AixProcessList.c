@@ -180,6 +180,8 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 			}
 		}
 		*command = xStrdup(argvbuf);
+	} else {
+		*command = xStrdup(pe->pi_comm);
 	}
 }
 
