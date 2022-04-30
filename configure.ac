@@ -16,7 +16,7 @@ AM_INIT_AUTOMAKE([1.11])
 
 # Checks for programs.
 # ----------------------------------------------------------------------
-AC_PROG_CC
+AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
 # Required by hwloc scripts
@@ -87,15 +87,6 @@ AC_FUNC_CLOSEDIR_VOID
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup])
-
-save_cflags="${CFLAGS}"
-CFLAGS="${CFLAGS} -std=c99"
-AC_MSG_CHECKING([whether gcc -std=c99 option works])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-   [AC_INCLUDES_DEFAULT], [[char *a; a = strdup("foo"); int i = 0; i++; // C99]])],
-   [AC_MSG_RESULT([yes])],
-   [AC_MSG_ERROR([htop is written in C99. A newer version of gcc is required.])])
-CFLAGS="$save_cflags"
 
 save_cflags="${CFLAGS}"
 CFLAGS="$CFLAGS -Wextra"
@@ -249,7 +240,7 @@ fi
 
 if test "$my_htop_platform" = "aix"; then
    dnl Required for vsnprintf definition
-   CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=700"
+   CPPFLAGS="$CPPFLAGS -D _XOPEN_SOURCE=700"
    dnl AIX has this, PASE does not
    AC_CHECK_LIB([perfstat], [perfstat_memory_total])
 fi
