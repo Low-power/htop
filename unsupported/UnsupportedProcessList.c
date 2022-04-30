@@ -38,7 +38,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     proc->pid  = 1;
     proc->ppid = 1;
     proc->tgid = 0;
-    proc->comm = "<unsupported>";
+    proc->name = "<unsupported>";
     proc->comm = "<unsupported architecture>";
     proc->basenameOffset = 0;
     proc->updated = true;
