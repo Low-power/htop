@@ -3,13 +3,14 @@
 #ifndef HEADER_XAlloc
 #define HEADER_XAlloc
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#include <err.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#if !defined __GNUC__ && !defined __attribute__
+#define __attribute__(A)
+#endif
+
+void __attribute__((__noreturn__)) xFail();
 
 void* xMalloc(size_t size);
 
@@ -17,7 +18,7 @@ void* xCalloc(size_t nmemb, size_t size);
 
 void* xRealloc(void* ptr, size_t size);
 
-#define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) { curs_set(1); endwin(); err(1, NULL); } } while(0)
+#define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) xFail(); } while(0)
 
 #undef xStrdup
 #undef xStrdup_
@@ -31,7 +32,7 @@ void* xRealloc(void* ptr, size_t size);
 # define __has_attribute(x) 0
 #endif
 #if (__has_attribute(nonnull) || \
-    ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)))
+    (defined __GNUC__ && ((__GNUC__ > 3) || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))))
 char* xStrdup_(const char* str) __attribute__((nonnull));
 #endif // __has_attribute(nonnull) || GNU C 3.3 or later
 
