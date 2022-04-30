@@ -279,7 +279,8 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
    proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem/(double)32768)*(double)100.0;
-   proc->st_uid             = _psinfo->pr_euid;
+   proc->ruid               = _psinfo->pr_uid;
+   proc->euid               = _psinfo->pr_euid;
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
@@ -291,7 +292,8 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc); 
-      proc->user            = UsersTable_getRef(pl->usersTable, proc->st_uid);
+      proc->real_user       = UsersTable_getRef(pl->usersTable, proc->ruid);
+      proc->effective_user  = UsersTable_getRef(pl->usersTable, proc->euid);
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
       proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);

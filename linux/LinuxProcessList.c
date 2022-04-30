@@ -396,17 +396,16 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
 }
 
 
-static bool LinuxProcessList_statProcessDir(Process* process, const char* dirname, char* name) {
-   char filename[MAX_NAME+1];
-   filename[MAX_NAME] = '\0';
-
-   xSnprintf(filename, MAX_NAME, "%s/%s", dirname, name);
-   struct stat sstat;
-   int statok = stat(filename, &sstat);
-   if (statok == -1)
-      return false;
-   process->st_uid = sstat.st_uid;
-   return true;
+static bool LinuxProcessList_getOwner(Process* process, int pid) {
+	char path[MAX_NAME];
+	xSnprintf(path, sizeof path, PROCDIR "/%d", pid);
+	struct stat st;
+	if(stat(path, &st) < 0) return false;
+	process->ruid = st.st_uid;
+	strcat(path, "/stat");
+	if(stat(path, &st) < 0) return false;
+	process->euid = st.st_uid;
+	return true;
 }
 
 #ifdef HAVE_TASKSTATS
@@ -857,10 +856,11 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
       if(!preExisting) {
 
-         if (! LinuxProcessList_statProcessDir(proc, dirname, name))
+         if (! LinuxProcessList_getOwner(proc, pid))
             goto errorReadingProcess;
 
-         proc->user = UsersTable_getRef(pl->usersTable, proc->st_uid);
+         proc->real_user = UsersTable_getRef(pl->usersTable, proc->ruid);
+         proc->effective_user = UsersTable_getRef(pl->usersTable, proc->euid);
 
          #ifdef HAVE_OPENVZ
          if (settings->flags & PROCESS_FLAG_LINUX_OPENVZ) {

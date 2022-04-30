@@ -243,9 +243,11 @@ void ProcessList_goThroughEntries(ProcessList* super) {
             proc->session = pe->pi_sid;
             proc->tty_nr = pe->pi_ttyd;
             proc->pgrp = pe->pi_pgrp;
-            proc->st_uid = pe->pi_uid;
+            proc->ruid = pe->pi_uid;
+            proc->euid = pe->pi_uid;	// XXX
+            proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
+            proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
             proc->starttime_ctime = pe->pi_start;
-            proc->user = UsersTable_getRef(super->usersTable, proc->st_uid);
             ProcessList_add((ProcessList*)super, proc);
             AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
             // copy so localtime_r works properly

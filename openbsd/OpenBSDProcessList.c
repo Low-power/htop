@@ -255,9 +255,11 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->session = kproc->p_sid;
          proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
-         proc->st_uid = kproc->p_uid;
+         proc->ruid = kproc->p_ruid;
+         proc->euid = kproc->p_uid;
+         proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+         proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->p_ustart_sec;
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
          OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);

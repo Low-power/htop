@@ -429,9 +429,11 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->session = kproc->ki_sid;
          proc->tty_nr = kproc->ki_tdev;
          proc->pgrp = kproc->ki_pgid;
-         proc->st_uid = kproc->ki_uid;
+         proc->ruid = kproc->ki_ruid;
+         proc->euid = kproc->ki_uid;
+         proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+         proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->ki_start.tv_sec;
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
          ProcessList_add((ProcessList*)this, proc);
          FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
@@ -446,10 +448,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             // if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->ki_ppid;
          }
-         if(proc->st_uid != kproc->ki_uid) {
-            // some processes change users (eg. to lower privs)
-            proc->st_uid = kproc->ki_uid;
-            proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+         // some processes change users (eg. to lower privs)
+         if(proc->ruid != kproc->ki_ruid) {
+            proc->ruid = kproc->ki_ruid;
+            proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+         }
+         if(proc->euid != kproc->ki_uid) {
+            proc->euid = kproc->ki_uid;
+            proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          }
          if (settings->updateProcessNames) {
             free(proc->name);

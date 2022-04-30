@@ -134,11 +134,8 @@ ProcessFieldData Process_fields[] = {
       .title = "  RES ",
       .description = "Resident set size, size of the text and data sections, plus stack usage",
       .flags = 0, },
-   [ST_UID] = {
-      .name = "ST_UID",
-      .title = " UID ",
-      .description = "User ID of the process owner",
-      .flags = 0, },
+   [REAL_UID] = { .name = "REAL_UID", .title = "RUID ", .description = "Real user ID", .flags = 0, },
+   [EFFECTIVE_UID] = { .name = "EFFECTIVE_UID", .title = "EUID ", .description = "Effective user ID", .flags = 0, },
    [PERCENT_CPU] = {
       .name = "PERCENT_CPU",
       .title = "CPU% ",
@@ -149,11 +146,8 @@ ProcessFieldData Process_fields[] = {
       .title = "MEM% ",
       .description = "Percentage of the memory the process is using, based on resident memory size",
       .flags = 0, },
-   [USER] = {
-      .name = "USER",
-      .title = "USER      ",
-      .description = "Username of the process owner (or user ID if name cannot be determined)",
-      .flags = 0, },
+   [REAL_USER] = { .name = "REAL_USER", .title = "REAL_USER ", .description = "Real user (or numeric user ID if name cannot be determined)", .flags = 0, },
+   [EFFECTIVE_USER] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
    [TIME] = {
       .name = "TIME",
       .title = "  TIME+  ",

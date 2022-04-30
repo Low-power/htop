@@ -310,10 +310,11 @@ void ProcessList_rebuildPanel(ProcessList* this) {
       Process* p = ProcessList_get(this, i);
 
       if ( (!p->show)
-         || (this->userId != (uid_t) -1 && (p->st_uid != this->userId))
+         || (this->userId != (uid_t) -1 && p->ruid != this->userId && p->euid != this->userId)
          || (incFilter && !(String_contains_i(p->comm, incFilter)))
-         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->tgid)) )
+         || (this->pidWhiteList && !Hashtable_get(this->pidWhiteList, p->tgid)) ) {
          hidden = true;
+      }
 
       if (!hidden) {
          Panel_set(this->panel, idx, (Object*)p);

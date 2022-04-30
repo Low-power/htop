@@ -448,10 +448,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->pgrp = kproc->kp_pgid;		// process group id
          proc->session = kproc->kp_sid;
          proc->tty_nr = kproc->kp_tdev;		// control terminal device number
-         proc->st_uid = kproc->kp_uid;		// user ID
+         proc->ruid = kproc->kp_ruid;		// real user ID
+         proc->euid = kproc->kp_uid;		// effective user ID
          proc->processor = kproc->kp_lwp.kl_origcpu;
+         proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+         proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->kp_start.tv_sec;
-         proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
 
          ProcessList_add((ProcessList*)this, proc);
          DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
@@ -466,9 +468,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if (proc->ppid != kproc->kp_ppid) {	// if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->kp_ppid;
          }
-         if(proc->st_uid != kproc->kp_uid) {	// some processes change users (eg. to lower privs)
-            proc->st_uid = kproc->kp_uid;
-            proc->user = UsersTable_getRef(this->usersTable, proc->st_uid);
+         // some processes change users (eg. to lower privs)
+         if(proc->ruid != kproc->kp_ruid) {
+            proc->ruid = kproc->kp_ruid;
+            proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+         }
+         if(proc->euid != kproc->kp_uid) {
+            proc->euid = kproc->kp_uid;
+            proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          }
          if (settings->updateProcessNames) {
             free(proc->name);

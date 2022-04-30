@@ -213,7 +213,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        super->totalTasks += 1;
 
        if(!preExisting) {
-           proc->super.user = UsersTable_getRef(super->usersTable, proc->super.st_uid);
+           proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);
+           proc->super.effective_user = UsersTable_getRef(super->usersTable, proc->super.euid);
 
            ProcessList_add(super, &proc->super);
        }

@@ -72,13 +72,15 @@ typedef enum ProcessFields {
    PROCESSOR = 38,
    M_SIZE = 39,
    M_RESIDENT = 40,
-   ST_UID = 46,
+   EFFECTIVE_UID = 46,
    PERCENT_CPU = 47,
    PERCENT_MEM = 48,
-   USER = 49,
+   EFFECTIVE_USER = 49,
    TIME = 50,
    NLWP = 51,
    TGID = 52,
+   REAL_UID = 53,
+   REAL_USER = 54,
    COMM = 99
 } ProcessField;
 
@@ -112,13 +114,16 @@ typedef struct Process_ {
    unsigned int session;
    unsigned int tty_nr;
    int tpgid;
-   uid_t st_uid;
+   uid_t ruid;
+   uid_t euid;
    unsigned long int flags;
    int processor;
 
    float percent_cpu;
    float percent_mem;
-   char* user;
+
+   char *real_user;
+   char *effective_user;
 
    long int priority;
    long int nice;
@@ -476,27 +481,35 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
-   case ST_UID: xSnprintf(buffer, n, "%4d ", this->st_uid); break;
+   case REAL_UID: xSnprintf(buffer, n, "%4d ", this->ruid); break;
+   case EFFECTIVE_UID: xSnprintf(buffer, n, "%4d ", this->euid); break;
    case TIME: Process_printTime(str, this->time); return;
    case TGID: xSnprintf(buffer, n, Process_pidFormat, this->tgid); break;
    case TPGID: xSnprintf(buffer, n, Process_pidFormat, this->tpgid); break;
    case TTY_NR:
       xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
       break;
-   case USER: {
-      if (Process_getuid != (int) this->st_uid)
-         attr = CRT_colors[PROCESS_SHADOW];
-      if (this->user) {
-         xSnprintf(buffer, n, "%-9s ", this->user);
+   case REAL_USER:
+      if (Process_getuid != (int) this->ruid) attr = CRT_colors[PROCESS_SHADOW];
+      if (this->real_user) {
+         xSnprintf(buffer, n, "%-9s ", this->real_user);
       } else {
-         xSnprintf(buffer, n, "%-9d ", this->st_uid);
+         xSnprintf(buffer, n, "%-9d ", this->ruid);
       }
+      goto user_end;
+   case EFFECTIVE_USER:
+      if (Process_getuid != (int) this->euid) attr = CRT_colors[PROCESS_SHADOW];
+      if (this->effective_user) {
+         xSnprintf(buffer, n, "%-9s ", this->effective_user);
+      } else {
+         xSnprintf(buffer, n, "%-9d ", this->euid);
+      }
+   user_end:
       if (buffer[9] != '\0') {
          buffer[9] = ' ';
          buffer[10] = '\0';
       }
       break;
-   }
    default:
       xSnprintf(buffer, n, "- ");
    }
@@ -507,12 +520,15 @@ void Process_display(Object* cast, RichString* out) {
    Process* this = (Process*) cast;
    ProcessField* fields = this->settings->fields;
    RichString_prune(out);
-   for (int i = 0; fields[i]; i++)
+   for (int i = 0; fields[i]; i++) {
       As_Process(this)->writeField(this, out, fields[i]);
-   if (this->settings->shadowOtherUsers && (int)this->st_uid != Process_getuid)
+   }
+   if (this->settings->shadowOtherUsers && (int)this->ruid != Process_getuid && (int)this->euid != Process_getuid) {
       RichString_setAttr(out, CRT_colors[PROCESS_SHADOW]);
-   if (this->tag == true)
+   }
+   if (this->tag) {
       RichString_setAttr(out, CRT_colors[PROCESS_TAG]);
+   }
    assert(out->chlen > 0);
 }
 
@@ -624,8 +640,10 @@ long Process_compare(const void* v1, const void* v2) {
    }
    case STATE:
       return (Process_sortState(p1->state) - Process_sortState(p2->state));
-   case ST_UID:
-      return (p1->st_uid - p2->st_uid);
+   case REAL_UID:
+      return (p1->ruid - p2->ruid);
+   case EFFECTIVE_UID:
+      return (p1->euid - p2->euid);
    case TIME:
       return ((p2->time) - (p1->time));
    case TGID:
@@ -634,8 +652,12 @@ long Process_compare(const void* v1, const void* v2) {
       return (p1->tpgid - p2->tpgid);
    case TTY_NR:
       return (p1->tty_nr - p2->tty_nr);
-   case USER:
-      return strcmp(p1->user ? p1->user : "", p2->user ? p2->user : "");
+   case REAL_USER:
+      if(!p1->real_user && !p2->real_user) return p1->ruid - p2->ruid;
+      return strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
+   case EFFECTIVE_USER:
+      if(!p1->effective_user && !p2->effective_user) return p1->euid - p2->euid;
+      return strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
    default:
       return (p1->pid - p2->pid);
    }

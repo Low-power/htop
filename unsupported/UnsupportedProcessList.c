@@ -49,13 +49,15 @@ void ProcessList_goThroughEntries(ProcessList* super) {
     proc->session = 0;
     proc->tty_nr = 0;
     proc->tpgid = 0;
-    proc->st_uid = 0;
+    proc->ruid = 0;
+    proc->euid = 0;
     proc->flags = 0;
     proc->processor = 0;
 
     proc->percent_cpu = 2.5;
     proc->percent_mem = 2.5;
-    proc->user = "nobody";
+    proc->real_user = "nobody";
+    proc->effective_user = "nobody";
 
     proc->priority = 0;
     proc->nice = 0;

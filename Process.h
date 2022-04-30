@@ -51,13 +51,15 @@ typedef enum ProcessFields {
    PROCESSOR = 38,
    M_SIZE = 39,
    M_RESIDENT = 40,
-   ST_UID = 46,
+   EFFECTIVE_UID = 46,
    PERCENT_CPU = 47,
    PERCENT_MEM = 48,
-   USER = 49,
+   EFFECTIVE_USER = 49,
    TIME = 50,
    NLWP = 51,
    TGID = 52,
+   REAL_UID = 53,
+   REAL_USER = 54,
    COMM = 99
 } ProcessField;
 
@@ -91,13 +93,16 @@ typedef struct Process_ {
    unsigned int session;
    unsigned int tty_nr;
    int tpgid;
-   uid_t st_uid;
+   uid_t ruid;
+   uid_t euid;
    unsigned long int flags;
    int processor;
 
    float percent_cpu;
    float percent_mem;
-   char* user;
+
+   char *real_user;
+   char *effective_user;
 
    long int priority;
    long int nice;
