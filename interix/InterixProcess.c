@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "InterixProcess.h"
 #include "CRT.h"
+#include <string.h>
 #include <stdlib.h>
 
 /*{
