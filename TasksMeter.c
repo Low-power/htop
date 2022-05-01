@@ -22,7 +22,7 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    ProcessList* pl = this->pl;
    this->values[0] = pl->totalTasks;
    this->values[1] = pl->thread_count > pl->totalTasks ? pl->thread_count : 0;
-   if (this->pl->settings->hideKernelThreads) {
+   if (this->pl->settings->hide_kernel_processes) {
       this->values[2] = 0;
       this->values[3] = 0;
    } else {
@@ -51,13 +51,13 @@ static void TasksMeter_display(Object* cast, RichString* out) {
       threadValueColor = CRT_colors[METER_VALUE];
       threadCaptionColor = CRT_colors[METER_TEXT];
    }
-   if (!settings->hideUserlandThreads && this->values[1] > 0) {
+   if (!settings->hide_thread_processes && this->values[1] > 0) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " thr");
    }
-   if (!settings->hideKernelThreads) {
+   if (!settings->hide_kernel_processes) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[2]);
       RichString_append(out, CRT_colors[METER_VALUE], buffer);

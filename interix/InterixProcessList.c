@@ -217,7 +217,7 @@ try_stat:
 			total_time_delta += i_proc->time_delta;
 		}
 		proc->time = t;
-		proc->show = !this->settings->hideKernelThreads || !Process_isKernelProcess(i_proc);
+		proc->show = !this->settings->hide_kernel_processes || !Process_isKernelProcess(i_proc);
 		proc->updated = true;
 		if(!is_existing) ProcessList_add(this, proc);
 		this->totalTasks++;

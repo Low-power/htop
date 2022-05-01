@@ -218,13 +218,13 @@ static Htop_Reaction actionSortByTime(State* st) {
 }
 
 static Htop_Reaction actionToggleKernelThreads(State* st) {
-   st->settings->hideKernelThreads = !st->settings->hideKernelThreads;
+   st->settings->hide_kernel_processes = !st->settings->hide_kernel_processes;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
 static Htop_Reaction actionToggleUserlandThreads(State* st) {
-   st->settings->hideUserlandThreads = !st->settings->hideUserlandThreads;
-   st->settings->hideThreads = st->settings->hideUserlandThreads;
+   st->settings->hide_thread_processes = !st->settings->hide_thread_processes;
+   st->settings->hideThreads = st->settings->hide_thread_processes;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
@@ -413,8 +413,8 @@ static const struct { const char* key; const char* info; } helpLeft[] = {
    { .key = "   F5 t: ", .info = "tree view" },
    { .key = "      p: ", .info = "toggle program path" },
    { .key = "      u: ", .info = "show processes of a single user" },
-   { .key = "      H: ", .info = "hide/show user process threads" },
-   { .key = "      K: ", .info = "hide/show kernel threads" },
+   { .key = "      H: ", .info = "hide/show thread processes" },
+   { .key = "      K: ", .info = "hide/show kernel processes" },
    { .key = "      F: ", .info = "cursor follows process" },
    { .key = " F6 + -: ", .info = "expand/collapse tree" },
    { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
@@ -518,8 +518,7 @@ static Htop_Reaction actionHelp(State* st) {
    for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
    for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
    attrset(CRT_colors[PROCESS_THREAD]);
-   mvaddstr(16, 32, "threads");
-   mvaddstr(17, 26, "threads");
+   mvaddstr(16, 19, "thread");
    attrset(CRT_colors[DEFAULT_COLOR]);
 
    attrset(CRT_colors[HELP_BOLD]);

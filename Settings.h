@@ -22,7 +22,6 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
-   
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -41,8 +40,8 @@ typedef struct Settings_ {
    bool hideThreads;
    bool shadowOtherUsers;
    bool showThreadNames;
-   bool hideKernelThreads;
-   bool hideUserlandThreads;
+   bool hide_kernel_processes;
+   bool hide_thread_processes;
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;

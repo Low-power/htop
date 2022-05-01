@@ -219,8 +219,8 @@ static double getpcpu(const struct kinfo_proc *kp) {
 void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
    Settings* settings = this->settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
+   bool hide_kernel_processes = settings->hide_kernel_processes;
+   bool hide_thread_processes = settings->hide_thread_processes;
    struct kinfo_proc* kproc;
    bool preExisting;
    Process* proc;
@@ -245,8 +245,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc = ProcessList_getProcess(this, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
       fp = (OpenBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(proc))
-                  || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hide_kernel_processes && Process_isKernelProcess(proc))
+                  || (hide_thread_processes && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
          proc->ppid = kproc->p_ppid;

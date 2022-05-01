@@ -187,9 +187,7 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 
 void ProcessList_goThroughEntries(ProcessList* super) {
 	AixProcessList* apl = (AixProcessList*)super;
-	Settings* settings = super->settings;
-	bool hideKernelThreads = settings->hideKernelThreads;
-	bool hideUserlandThreads = settings->hideUserlandThreads;
+	bool hide_kernel_processes = super->settings->hide_kernel_processes;
 	bool preExisting;
 	Process *proc;
 	AixProcess *ap;
@@ -231,8 +229,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
 		ap = (AixProcess*) proc;
 
-		proc->show = ! ((hideKernelThreads && Process_isKernelProcess(ap))
-				|| (hideUserlandThreads && Process_isUserlandThread(ap)));
+		proc->show = !(hide_kernel_processes && Process_isKernelProcess(ap));
 
 		if (!preExisting) {
 			ap->kernel = pe->pi_flags & SKPROC ? 1 : 0;
@@ -255,7 +252,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			(void) localtime_r((time_t*) &pt, &date);
 			strftime(proc->starttime_show, 7, ((proc->starttime_ctime > t - 86400) || 0 ? "%R " : "%b%d "), &date);
 		} else {
-			if (settings->updateProcessNames) {
+			if (super->settings->updateProcessNames) {
 				free(proc->comm);
 				AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
 			}

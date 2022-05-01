@@ -396,9 +396,7 @@ static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
 
 void ProcessList_goThroughEntries(ProcessList* this) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
-   Settings* settings = this->settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
+   bool hide_kernel_processes = this->settings->hide_kernel_processes;
 
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
@@ -414,7 +412,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = !(hide_kernel_processes && Process_isKernelProcess(fp));
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
@@ -457,7 +455,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->euid = kproc->ki_uid;
             proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          }
-         if (settings->updateProcessNames) {
+         if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
             FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);

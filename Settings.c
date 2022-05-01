@@ -31,7 +31,6 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
-   
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -50,8 +49,8 @@ typedef struct Settings_ {
    bool hideThreads;
    bool shadowOtherUsers;
    bool showThreadNames;
-   bool hideKernelThreads;
-   bool hideUserlandThreads;
+   bool hide_kernel_processes;
+   bool hide_thread_processes;
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;
@@ -114,7 +113,6 @@ static void Settings_defaultMeters(Settings* this) {
       this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->columns[i].len = sizes[i];
    }
-   
    int r = 0;
    if (this->cpuCount > 8) {
       this->columns[0].names[0] = xStrdup("LeftCPUs2");
@@ -134,7 +132,6 @@ static void Settings_defaultMeters(Settings* this) {
    this->columns[0].modes[1] = BAR_METERMODE;
    this->columns[0].names[2] = xStrdup("Swap");
    this->columns[0].modes[2] = BAR_METERMODE;
-   
    this->columns[1].names[r] = xStrdup("Tasks");
    this->columns[1].modes[r++] = TEXT_METERMODE;
    this->columns[1].names[r] = xStrdup("LoadAverage");
@@ -168,7 +165,6 @@ static bool Settings_read(Settings* this, const char* fileName) {
    FILE *f = fopen(fileName, "r");
    CRT_restorePrivileges();
    if (!f) return false;
-   
    bool didReadMeters = false;
    bool didReadFields = false;
    for (;;) {
@@ -195,10 +191,10 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->treeView = atoi(option[1]);
       } else if (String_eq(option[0], "hide_threads")) {
          this->hideThreads = atoi(option[1]);
-      } else if (String_eq(option[0], "hide_kernel_threads")) {
-         this->hideKernelThreads = atoi(option[1]);
-      } else if (String_eq(option[0], "hide_userland_threads")) {
-         this->hideUserlandThreads = atoi(option[1]);
+      } else if (String_eq(option[0], "hide_kernel_processes") || String_eq(option[0], "hide_kernel_threads")) {
+         this->hide_kernel_processes = atoi(option[1]);
+      } else if (String_eq(option[0], "hide_thread_processes") || String_eq(option[0], "hide_userland_threads")) {
+         this->hide_thread_processes = atoi(option[1]);
       } else if (String_eq(option[0], "shadow_other_users")) {
          this->shadowOtherUsers = atoi(option[1]);
       } else if (String_eq(option[0], "show_thread_names")) {
@@ -295,8 +291,8 @@ bool Settings_write(Settings* this) {
    fprintf(f, "sort_key=%d\n", (int) this->sortKey-1);
    fprintf(f, "sort_direction=%d\n", (int) this->direction);
    fprintf(f, "hide_threads=%d\n", (int) this->hideThreads);
-   fprintf(f, "hide_kernel_threads=%d\n", (int) this->hideKernelThreads);
-   fprintf(f, "hide_userland_threads=%d\n", (int) this->hideUserlandThreads);
+   fprintf(f, "hide_kernel_processes=%d\n", (int) this->hide_kernel_processes);
+   fprintf(f, "hide_thread_processes=%d\n", (int) this->hide_thread_processes);
    fprintf(f, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
    fprintf(f, "show_thread_names=%d\n", (int) this->showThreadNames);
    fprintf(f, "show_program_path=%d\n", (int) this->showProgramPath);
@@ -320,7 +316,6 @@ bool Settings_write(Settings* this) {
 }
 
 Settings* Settings_new(int cpuCount) {
-  
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = PERCENT_CPU;
@@ -328,8 +323,8 @@ Settings* Settings_new(int cpuCount) {
    this->hideThreads = false;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
-   this->hideKernelThreads = false;
-   this->hideUserlandThreads = false;
+   this->hide_kernel_processes = false;
+   this->hide_thread_processes = false;
    this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;
@@ -339,7 +334,6 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
-   
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).
@@ -370,7 +364,6 @@ Settings* Settings_new(int cpuCount) {
          htopDir = String_cat(home, "/.config/htop");
       }
       legacyDotfile = String_cat(home, "/.htoprc");
-      
       CRT_dropPrivileges();
       (void) mkdir(configDir, 0700);
       (void) mkdir(htopDir, 0700);
@@ -409,7 +402,7 @@ Settings* Settings_new(int cpuCount) {
    }
    if (!ok) {
       Settings_defaultMeters(this);
-      this->hideKernelThreads = true;
+      this->hide_kernel_processes = true;
       this->highlightMegabytes = true;
       this->highlightThreads = true;
       this->headerMargin = true;

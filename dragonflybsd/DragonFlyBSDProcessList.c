@@ -407,9 +407,6 @@ static char *DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl,
 
 void ProcessList_goThroughEntries(ProcessList* this) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
-   Settings* settings = this->settings;
-   bool hideKernelThreads = settings->hideKernelThreads;
-   bool hideUserlandThreads = settings->hideUserlandThreads;
 
    DragonFlyBSDProcessList_scanMemoryInfo(this);
    DragonFlyBSDProcessList_scanCPUTime(this);
@@ -418,7 +415,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    int count = 0;
 
    // TODO Kernel Threads seem to be skipped, need to figure out the correct flag
-   struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL | (!hideUserlandThreads ? KERN_PROC_FLAG_LWP : 0), 0, &count);
+   struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL, 0, &count);
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
@@ -429,7 +426,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(dfp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = !(this->settings->hide_kernel_processes && Process_isKernelProcess(dfp));
 
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
@@ -477,7 +474,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->euid = kproc->kp_uid;
             proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          }
-         if (settings->updateProcessNames) {
+         if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
             DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
