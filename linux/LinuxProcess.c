@@ -329,7 +329,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   int n = sizeof(buffer);
    switch ((int)field) {
    case TTY_NR: {
       if (lp->ttyDevice) {

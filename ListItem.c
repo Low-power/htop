@@ -38,7 +38,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    assert (this != NULL);
    /*
    int len = strlen(this->value)+1;
-   char buffer[len+1];
+   char buffer[len];
    xSnprintf(buffer, len, "%s", this->value);
    */
    if (this->moving) {

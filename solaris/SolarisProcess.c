@@ -144,7 +144,7 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    SolarisProcess* sp = (SolarisProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   int n = sizeof(buffer);
    switch ((int) field) {
    // add Solaris-specific fields here
    case ZONEID: xSnprintf(buffer, n, Process_pidFormat, sp->zoneid); break;

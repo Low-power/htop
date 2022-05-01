@@ -117,7 +117,7 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
    DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   int n = sizeof(buffer);
    switch ((int) field) {
    // add Platform-specific fields here
    case PID: xSnprintf(buffer, n, Process_pidFormat, (fp->kernel ? -1 : this->pid)); break;
