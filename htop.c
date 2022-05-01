@@ -18,7 +18,7 @@ in the source distribution for its full text.
 #include "UsersTable.h"
 #include "Platform.h"
 
-#ifdef HAVE_GETOPT_H
+#if defined HAVE_GETOPT_H && defined HAVE_GETOPT_LONG
 #include <getopt.h>
 #endif
 #include <locale.h>
@@ -78,7 +78,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .treeView = false,
    };
 
-#ifdef HAVE_GETOPT_H
+#ifdef HAVE_GETOPT_LONG
    static struct option long_opts[] =
    {
       {"help",     no_argument,         0, 'h'},
@@ -92,18 +92,15 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {"pid",      required_argument,   0, 'p'},
       {0,0,0,0}
    };
-
-   int opt, opti=0;
-#else
-   int opt;
 #endif
    /* Parse arguments */
-#ifdef HAVE_GETOPT_H
-   while ((opt = getopt_long(argc, argv, "hvCs:td:u:p:", long_opts, &opti))) {
+   while(true) {
+#ifdef HAVE_GETOPT_LONG
+      int opt = getopt_long(argc, argv, "hvCs:td:u:p:", long_opts, NULL);
 #else
-   while ((opt = getopt(argc, argv, "hvCs:td:u:p:"))) {
+      int opt = getopt(argc, argv, "hvCs:td:u:p:");
 #endif
-      if (opt == EOF) break;
+      if (opt == -1) break;
       switch (opt) {
          case 'h':
             printHelpFlag();
@@ -162,7 +159,10 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             break;
          }
          default:
-            exit(1);
+#ifdef __ANDROID__
+            fputc('\n', stderr);
+#endif
+            exit(-1);
       }
    }
    return flags;

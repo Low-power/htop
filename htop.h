@@ -9,7 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_GETOPT_H
+#if defined HAVE_GETOPT_H && defined HAVE_GETOPT_LONG
 #endif
 
 //#link m
