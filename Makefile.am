@@ -198,6 +198,30 @@ myhtopplatsources = \
 myhtopplatheaders = $(interix_platform_headers)
 endif
 
+# Cygwin
+# ------
+
+cygwin_platform_headers = \
+	cygwin/Platform.h \
+	cygwin/IOPriorityPanel.h \
+	cygwin/IOPriority.h \
+	cygwin/LinuxProcess.h \
+	cygwin/LinuxProcessList.h \
+	cygwin/Battery.h
+all_platform_headers += $(cygwin_platform_headers)
+
+if HTOP_CYGWIN
+myhtopplatsources = \
+	cygwin/Platform.c \
+	cygwin/IOPriorityPanel.c \
+	cygwin/IOPriority.c \
+	cygwin/LinuxProcess.c \
+	cygwin/LinuxProcessList.c \
+	cygwin/Battery.c \
+	unsupported/UnsupportedCRT.c
+myhtopplatheaders = $(cygwin_platform_headers)
+endif
+
 # Unsupported
 # -----------
 

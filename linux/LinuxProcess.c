@@ -14,7 +14,9 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#ifdef __linux__
 #include <sys/syscall.h>
+#endif
 #include <time.h>
 
 /*{

@@ -49,6 +49,9 @@ aix*|os400*)
 interix*)
    my_htop_platform=interix
    ;;
+cygwin)
+   my_htop_platform=cygwin
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
@@ -330,6 +333,7 @@ AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_AIX], [test "$my_htop_platform" = aix])
 AM_CONDITIONAL([HTOP_INTERIX], [test "$my_htop_platform" = interix])
+AM_CONDITIONAL([HTOP_CYGWIN], [test "$my_htop_platform" = cygwin])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
