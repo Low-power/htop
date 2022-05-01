@@ -153,7 +153,7 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
          }
       }
       doSearch = false;
-   } else if (ch < 255 && isprint((char)ch)) {
+   } else if (ch < 255 && isprint(ch)) {
       if (mode->index < INCMODE_MAX) {
          mode->buffer[mode->index] = ch;
          mode->index++;
