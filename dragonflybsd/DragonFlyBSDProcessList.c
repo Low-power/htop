@@ -571,14 +571,16 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (kproc->kp_flags & P_JAILED) {
          proc->state = 'J';
       }
-      
-      if (Process_isKernelProcess(dfp)) {
-         this->kernelThreads++;
-      }
-
       this->totalTasks++;
-      if (proc->state == 'R')
-         this->runningTasks++;
+      this->thread_count += proc->nlwp;
+      if (Process_isKernelProcess(dfp)) {
+         this->kernel_process_count++;
+         this->kernel_thread_count += proc->nlwp;
+      }
+      if (proc->state == 'R') {
+         this->running_process_count++;
+         this->running_thread_count++;
+      }
       proc->updated = true;
    }
 }

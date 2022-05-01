@@ -145,10 +145,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    /* Initialize the VM statistics */
    ProcessList_getVMStats(&this->vm_stats);
 
-   this->super.kernelThreads = 0;
-   this->super.userlandThreads = 0;
    this->super.totalTasks = 0;
-   this->super.runningTasks = 0;
+   this->super.thread_count = 0;
+   this->super.kernel_process_count = 0;
+   this->super.kernel_thread_count = 0;
+   this->super.running_thread_count = 0;
 
    return &this->super;
 }
@@ -182,12 +183,6 @@ void ProcessList_goThroughEntries(ProcessList* super) {
         }
     }
 
-    /* Clear the thread counts */
-    super->kernelThreads = 0;
-    super->userlandThreads = 0;
-    super->totalTasks = 0;
-    super->runningTasks = 0;
-
     /* We use kinfo_procs for initial data since :
      *
      * 1) They always succeed.
@@ -209,8 +204,6 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        if (isScanThreadSupported){
            DarwinProcess_scanThreads(proc);
        }
-
-       super->totalTasks += 1;
 
        if(!preExisting) {
            proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);

@@ -895,15 +895,16 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
                goto errorReadingProcess;
          }
          if (Process_isKernelProcess(proc)) {
-            pl->kernelThreads++;
-         } else {
-            pl->userlandThreads++;
+            pl->kernel_process_count++;
+            pl->kernel_thread_count++;
          }
       }
-
       pl->totalTasks++;
-      if (proc->state == 'R')
-         pl->runningTasks++;
+      pl->thread_count++;
+      if (proc->state == 'R') {
+         pl->running_process_count++;
+         pl->running_thread_count++;
+      }
       proc->updated = true;
       continue;
 

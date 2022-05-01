@@ -294,14 +294,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          default:      proc->state = '?';
       }
 
+      this->totalTasks++;
+      this->thread_count += proc->nlwp;
       if (Process_isKernelProcess(proc)) {
-         this->kernelThreads++;
+         this->kernel_process_count++;
+         this->kernel_thread_count++;
       }
 
-      this->totalTasks++;
       // SRUN ('R') means runnable, not running
       if (proc->state == 'P') {
-         this->runningTasks++;
+         this->running_process_count++;
+         this->running_thread_count++;
       }
       proc->updated = true;
    }

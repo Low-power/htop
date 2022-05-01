@@ -289,10 +289,12 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
       proc->stime = pti.pti_total_system;
       proc->utime = pti.pti_total_user;
 
-      dpl->super.kernelThreads += 0; /*pti.pti_threads_system;*/
-      dpl->super.userlandThreads += pti.pti_threadnum; /*pti.pti_threads_user;*/
-      dpl->super.totalTasks += pti.pti_threadnum;
-      dpl->super.runningTasks += pti.pti_numrunning;
+      dpl->super.totalTasks++;
+      dpl->super.thread_count += pti.pti_threadnum;
+      dpl->super.kernel_process_count += 0; /*pti.pti_threads_system;*/
+      //dpl->super.kernel_thread_count;
+      dpl->super.running_process_count++;
+      dpl->super.running_thread_count += pti.pti_numrunning;
    }
 }
 

@@ -314,19 +314,13 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       }
 
       // Update proc and thread counts based on settings
-      if (sproc->kernel && !pl->settings->hideKernelThreads) {
-         pl->kernelThreads += proc->nlwp;
-         pl->totalTasks += proc->nlwp+1;
-         if (proc->state == 'O') pl->runningTasks++;
-      } else if (!sproc->kernel) {
-         if (proc->state == 'O') pl->runningTasks++;
-         if (pl->settings->hideUserlandThreads) {
-            pl->totalTasks++;
-         } else {
-            pl->userlandThreads += proc->nlwp;
-            pl->totalTasks += proc->nlwp+1;
-         }
+      pl->totalTasks++;
+      pl->thread_count += proc->nlwp;
+      if (sproc->kernel) {
+	 pl->kernel_process_count++;
+         pl->kernel_thread_count += proc->nlwp;
       }
+      if (proc->state == 'O') pl->running_process_count++;
       proc->show = !(pl->settings->hideKernelThreads && sproc->kernel);
    } else { // We are not in the master LWP, so jump to the LWP handling code
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768)*(double)100.0;
@@ -343,6 +337,8 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
       // Top-level process only gets this for the representative LWP
       if (sproc->kernel  && !pl->settings->hideKernelThreads)   proc->show = true;
       if (!sproc->kernel && !pl->settings->hideUserlandThreads) proc->show = true;
+
+      if (proc->state == 'O') pl->running_thread_count++;
    } // Top-level LWP or subordinate LWP
 
    // Common code pass 2
@@ -367,7 +363,7 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
 void ProcessList_goThroughEntries(ProcessList* this) {
    SolarisProcessList_scanCPUTime(this);
    SolarisProcessList_scanMemoryInfo(this);
-   this->kernelThreads = 1;
+   this->kernel_process_count = 1;
    proc_walk(&SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }
 

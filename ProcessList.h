@@ -49,9 +49,11 @@ typedef struct ProcessList_ {
    #endif
 
    int totalTasks;
-   int runningTasks;
-   int userlandThreads;
-   int kernelThreads;
+   int thread_count;
+   int kernel_process_count;
+   int kernel_thread_count;
+   int running_process_count;
+   int running_thread_count;
 
    unsigned long long int totalMem;
    unsigned long long int usedMem;

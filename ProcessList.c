@@ -55,9 +55,11 @@ typedef struct ProcessList_ {
    #endif
 
    int totalTasks;
-   int runningTasks;
-   int userlandThreads;
-   int kernelThreads;
+   int thread_count;
+   int kernel_process_count;
+   int kernel_thread_count;
+   int running_process_count;
+   int running_thread_count;
 
    unsigned long long int totalMem;
    unsigned long long int usedMem;
@@ -360,9 +362,11 @@ void ProcessList_scan(ProcessList* this) {
    }
 
    this->totalTasks = 0;
-   this->userlandThreads = 0;
-   this->kernelThreads = 0;
-   this->runningTasks = 0;
+   this->thread_count = 0;
+   this->kernel_process_count = 0;
+   this->kernel_thread_count = 0;
+   this->running_process_count = 0;
+   this->running_thread_count = 0;
 
    ProcessList_goThroughEntries(this);
    read_zfs_arc_size(this);
