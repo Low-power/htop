@@ -479,11 +479,11 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
-   case REAL_UID: xSnprintf(buffer, n, "%4d ", this->ruid); break;
-   case EFFECTIVE_UID: xSnprintf(buffer, n, "%4d ", this->euid); break;
+   case REAL_UID: xSnprintf(buffer, n, "%4d ", (int)this->ruid); break;
+   case EFFECTIVE_UID: xSnprintf(buffer, n, "%4d ", (int)this->euid); break;
    case TIME: Process_printTime(str, this->time); return;
-   case TGID: xSnprintf(buffer, n, Process_pidFormat, this->tgid); break;
-   case TPGID: xSnprintf(buffer, n, Process_pidFormat, this->tpgid); break;
+   case TGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid); break;
+   case TPGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid); break;
    case TTY_NR:
       xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
       break;
@@ -492,7 +492,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       if (this->real_user) {
          xSnprintf(buffer, n, "%-9s ", this->real_user);
       } else {
-         xSnprintf(buffer, n, "%-9d ", this->ruid);
+         xSnprintf(buffer, n, "%-9d ", (int)this->ruid);
       }
       goto user_end;
    case EFFECTIVE_USER:
@@ -500,7 +500,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       if (this->effective_user) {
          xSnprintf(buffer, n, "%-9s ", this->effective_user);
       } else {
-         xSnprintf(buffer, n, "%-9d ", this->euid);
+         xSnprintf(buffer, n, "%-9d ", (int)this->euid);
       }
    user_end:
       if (buffer[9] != '\0') {
