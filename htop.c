@@ -169,6 +169,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 }
 
 static void millisleep(unsigned long millisec) {
+#ifdef HAVE_NANOSLEEP
    struct timespec req = {
       .tv_sec = 0,
       .tv_nsec = millisec * 1000000L
@@ -176,6 +177,12 @@ static void millisleep(unsigned long millisec) {
    while(nanosleep(&req,&req)==-1) {
       continue;
    }
+#else
+	unsigned int sec = millisec / 1000;
+	if(sec) sleep(sec);
+	millisec %= 1000;
+	usleep(millisec);
+#endif
 }
 
 int main(int argc, char** argv) {

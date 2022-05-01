@@ -5,8 +5,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Meter.h"
-
 #include "RichString.h"
 #include "Object.h"
 #include "CRT.h"
@@ -119,6 +119,16 @@ typedef struct GraphData_ {
 #endif
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
+#endif
+
+#ifndef HAVE_LROUND
+static long int lround(double v) {
+	long int n = v;
+	v -= (double)n;
+	if(v < -0.5) n--;
+	else if(v > 0.5) n++;
+	return n;
+}
 #endif
 
 MeterClass Meter_class = {

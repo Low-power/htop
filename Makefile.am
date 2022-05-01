@@ -178,6 +178,26 @@ aix/AixCRT.c aix/Battery.c
 myhtopplatheaders = $(aix_platform_headers)
 endif
 
+# Interix
+# -------
+
+interix_platform_headers = \
+	interix/Platform.h \
+	interix/InterixProcess.h \
+	interix/Battery.h
+
+all_platform_headers += $(interix_platform_headers)
+
+if HTOP_INTERIX
+myhtopplatsources = \
+	interix/Platform.c \
+	interix/InterixProcess.c \
+	interix/InterixProcessList.c \
+	interix/Battery.c \
+	unsupported/UnsupportedCRT.c
+myhtopplatheaders = $(interix_platform_headers)
+endif
+
 # Unsupported
 # -----------
 

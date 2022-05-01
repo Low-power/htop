@@ -46,6 +46,9 @@ solaris*)
 aix*|os400*)
    my_htop_platform=aix
    ;;
+interix*)
+   my_htop_platform=interix
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
@@ -86,7 +89,7 @@ AC_TYPE_UID_T
 AC_FUNC_CLOSEDIR_VOID
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup])
+AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup nanosleep lround])
 
 save_cflags="${CFLAGS}"
 CFLAGS="$CFLAGS -Wextra"
@@ -245,6 +248,10 @@ if test "$my_htop_platform" = "aix"; then
    AC_CHECK_LIB([perfstat], [perfstat_memory_total])
 fi
 
+if test "$my_htop_platform" = interix; then
+   CPPFLAGS="$CPPFLAGS -D _REENTRANT=1"
+fi
+
 AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
 if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
    AC_MSG_CHECKING([for usable sched_setaffinity])
@@ -322,6 +329,7 @@ AM_CONDITIONAL([HTOP_OPENBSD], [test "$my_htop_platform" = openbsd])
 AM_CONDITIONAL([HTOP_DARWIN], [test "$my_htop_platform" = darwin])
 AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_AIX], [test "$my_htop_platform" = aix])
+AM_CONDITIONAL([HTOP_INTERIX], [test "$my_htop_platform" = interix])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
