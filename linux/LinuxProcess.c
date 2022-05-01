@@ -144,8 +144,8 @@ typedef struct LinuxProcess_ {
    #endif
 } LinuxProcess;
 
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (((LinuxProcess*)(_process))->isKernelThread)
+#ifndef Process_isKernelProcess
+#define Process_isKernelProcess(_process) (((LinuxProcess*)(_process))->isKernelThread)
 #endif
 
 #ifndef Process_isUserlandThread
@@ -494,6 +494,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
 }
 
 bool Process_isThread(Process* this) {
-   return (Process_isUserlandThread(this) || Process_isKernelThread(this));
+   return (Process_isUserlandThread(this) || Process_isKernelProcess(this));
 }
 

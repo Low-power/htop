@@ -35,8 +35,8 @@ typedef struct DragonFlyBSDProcess_ {
 } DragonFlyBSDProcess;
 
 
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->kernel == 1)
+#ifndef Process_isKernelProcess
+#define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
 #ifndef Process_isUserlandThread

@@ -833,7 +833,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(proc)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
@@ -903,14 +903,14 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          proc->basenameOffset = -1;
          setCommand(proc, command, commLen);
       } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelThread(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
+         if (settings->showThreadNames || Process_isKernelProcess(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames) {
             if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
                goto errorReadingProcess;
          }
-         if (Process_isKernelThread(proc)) {
+         if (Process_isKernelProcess(proc)) {
             pl->kernelThreads++;
          } else {
             pl->userlandThreads++;

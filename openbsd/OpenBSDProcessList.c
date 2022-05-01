@@ -245,7 +245,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc = ProcessList_getProcess(this, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
       fp = (OpenBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(proc))
+      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(proc))
                   || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
@@ -294,7 +294,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          default:      proc->state = '?';
       }
 
-      if (Process_isKernelThread(proc)) {
+      if (Process_isKernelProcess(proc)) {
          this->kernelThreads++;
       }
 

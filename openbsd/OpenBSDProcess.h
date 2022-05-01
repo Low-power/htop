@@ -20,8 +20,8 @@ typedef struct OpenBSDProcess_ {
    Process super;
 } OpenBSDProcess;
 
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->pgrp == 0)
+#ifndef Process_isKernelProcess
+#define Process_isKernelProcess(_process) (_process->pgrp == 0)
 #endif
 
 #ifndef Process_isUserlandThread

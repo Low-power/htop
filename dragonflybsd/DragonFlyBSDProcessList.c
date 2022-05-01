@@ -429,7 +429,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(dfp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(dfp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
@@ -572,7 +572,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->state = 'J';
       }
       
-      if (Process_isKernelThread(dfp)) {
+      if (Process_isKernelProcess(dfp)) {
          this->kernelThreads++;
       }
 

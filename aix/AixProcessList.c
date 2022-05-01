@@ -50,8 +50,8 @@ typedef struct AixProcessList_ {
 #endif
 } AixProcessList;
 
-#ifndef Process_isKernelThread
-#define Process_isKernelThread(_process) (_process->kernel == 1)
+#ifndef Process_isKernelProcess
+#define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
 #ifndef Process_isUserlandThread
@@ -231,7 +231,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
         proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
         ap = (AixProcess*) proc;
 
-	proc->show = ! ((hideKernelThreads && Process_isKernelThread(ap))
+	proc->show = ! ((hideKernelThreads && Process_isKernelProcess(ap))
                     || (hideUserlandThreads && Process_isUserlandThread(ap)));
 
         if (!preExisting) {
@@ -286,7 +286,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
            default:      proc->state = '?';
        }
 
-       if (Process_isKernelThread(ap)) {
+       if (Process_isKernelProcess(ap)) {
           super->kernelThreads++;
        }
 

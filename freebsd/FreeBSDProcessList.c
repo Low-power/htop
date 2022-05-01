@@ -414,7 +414,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
-      proc->show = ! ((hideKernelThreads && Process_isKernelThread(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
+      proc->show = ! ((hideKernelThreads && Process_isKernelProcess(fp)) || (hideUserlandThreads && Process_isUserlandThread(proc)));
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
@@ -504,7 +504,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       default:     proc->state = '?';
       }
 
-      if (Process_isKernelThread(fp)) {
+      if (Process_isKernelProcess(fp)) {
          this->kernelThreads++;
       }
 
