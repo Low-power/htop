@@ -20,12 +20,18 @@ in the source distribution for its full text.
 #include "OpenBSDProcess.h"
 #include "OpenBSDProcessList.h"
 
+#ifdef SAFE_TO_DEFINE_KERNEL
+#define _KERNEL
+#endif
+#include <sys/param.h>
+#include <sys/proc.h>
+#ifdef SAFE_TO_DEFINE_KERNEL
+#undef _KERNEL
+#endif
 #include <sys/sched.h>
 #include <uvm/uvmexp.h>
-#include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/swap.h>
-#include <sys/proc.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>

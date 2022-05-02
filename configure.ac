@@ -236,6 +236,19 @@ fi
 
 if test "$my_htop_platform" = "openbsd"; then
    AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
+	AC_MSG_CHECKING([whether safe to define _KERNEL before including sys/proc.h])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+			#define _KERNEL
+			#include <sys/param.h>
+			#include <sys/proc.h>
+			#undef _KERNEL
+		], [])], [
+			AC_DEFINE(SAFE_TO_DEFINE_KERNEL, 1,
+				[Define if it is safe to define '_KERNEL' before including 'sys/proc.h'.])
+			AC_MSG_RESULT([yes])
+		], [
+			AC_MSG_RESULT([no])
+		])
 fi
 
 if test "$my_htop_platform" = "solaris"; then
