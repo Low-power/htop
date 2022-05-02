@@ -25,14 +25,16 @@ typedef enum OpenBSDProcessFields {
 
 typedef struct OpenBSDProcess_ {
    Process super;
+   bool is_kernel_process;
 } OpenBSDProcess;
 
 #ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->pgrp == 0)
+//#define Process_isKernelProcess(_process) ((_process)->super.pgrp == 0)
+#define Process_isKernelProcess(_process) ((_process)->is_kernel_process)
 #endif
 
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (0)
+#ifndef Process_isThreadProcess
+#define Process_isThreadProcess(_process) ((_process)->super.pid != (_process)->super.tgid)
 #endif
 
 }*/
@@ -225,5 +227,5 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
 }
 
 bool Process_isThread(Process* this) {
-   return (Process_isKernelProcess(this));
+   return (Process_isThreadProcess((OpenBSDProcess *)this));
 }

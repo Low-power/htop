@@ -218,40 +218,36 @@ static double getpcpu(const struct kinfo_proc *kp) {
 
 void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
-   Settings* settings = this->settings;
-   bool hide_kernel_processes = settings->hide_kernel_processes;
-   bool hide_thread_processes = settings->hide_thread_processes;
-   struct kinfo_proc* kproc;
-   bool preExisting;
-   Process* proc;
-   OpenBSDProcess* fp;
-   struct tm date;
-   struct timeval tv;
+   bool hide_kernel_processes = this->settings->hide_kernel_processes;
+   bool hide_thread_processes = this->settings->hide_thread_processes;
+   struct timeval now;
    int count = 0;
    int i;
 
    OpenBSDProcessList_scanMemoryInfo(this);
 
-   // use KERN_PROC_KTHREAD to also include kernel threads
-   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), &count);
-   //struct kinfo_proc* kprocs = getprocs(KERN_PROC_ALL, 0, &count);
+   int op = hide_kernel_processes ? KERN_PROC_ALL : KERN_PROC_KTHREAD;
+#ifdef KERN_PROC_SHOW_THREADS
+   if(!hide_thread_processes) op |= KERN_PROC_SHOW_THREADS;
+#endif
+   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, op, 0, sizeof(struct kinfo_proc), &count);
 
-   gettimeofday(&tv, NULL);
+   gettimeofday(&now, NULL);
 
    for (i = 0; i < count; i++) {
-      kproc = &kprocs[i];
-
-      preExisting = false;
-      proc = ProcessList_getProcess(this, kproc->p_pid, &preExisting, (Process_New) OpenBSDProcess_new);
-      fp = (OpenBSDProcess*) proc;
-
-      proc->show = ! ((hide_kernel_processes && Process_isKernelProcess(proc))
-                  || (hide_thread_processes && Process_isUserlandThread(proc)));
+      struct kinfo_proc *kproc = kprocs + i;
+      //if(!hide_thread_processes && kproc->p_tid == -1) continue;
+      if(kproc->p_pid == 0 && kproc->p_tid == -1) continue;
+      pid_t pid = kproc->p_tid == -1 ? kproc->p_pid : kproc->p_tid - THREAD_PID_OFFSET;
+      bool preExisting;
+      Process *proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) OpenBSDProcess_new);
+      OpenBSDProcess *openbsd_proc = (OpenBSDProcess *)proc;
 
       if (!preExisting) {
+         struct tm date;
+         proc->tgid = kproc->p_pid;
          proc->ppid = kproc->p_ppid;
          proc->tpgid = kproc->p_tpgid;
-         proc->tgid = kproc->p_pid;
          proc->session = kproc->p_sid;
          proc->tty_nr = kproc->p_tdev;
          proc->pgrp = kproc->p__pgid;
@@ -260,16 +256,15 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
          proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->p_ustart_sec;
+         openbsd_proc->is_kernel_process = (kproc->p_flag & P_SYSTEM);
          ProcessList_add((ProcessList*)this, proc);
          OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
-         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
-      } else {
-         if (settings->updateProcessNames) {
-            free(proc->name);
-            free(proc->comm);
-            OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
-         }
+         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+      } else if (this->settings->updateProcessNames) {
+         free(proc->name);
+         free(proc->comm);
+         OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
       }
 
       proc->m_size = kproc->p_vm_dsize;
@@ -294,18 +289,26 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          default:      proc->state = '?';
       }
 
-      this->totalTasks++;
-      this->thread_count += proc->nlwp;
-      if (Process_isKernelProcess(proc)) {
-         this->kernel_process_count++;
-         this->kernel_thread_count++;
+      if(kproc->p_tid != -1) {
+         this->totalTasks++;
+         this->thread_count++;
+         if (Process_isKernelProcess(openbsd_proc)) {
+            this->kernel_process_count++;
+            this->kernel_thread_count++;
+         }
+
+         // SRUN ('R') means runnable, not running
+         if (proc->state == 'P') {
+            this->running_process_count++;
+            this->running_thread_count++;
+         }
       }
 
-      // SRUN ('R') means runnable, not running
-      if (proc->state == 'P') {
-         this->running_process_count++;
-         this->running_thread_count++;
-      }
+      proc->show =
+         !(Process_isKernelProcess(openbsd_proc) && !Process_isThreadProcess(openbsd_proc)) &&
+            (!((hide_kernel_processes && Process_isKernelProcess(openbsd_proc)) ||
+               (hide_thread_processes && Process_isThreadProcess(openbsd_proc))));
+
       proc->updated = true;
    }
 }

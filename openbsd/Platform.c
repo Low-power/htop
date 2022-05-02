@@ -25,7 +25,7 @@ in the source distribution for its full text.
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/swap.h>
-
+#include <sys/proc.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -201,7 +201,13 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
    // this is hard-coded in sys/sys/proc.h - no sysctl exists
+#ifdef TID_MASK
+   return TID_MASK + 1;
+#elif defined PID_MAX
+   return PID_MAX;
+#else
    return 32766;
+#endif
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
