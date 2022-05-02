@@ -154,6 +154,12 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
+#ifdef __CYGWIN__
+   /* Cygwin uses Windows PID directly, and Windows didn't have a hard
+    * limit for processes; the maximum PID value based on data type
+    * would be UINT32_MAX - 1, which is too big to use here. */
+   return 4194304;
+#else
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
    if (!file) return -1;
    int maxPid = 4194303;
@@ -161,6 +167,7 @@ int Platform_getMaxPid() {
    (void) match;
    fclose(file);
    return maxPid;
+#endif
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
