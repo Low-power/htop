@@ -300,7 +300,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->show =
 #ifdef KERN_PROC_SHOW_THREADS
-         !(Process_isKernelProcess(openbsd_proc) && !Process_isThreadProcess(openbsd_proc)) &&
+         !(Process_isKernelProcess(openbsd_proc) && kproc->p_tid == -1) &&
 #endif
             (!((hide_kernel_processes && Process_isKernelProcess(openbsd_proc)) ||
                (hide_thread_processes && Process_isThreadProcess(openbsd_proc))));
