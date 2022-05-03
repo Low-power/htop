@@ -76,12 +76,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
    spl->kd = kstat_open();
 
-   pl->cpuCount = sysconf(_SC_NPROCESSORS_ONLN);
-
-   if (pl->cpuCount == 1 ) {
-      spl->cpus = xRealloc(spl->cpus, sizeof(CPUData));
+   pl->cpuCount = sysconf(_SC_NPROCESSORS_CONF);
+   if (pl->cpuCount > 1) {
+      spl->cpus = xMalloc((pl->cpuCount + 1) * sizeof(CPUData));
    } else {
-      spl->cpus = xRealloc(spl->cpus, (pl->cpuCount + 1) * sizeof(CPUData));
+      spl->cpus = xMalloc(sizeof(CPUData));
    }
 
    return pl;
