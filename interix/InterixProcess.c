@@ -16,7 +16,6 @@ in the source distribution for its full text.
 #include "Settings.h"
 
 #define Process_delete InterixProcess_delete
-#define Process_isKernelProcess(P) ((P)->native_pid == 0 || (P)->native_pid == 4 || (P)->native_pid == 8)
 
 typedef enum {
 	NATIVE_PID = 100,
@@ -128,6 +127,11 @@ void InterixProcess_writeField(Process *super, RichString *str, ProcessField fie
 #endif
 	}
 	RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
+}
+
+bool Process_isKernelProcess(Process *this) {
+	InterixProcess *p = (InterixProcess *)this;
+	return p->native_pid == 0 || p->native_pid == 4 || p->native_pid == 8;
 }
 
 bool Process_isExtraThreadProcess(Process *this) {

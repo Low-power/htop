@@ -16,7 +16,7 @@ in the source distribution for its full text.
 
 typedef struct DarwinProcess_ {
    Process super;
-
+   bool is_kernel_process;
    uint64_t utime;
    uint64_t stime;
    bool taskAccess;
@@ -29,13 +29,15 @@ DarwinProcess* DarwinProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
+bool Process_isKernelProcess(Process* this);
+
 bool Process_isExtraThreadProcess(Process* this);
 
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now);
+void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, time_t now);
 
-char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset);
+char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset);
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists);
+void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, time_t now, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 

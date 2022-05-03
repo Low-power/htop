@@ -286,7 +286,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if(kproc->p_tid != -1) {
          this->totalTasks++;
          this->thread_count++;
-         if (Process_isKernelProcess(openbsd_proc)) {
+         if (Process_isKernelProcess(proc)) {
             this->kernel_process_count++;
             this->kernel_thread_count++;
          }
@@ -300,10 +300,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->show =
 #ifdef KERN_PROC_SHOW_THREADS
-         !(Process_isKernelProcess(openbsd_proc) && kproc->p_tid == -1) &&
+         !(Process_isKernelProcess(proc) && kproc->p_tid == -1) &&
 #endif
-            (!((hide_kernel_processes && Process_isKernelProcess(openbsd_proc)) ||
-               (hide_thread_processes && Process_isExtraThreadProcess(openbsd_proc))));
+            (!((hide_kernel_processes && Process_isKernelProcess(proc)) ||
+               (hide_thread_processes && Process_isExtraThreadProcess(proc))));
 
       proc->updated = true;
    }

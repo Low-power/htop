@@ -50,10 +50,6 @@ typedef struct AixProcessList_ {
 #endif
 } AixProcessList;
 
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->kernel == 1)
-#endif
-
 }*/
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
@@ -183,9 +179,6 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 void ProcessList_goThroughEntries(ProcessList* super) {
 	AixProcessList* apl = (AixProcessList*)super;
 	bool hide_kernel_processes = super->settings->hide_kernel_processes;
-	bool preExisting;
-	Process *proc;
-	AixProcess *ap;
 	/* getprocs stuff */
 	struct procentry64 *pes;
 	struct procentry64 *pe;
@@ -220,11 +213,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
 	t = time (NULL);
 	for (i = 0; i < count; i++) {
+		bool preExisting;
 		pe = pes + i;
-		proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
-		ap = (AixProcess*) proc;
-
-		proc->show = !(hide_kernel_processes && Process_isKernelProcess(ap));
+		Process *proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
+		AixProcess *ap = (AixProcess *)proc;
 
 		if (!preExisting) {
 			ap->kernel = pe->pi_flags & SKPROC ? 1 : 0;
@@ -280,7 +272,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
 		super->totalTasks++;
 		super->thread_count += proc->nlwp;
-		if (Process_isKernelProcess(ap)) {
+		if (Process_isKernelProcess(proc)) {
 			super->kernel_process_count++;
 			super->kernel_thread_count += proc->nlwp;
 		}
@@ -289,6 +281,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			super->running_process_count++;
 			super->running_thread_count++;
 		}
+
+		proc->show = !(hide_kernel_processes && Process_isKernelProcess(proc));
 
 		proc->updated = true;
 	}

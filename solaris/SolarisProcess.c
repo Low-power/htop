@@ -33,10 +33,9 @@ typedef enum SolarisProcessFields {
    LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
-
 typedef struct SolarisProcess_ {
    Process    super;
-   int        kernel;
+   bool       kernel;
    zoneid_t   zoneid;
    char*      zname;
    taskid_t   taskid;
@@ -48,11 +47,6 @@ typedef struct SolarisProcess_ {
    pid_t      realppid;
    pid_t      lwpid;
 } SolarisProcess;
-
-
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->kernel == 1)
-#endif
 
 }*/
 
@@ -196,6 +190,10 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
+}
+
+bool Process_isKernelProcess(Process *this) {
+	return ((SolarisProcess *)this)->kernel;
 }
 
 bool Process_isExtraThreadProcess(Process* this) {

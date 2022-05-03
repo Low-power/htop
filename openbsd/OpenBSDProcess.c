@@ -26,11 +26,6 @@ typedef struct OpenBSDProcess_ {
    bool is_kernel_process;
 } OpenBSDProcess;
 
-#ifndef Process_isKernelProcess
-//#define Process_isKernelProcess(_process) ((_process)->super.pgrp == 0)
-#define Process_isKernelProcess(_process) ((_process)->is_kernel_process)
-#endif
-
 }*/
 
 ProcessClass OpenBSDProcess_class = {
@@ -218,6 +213,10 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
+}
+
+bool Process_isKernelProcess(Process *this) {
+	return ((OpenBSDProcess *)this)->is_kernel_process;
 }
 
 bool Process_isExtraThreadProcess(Process* this) {

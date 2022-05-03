@@ -705,7 +705,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    int tokenEnd = 0;
    int lastChar = 0;
    if (amtRead == 0) {
-      ((LinuxProcess*)process)->isKernelThread = true;
+      ((LinuxProcess*)process)->is_kernel_process = true;
       return true;
    } else if (amtRead < 0) {
       return false;
@@ -823,8 +823,6 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
 
-      proc->show = !((hide_kernel_processes && Process_isKernelProcess(proc)) || (hide_thread_processes && Process_isExtraThreadProcess(proc)));
-
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       int commLen = 0;
@@ -908,6 +906,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          pl->running_process_count++;
          pl->running_thread_count++;
       }
+
+      proc->show = !((hide_kernel_processes && Process_isKernelProcess(proc)) || (hide_thread_processes && Process_isExtraThreadProcess(proc)));
+
       proc->updated = true;
       continue;
 

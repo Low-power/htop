@@ -25,14 +25,10 @@ typedef enum AixProcessFields {
 
 typedef struct AixProcess_ {
    Process super;
-   int kernel;
+   bool kernel;
    cid_t cid; // WPAR ID
    unsigned long long int stime, utime; // System/User time (stored sep for calculations)
 } AixProcess;
-
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->kernel == 1)
-#endif
 
 }*/
 
@@ -230,6 +226,10 @@ long AixProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
+}
+
+bool Process_isKernelProcess(Process *this) {
+	return ((AixProcess *)this)->kernel;
 }
 
 bool Process_isExtraThreadProcess(Process *this) {

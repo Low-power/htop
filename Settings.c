@@ -54,6 +54,7 @@ typedef struct Settings_ {
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;
+   bool highlight_kernel_processes;
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
@@ -207,6 +208,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->highlightMegabytes = atoi(option[1]);
       } else if (String_eq(option[0], "highlight_threads")) {
          this->highlightThreads = atoi(option[1]);
+      } else if(String_eq(option[0], "highlight_kernel_processes")) {
+         this->highlight_kernel_processes = atoi(option[1]);
       } else if (String_eq(option[0], "header_margin")) {
          this->headerMargin = atoi(option[1]);
       } else if (String_eq(option[0], "expand_system_time")) {
@@ -299,6 +302,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "highlight_base_name=%d\n", (int) this->highlightBaseName);
    fprintf(f, "highlight_megabytes=%d\n", (int) this->highlightMegabytes);
    fprintf(f, "highlight_threads=%d\n", (int) this->highlightThreads);
+   fprintf(f, "highlight_kernel_processes=%d\n", (int)this->highlight_kernel_processes);
    fprintf(f, "tree_view=%d\n", (int) this->treeView);
    fprintf(f, "header_margin=%d\n", (int) this->headerMargin);
    fprintf(f, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
@@ -334,6 +338,7 @@ Settings* Settings_new(int cpuCount) {
    this->cpuCount = cpuCount;
    this->showProgramPath = true;
    this->highlightThreads = true;
+   this->highlight_kernel_processes = true;
    this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
    // TODO: turn 'fields' into a Vector,
    // (and ProcessFields into proper objects).

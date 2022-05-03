@@ -21,7 +21,7 @@ in the source distribution for its full text.
 
 typedef struct DarwinProcess_ {
    Process super;
-
+   bool is_kernel_process;
    uint64_t utime;
    uint64_t stime;
    bool taskAccess;
@@ -58,12 +58,16 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
+bool Process_isKernelProcess(Process* this) {
+	return ((DarwinProcess *)this)->is_kernel_process;
+}
+
 bool Process_isExtraThreadProcess(Process* this) {
    (void) this;
    return false;
 }
 
-void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t now) {
+void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, time_t now) {
    struct tm date;
 
    proc->starttime_ctime = ep->p_starttime.tv_sec;
@@ -71,7 +75,7 @@ void DarwinProcess_setStartTime(Process *proc, struct extern_proc *ep, time_t no
    strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
 
-char *DarwinProcess_getCmdLine(struct kinfo_proc* k, int* basenameOffset) {
+char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -214,8 +218,8 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t now, bool exists) {
-   struct extern_proc *ep = &ps->kp_proc;
+void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, time_t now, bool exists) {
+   const struct extern_proc *ep = &ps->kp_proc;
 
    /* UNSET HERE :
     *
@@ -248,6 +252,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
       DarwinProcess_setStartTime(proc, ep, now);
       proc->name = xStrdup(ps->kp_proc.p_comm);
       proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
+      ((DarwinProcess *)proc)->is_kernel_process = ep->p_flag & P_SYSTEM;
    }
 
    /* Mutable information */
@@ -262,38 +267,32 @@ void DarwinProcess_setFromKInfoProc(Process *proc, struct kinfo_proc *ps, time_t
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
    struct proc_taskinfo pti;
+   if(proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof pti) != sizeof pti) return;
 
-   if(sizeof(pti) == proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti))) {
-      if(0 != proc->utime || 0 != proc->stime) {
-         uint64_t diff = (pti.pti_total_system - proc->stime)
-                  + (pti.pti_total_user - proc->utime);
+   if(0 != proc->utime || 0 != proc->stime) {
+      uint64_t diff = (pti.pti_total_system - proc->stime)
+               + (pti.pti_total_user - proc->utime);
 
-         proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
-                  / ((double)dpl->global_diff * 100000.0);
-
-//       fprintf(stderr, "%f %llu %llu %llu %llu %llu\n", proc->super.percent_cpu,
-//               proc->stime, proc->utime, pti.pti_total_system, pti.pti_total_user, dpl->global_diff);
-//       exit(7);
-      }
-
-      proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
-      proc->super.nlwp = pti.pti_threadnum;
-      proc->super.m_size = pti.pti_virtual_size / 1024 / PAGE_SIZE_KB;
-      proc->super.m_resident = pti.pti_resident_size / 1024 / PAGE_SIZE_KB;
-      proc->super.majflt = pti.pti_faults;
-      proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-              / (double)dpl->host_info.max_mem;
-
-      proc->stime = pti.pti_total_system;
-      proc->utime = pti.pti_total_user;
-
-      dpl->super.totalTasks++;
-      dpl->super.thread_count += pti.pti_threadnum;
-      dpl->super.kernel_process_count += 0; /*pti.pti_threads_system;*/
-      //dpl->super.kernel_thread_count;
-      dpl->super.running_process_count++;
-      dpl->super.running_thread_count += pti.pti_numrunning;
+      proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
+               / ((double)dpl->global_diff * 100000.0);
    }
+
+   proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
+   proc->super.nlwp = pti.pti_threadnum;
+   proc->super.m_size = pti.pti_virtual_size / 1024 / PAGE_SIZE_KB;
+   proc->super.m_resident = pti.pti_resident_size / 1024 / PAGE_SIZE_KB;
+   proc->super.majflt = pti.pti_faults;
+   proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
+           / (double)dpl->host_info.max_mem;
+
+   proc->stime = pti.pti_total_system;
+   proc->utime = pti.pti_total_user;
+
+   dpl->super.thread_count += pti.pti_threadnum;
+   if(Process_isKernelProcess(&proc->super)) {
+      dpl->super.kernel_thread_count += pti.pti_threadnum;
+   }
+   dpl->super.running_thread_count += pti.pti_numrunning;
 }
 
 /*

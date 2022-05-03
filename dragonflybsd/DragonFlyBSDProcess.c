@@ -27,15 +27,11 @@ typedef enum DragonFlyBSDProcessFields {
 
 typedef struct DragonFlyBSDProcess_ {
    Process super;
-   int   kernel;
+   bool kernel;
    int   jid;
    char* jname;
 } DragonFlyBSDProcess;
 
-
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->kernel == 1)
-#endif
 
 }*/
 
@@ -150,6 +146,10 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
+}
+
+bool Process_isKernelProcess(Process *this) {
+	return ((DragonFlyBSDProcess *)this)->kernel;
 }
 
 bool Process_isExtraThreadProcess(Process* this) {

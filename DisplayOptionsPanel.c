@@ -88,6 +88,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel processes"), &(settings->hide_kernel_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide additional thread processes"), &(settings->hide_thread_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Display additional threads in a different color"), &(settings->highlightThreads)));
+   Panel_add(super, (Object*)CheckItem_newByRef(xStrdup("Display kernel processes in a different color"), &(settings->highlight_kernel_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight program \"basename\""), &(settings->highlightBaseName)));

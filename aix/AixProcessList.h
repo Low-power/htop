@@ -37,10 +37,6 @@ typedef struct AixProcessList_ {
 #endif
 } AixProcessList;
 
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (_process->kernel == 1)
-#endif
-
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 

@@ -426,8 +426,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
-      proc->show = !(this->settings->hide_kernel_processes && Process_isKernelProcess(dfp));
-
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
          if (kproc->kp_ktaddr && kproc->kp_flags & P_SYSTEM) {
@@ -570,7 +568,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
       this->totalTasks++;
       this->thread_count += proc->nlwp;
-      if (Process_isKernelProcess(dfp)) {
+      if (Process_isKernelProcess(proc)) {
          this->kernel_process_count++;
          this->kernel_thread_count += proc->nlwp;
       }
@@ -578,6 +576,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          this->running_process_count++;
          this->running_thread_count++;
       }
+      proc->show = !(this->settings->hide_kernel_processes && Process_isKernelProcess(proc));
       proc->updated = true;
    }
 }

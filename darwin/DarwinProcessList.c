@@ -160,58 +160,62 @@ void ProcessList_delete(ProcessList* this) {
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
-    DarwinProcessList *dpl = (DarwinProcessList *)super;
-	bool preExisting = true;
+	DarwinProcessList *dpl = (DarwinProcessList *)super;
 	struct kinfo_proc *ps;
 	size_t count;
-    DarwinProcess *proc;
-    struct timeval tv;
+	struct timeval now;
 
-    gettimeofday(&tv, NULL); /* Start processing time */
+	gettimeofday(&now, NULL); /* Start processing time */
 
-    /* Update the global data (CPU times and VM stats) */
-    ProcessList_freeCPULoadInfo(&dpl->prev_load);
-    dpl->prev_load = dpl->curr_load;
-    ProcessList_allocateCPULoadInfo(&dpl->curr_load);
-    ProcessList_getVMStats(&dpl->vm_stats);
+	/* Update the global data (CPU times and VM stats) */
+	ProcessList_freeCPULoadInfo(&dpl->prev_load);
+	dpl->prev_load = dpl->curr_load;
+	ProcessList_allocateCPULoadInfo(&dpl->curr_load);
+	ProcessList_getVMStats(&dpl->vm_stats);
 
-    /* Get the time difference */
-    dpl->global_diff = 0;
-    for(int i = 0; i < dpl->super.cpuCount; ++i) {
-        for(size_t j = 0; j < CPU_STATE_MAX; ++j) {
-            dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
-        }
-    }
+	/* Get the time difference */
+	dpl->global_diff = 0;
+	for(int i = 0; i < dpl->super.cpuCount; ++i) {
+		for(size_t j = 0; j < CPU_STATE_MAX; ++j) {
+			dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
+		}
+	}
 
-    /* We use kinfo_procs for initial data since :
-     *
-     * 1) They always succeed.
-     * 2) The contain the basic information.
-     *
-     * We attempt to fill-in additional information with libproc.
-     */
-    ps = ProcessList_getKInfoProcs(&count);
+	/* We use kinfo_procs for initial data since :
+	 *
+	 * 1) They always succeed.
+	 * 2) The contain the basic information.
+	 *
+	 * We attempt to fill-in additional information with libproc.
+	 */
+	ps = ProcessList_getKInfoProcs(&count);
 
-    for(size_t i = 0; i < count; ++i) {
-       proc = (DarwinProcess *)ProcessList_getProcess(super, ps[i].kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
+	for(size_t i = 0; i < count; ++i) {
+		bool preExisting;
+		const struct kinfo_proc *info = ps + i;
+		DarwinProcess *proc = (DarwinProcess *)ProcessList_getProcess(super, info->kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-       DarwinProcess_setFromKInfoProc(&proc->super, &ps[i], tv.tv_sec, preExisting);
-       DarwinProcess_setFromLibprocPidinfo(proc, dpl);
+		DarwinProcess_setFromKInfoProc(&proc->super, info, now.tv_sec, preExisting);
+		DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
-       // Disabled for High Sierra due to bug in macOS High Sierra
-       bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
+		super->totalTasks++;
+		if(Process_isKernelProcess(&proc->super)) super->kernel_process_count++;
+		super->running_process_count++;
 
-       if (isScanThreadSupported){
-           DarwinProcess_scanThreads(proc);
-       }
+		// Disabled for High Sierra due to bug in macOS High Sierra
+		bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
 
-       if(!preExisting) {
-           proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);
-           proc->super.effective_user = UsersTable_getRef(super->usersTable, proc->super.euid);
+		if (isScanThreadSupported){
+			DarwinProcess_scanThreads(proc);
+		}
 
-           ProcessList_add(super, &proc->super);
-       }
-    }
+		if(!preExisting) {
+			proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);
+			proc->super.effective_user = UsersTable_getRef(super->usersTable, proc->super.euid);
 
-    free(ps);
+			ProcessList_add(super, &proc->super);
+		}
+	}
+
+	free(ps);
 }

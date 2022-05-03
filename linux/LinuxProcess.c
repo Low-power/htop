@@ -96,7 +96,7 @@ typedef enum LinuxProcessFields {
 
 typedef struct LinuxProcess_ {
    Process super;
-   bool isKernelThread;
+   bool is_kernel_process;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;
@@ -145,10 +145,6 @@ typedef struct LinuxProcess_ {
    float swapin_delay_percent;
    #endif
 } LinuxProcess;
-
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (((LinuxProcess*)(_process))->isKernelThread)
-#endif
 
 }*/
 
@@ -489,6 +485,10 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    }
    test_diff:
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
+}
+
+bool Process_isKernelProcess(Process *this) {
+	return ((LinuxProcess *)this)->is_kernel_process;
 }
 
 bool Process_isExtraThreadProcess(Process *this) {

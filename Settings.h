@@ -45,6 +45,7 @@ typedef struct Settings_ {
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;
+   bool highlight_kernel_processes;
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;

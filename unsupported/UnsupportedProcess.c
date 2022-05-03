@@ -31,6 +31,10 @@ void UnsupportedProcess_delete(Object* cast) {
    free(this);
 }
 
+bool Process_isKernelProcess(Process *this) {
+	return false;
+}
+
 bool Process_isExtraThreadProcess(Process *this) {
 	return false;
 }

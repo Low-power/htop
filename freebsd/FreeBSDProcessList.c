@@ -401,7 +401,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 
-   int cpus = this->cpuCount;
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
 
@@ -411,8 +410,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       bool isIdleProcess = false;
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
-
-      proc->show = !(hide_kernel_processes && Process_isKernelProcess(fp));
 
       if (!preExisting) {
          fp->jid = kproc->ki_jid;
@@ -501,7 +498,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       this->totalTasks++;
       this->thread_count += proc->nlwp;
-      if (Process_isKernelProcess(fp)) {
+      if (Process_isKernelProcess(proc)) {
          this->kernel_process_count++;
          this->kernel_thread_count += proc->nlwp;
       }
@@ -509,6 +506,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          this->running_process_count++;
          this->running_thread_count++;
       }
+
+      proc->show = !(hide_kernel_processes && Process_isKernelProcess(proc));
+
       proc->updated = true;
    }
 }

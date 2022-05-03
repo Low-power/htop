@@ -217,12 +217,12 @@ try_stat:
 			total_time_delta += i_proc->time_delta;
 		}
 		proc->time = t;
-		proc->show = !this->settings->hide_kernel_processes || !Process_isKernelProcess(i_proc);
+		proc->show = !this->settings->hide_kernel_processes || !Process_isKernelProcess(proc);
 		proc->updated = true;
 		if(!is_existing) ProcessList_add(this, proc);
 		this->totalTasks++;
 		this->thread_count += proc->nlwp;
-		if(Process_isKernelProcess(i_proc)) {
+		if(Process_isKernelProcess(proc)) {
 			this->kernel_process_count++;
 			this->kernel_thread_count += proc->nlwp;
 		}

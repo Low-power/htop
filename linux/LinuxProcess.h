@@ -88,7 +88,7 @@ typedef enum LinuxProcessFields {
 
 typedef struct LinuxProcess_ {
    Process super;
-   bool isKernelThread;
+   bool is_kernel_process;
    IOPriority ioPriority;
    unsigned long int cminflt;
    unsigned long int cmajflt;
@@ -138,10 +138,6 @@ typedef struct LinuxProcess_ {
    #endif
 } LinuxProcess;
 
-#ifndef Process_isKernelProcess
-#define Process_isKernelProcess(_process) (((LinuxProcess*)(_process))->isKernelThread)
-#endif
-
 
 extern long long btime;
 
@@ -176,6 +172,8 @@ void LinuxProcess_printDelay(float delay_percent, char* buffer, int n);
 void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field);
 
 long LinuxProcess_compare(const void* v1, const void* v2);
+
+bool Process_isKernelProcess(Process *this);
 
 bool Process_isExtraThreadProcess(Process *this);
 

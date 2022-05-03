@@ -21,11 +21,6 @@ typedef struct OpenBSDProcess_ {
    bool is_kernel_process;
 } OpenBSDProcess;
 
-#ifndef Process_isKernelProcess
-//#define Process_isKernelProcess(_process) ((_process)->super.pgrp == 0)
-#define Process_isKernelProcess(_process) ((_process)->is_kernel_process)
-#endif
-
 
 extern ProcessClass OpenBSDProcess_class;
 
@@ -40,6 +35,8 @@ void Process_delete(Object* cast);
 void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField field);
 
 long OpenBSDProcess_compare(const void* v1, const void* v2);
+
+bool Process_isKernelProcess(Process *this);
 
 bool Process_isExtraThreadProcess(Process* this);
 
