@@ -36,10 +36,6 @@ typedef struct FreeBSDProcess_ {
 #define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (0)
-#endif
-
 }*/
 
 ProcessClass FreeBSDProcess_class = {
@@ -155,6 +151,6 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isExtraThreadProcess(Process* this) {
 	return false;
 }

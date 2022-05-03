@@ -124,11 +124,6 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-bool Process_isThread(Process* this) {
-   (void) this;
-   return false;
-}
-
 char **Platform_getProcessEnv(pid_t pid) {
    (void) pid;
    return NULL;

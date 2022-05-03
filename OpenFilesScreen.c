@@ -60,10 +60,7 @@ InfoScreenClass OpenFilesScreen_class = {
 OpenFilesScreen* OpenFilesScreen_new(Process* process) {
    OpenFilesScreen* this = xMalloc(sizeof(OpenFilesScreen));
    Object_setClass(this, Class(OpenFilesScreen));
-   if (Process_isThread(process))
-      this->pid = process->tgid;
-   else
-      this->pid = process->pid;
+   this->pid = Process_isExtraThreadProcess(process) ? process->tgid : process->pid;
    return (OpenFilesScreen*) InfoScreen_init(&this->super, process, NULL, LINES-3, "   FD TYPE     DEVICE       SIZE       NODE NAME");
 }
 

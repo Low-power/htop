@@ -823,7 +823,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
 
-      proc->show = ! ((hide_kernel_processes && Process_isKernelProcess(proc)) || (hide_thread_processes && Process_isUserlandThread(proc)));
+      proc->show = !((hide_kernel_processes && Process_isKernelProcess(proc)) || (hide_thread_processes && Process_isExtraThreadProcess(proc)));
 
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
@@ -887,24 +887,23 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
 
-      if (proc->state == 'Z' && (proc->basenameOffset == 0)) {
+      if (Process_isKernelProcess(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
          setCommand(proc, command, commLen);
-      } else if (Process_isThread(proc)) {
-         if (settings->showThreadNames || Process_isKernelProcess(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
+      } else if (Process_isExtraThreadProcess(proc)) {
+         if (settings->showThreadNames || (proc->state == 'Z' && proc->basenameOffset == 0)) {
             proc->basenameOffset = -1;
             setCommand(proc, command, commLen);
-         } else if (settings->showThreadNames) {
-            if (! LinuxProcessList_readCmdlineFile(proc, dirname, name))
-               goto errorReadingProcess;
-         }
-         if (Process_isKernelProcess(proc)) {
-            pl->kernel_process_count++;
-            pl->kernel_thread_count++;
+         } else if (settings->showThreadNames && !LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
+            goto errorReadingProcess;
          }
       }
       pl->totalTasks++;
       pl->thread_count++;
+      if (Process_isKernelProcess(proc)) {
+         pl->kernel_process_count++;
+         pl->kernel_thread_count++;
+      }
       if (proc->state == 'R') {
          pl->running_process_count++;
          pl->running_thread_count++;

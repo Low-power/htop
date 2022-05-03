@@ -34,11 +34,6 @@ typedef struct AixProcess_ {
 #define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
-#ifndef Process_isUserlandThread
-// XXX
-#define Process_isUserlandThread(_process) (false)
-#endif
-
 }*/
 
 ProcessClass AixProcess_class = {
@@ -235,4 +230,8 @@ long AixProcess_compare(const void* v1, const void* v2) {
    default:
       return Process_compare(v1, v2);
    }
+}
+
+bool Process_isExtraThreadProcess(Process *this) {
+	return false;
 }

@@ -129,3 +129,7 @@ void InterixProcess_writeField(Process *super, RichString *str, ProcessField fie
 	}
 	RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
 }
+
+bool Process_isExtraThreadProcess(Process *this) {
+	return false;
+}

@@ -303,7 +303,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          !(Process_isKernelProcess(openbsd_proc) && kproc->p_tid == -1) &&
 #endif
             (!((hide_kernel_processes && Process_isKernelProcess(openbsd_proc)) ||
-               (hide_thread_processes && Process_isThreadProcess(openbsd_proc))));
+               (hide_thread_processes && Process_isExtraThreadProcess(openbsd_proc))));
 
       proc->updated = true;
    }

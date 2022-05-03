@@ -31,10 +31,6 @@ typedef struct OpenBSDProcess_ {
 #define Process_isKernelProcess(_process) ((_process)->is_kernel_process)
 #endif
 
-#ifndef Process_isThreadProcess
-#define Process_isThreadProcess(_process) ((_process)->super.pid != (_process)->super.tgid)
-#endif
-
 }*/
 
 ProcessClass OpenBSDProcess_class = {
@@ -224,6 +220,6 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
-   return (Process_isThreadProcess((OpenBSDProcess *)this));
+bool Process_isExtraThreadProcess(Process* this) {
+	return this->pid != this->tgid;
 }

@@ -18,5 +18,6 @@ Process* UnsupportedProcess_new(Settings* settings);
 
 void UnsupportedProcess_delete(Object* cast);
 
+bool Process_isExtraThreadProcess(Process *this);
 
 #endif

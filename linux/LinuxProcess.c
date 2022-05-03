@@ -150,10 +150,6 @@ typedef struct LinuxProcess_ {
 #define Process_isKernelProcess(_process) (((LinuxProcess*)(_process))->isKernelThread)
 #endif
 
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
 }*/
 
 long long btime; /* semi-global */
@@ -495,7 +491,6 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
 }
 
-bool Process_isThread(Process* this) {
-   return (Process_isUserlandThread(this) || Process_isKernelProcess(this));
+bool Process_isExtraThreadProcess(Process *this) {
+	return this->pid != this->tgid;
 }
-

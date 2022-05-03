@@ -54,10 +54,6 @@ typedef struct SolarisProcess_ {
 #define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
-#ifndef Process_isUserlandThread
-#define Process_isUserlandThread(_process) (_process->pid != _process->tgid)
-#endif
-
 }*/
 
 ProcessClass SolarisProcess_class = {
@@ -202,7 +198,7 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isThread(Process* this) {
+bool Process_isExtraThreadProcess(Process* this) {
    SolarisProcess* fp = (SolarisProcess*) this;
    return fp->is_lwp;
 }

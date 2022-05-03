@@ -26,10 +26,6 @@ typedef struct OpenBSDProcess_ {
 #define Process_isKernelProcess(_process) ((_process)->is_kernel_process)
 #endif
 
-#ifndef Process_isThreadProcess
-#define Process_isThreadProcess(_process) ((_process)->super.pid != (_process)->super.tgid)
-#endif
-
 
 extern ProcessClass OpenBSDProcess_class;
 
@@ -45,6 +41,6 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 
 long OpenBSDProcess_compare(const void* v1, const void* v2);
 
-bool Process_isThread(Process* this);
+bool Process_isExtraThreadProcess(Process* this);
 
 #endif

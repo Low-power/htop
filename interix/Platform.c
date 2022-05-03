@@ -133,11 +133,6 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-bool Process_isThread(Process* this) {
-   (void) this;
-   return false;
-}
-
 char **Platform_getProcessEnv(pid_t pid) {
    char path[32];
    xSnprintf(path, sizeof path, "/proc/%d/environ", (int)pid);

@@ -219,11 +219,6 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-bool Process_isThread(Process* this) {
-   (void) this;
-   return false;
-}
-
 char **Platform_getProcessEnv(pid_t pid) {
    char* buf;
    struct procentry64 pe;

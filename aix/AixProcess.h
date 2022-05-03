@@ -32,11 +32,6 @@ typedef struct AixProcess_ {
 #define Process_isKernelProcess(_process) (_process->kernel == 1)
 #endif
 
-#ifndef Process_isUserlandThread
-// XXX
-#define Process_isUserlandThread(_process) (false)
-#endif
-
 
 extern ProcessClass AixProcess_class;
 
@@ -51,5 +46,7 @@ void AixProcess_delete(Object* cast);
 void AixProcess_writeField(Process* this, RichString* str, ProcessField field);
 
 long AixProcess_compare(const void* v1, const void* v2);
+
+bool Process_isExtraThreadProcess(Process *this);
 
 #endif

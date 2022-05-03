@@ -170,7 +170,7 @@ typedef struct ProcessFieldData_ {
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
 void Process_delete(Object* cast);
-bool Process_isThread(Process* this);
+bool Process_isExtraThreadProcess(Process* this);
 extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];
@@ -405,7 +405,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       xSnprintf(buffer, n, "%-15s ", this->name);
       break;
    case COMM: {
-      if (this->settings->highlightThreads && Process_isThread(this)) {
+      if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
       }
