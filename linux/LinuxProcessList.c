@@ -10,8 +10,8 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "StringUtils.h"
 #include <errno.h>
+#include <sys/types.h>
 #include <sys/time.h>
-#include <sys/utsname.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -24,7 +24,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <time.h>
 #include <assert.h>
-#include <sys/types.h>
 #include <fcntl.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>

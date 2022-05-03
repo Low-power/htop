@@ -11,8 +11,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <libproc.h>
 #include <string.h>
-#include <stdio.h>
-
 #include <mach/mach.h>
 
 /*{

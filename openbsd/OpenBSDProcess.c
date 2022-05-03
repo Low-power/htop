@@ -13,8 +13,6 @@ in the source distribution for its full text.
 #include "CRT.h"
 
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/syscall.h>
 
 /*{
 

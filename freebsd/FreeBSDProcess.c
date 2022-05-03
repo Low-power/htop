@@ -13,8 +13,6 @@ in the source distribution for its full text.
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/syscall.h>
 
 /*{
 
