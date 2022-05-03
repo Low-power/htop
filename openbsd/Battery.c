@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include <sys/sysctl.h>
 #include <sys/sensors.h>
+#include <string.h>
 #include <errno.h>
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
