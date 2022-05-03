@@ -261,7 +261,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        proc->m_size = pe->pi_ru.ru_maxrss;//pe->pi_drss + pe->pi_trss;
        proc->percent_mem = (pe->pi_drss + pe->pi_trss * PAGE_SIZE_KB) / (double)(super->totalMem) * 100.0;
        proc->nlwp = pe->pi_thcount;
-       proc->nice = pe->pi_nice;
+       proc->nice = pe->pi_nice - NZERO;
        ap->utime = pe->pi_ru.ru_utime.tv_sec;
        ap->stime = pe->pi_ru.ru_stime.tv_sec;
        proc->time = ap->utime + ap->stime;
