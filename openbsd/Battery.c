@@ -7,6 +7,7 @@ in the source distribution for its full text.
 */
 
 #include "BatteryMeter.h"
+#include <sys/param.h>
 #include <sys/sysctl.h>
 #include <sys/sensors.h>
 #include <string.h>

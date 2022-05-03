@@ -224,7 +224,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    int op = hide_kernel_processes ? KERN_PROC_ALL : KERN_PROC_KTHREAD;
 #ifdef KERN_PROC_SHOW_THREADS
-   if(!hide_thread_processes) op |= KERN_PROC_SHOW_THREADS;
+   op |= KERN_PROC_SHOW_THREADS;
 #endif
    struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, op, 0, sizeof(struct kinfo_proc), &count);
 
@@ -267,9 +267,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
-      //proc->nlwp = kproc->p_numthreads;
-      //proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 10);
-      proc->nice = kproc->p_nice - 20;
+      proc->nice = kproc->p_nice - NZERO;
       proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);
       proc->time *= 100;
       proc->priority = kproc->p_priority - PZERO;
@@ -292,7 +290,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             this->kernel_process_count++;
             this->kernel_thread_count++;
          }
-
+ 
          // SRUN ('R') means runnable, not running
          if (proc->state == 'P') {
             this->running_process_count++;
@@ -301,7 +299,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
 
       proc->show =
+#ifdef KERN_PROC_SHOW_THREADS
          !(Process_isKernelProcess(openbsd_proc) && !Process_isThreadProcess(openbsd_proc)) &&
+#endif
             (!((hide_kernel_processes && Process_isKernelProcess(openbsd_proc)) ||
                (hide_thread_processes && Process_isThreadProcess(openbsd_proc))));
 
