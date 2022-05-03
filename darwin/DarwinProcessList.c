@@ -108,7 +108,7 @@ static void ProcessList_getVMStats(vm_statistics_t p) {
 }
 
 static struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
-   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL };
+   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    struct kinfo_proc *processes;
 
    /* Note the two calls to sysctl(). One to get length and one to get the
@@ -128,6 +128,19 @@ static struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
 
    *count = *count / sizeof(struct kinfo_proc);
 
+   // Check for process 0 (kernel_task)
+   for(unsigned int i = 0; i < *count; i++) {
+      if(processes[i].kp_proc.p_pid == 0) return processes;
+   }
+
+   mib[2] = KERN_PROC_PID;
+   struct kinfo_proc proc0_info;
+   size_t info_size = sizeof proc0_info;
+   if(sysctl(mib, 4, &proc0_info, &info_size, NULL, 0) == 0 && info_size == sizeof proc0_info) {
+      processes = xRealloc(processes, (*count + 1) * sizeof(struct kinfo_proc));
+      memcpy(processes + *count, &proc0_info, sizeof proc0_info);
+      (*count)++;
+   }
    return processes;
 }
 
@@ -199,7 +212,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
 		super->totalTasks++;
-		if(Process_isKernelProcess(&proc->super)) super->kernel_process_count++;
+		if(Process_isKernelProcess(&proc->super)) {
+			super->kernel_process_count++;
+			if(super->settings->hide_kernel_processes) proc->super.show = false;
+		}
 		super->running_process_count++;
 
 		// Disabled for High Sierra due to bug in macOS High Sierra
