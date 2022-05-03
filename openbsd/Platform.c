@@ -28,20 +28,13 @@ in the source distribution for its full text.
 #ifdef SAFE_TO_DEFINE_KERNEL
 #undef _KERNEL
 #endif
-#include <sys/sched.h>
-#include <uvm/uvmexp.h>
 #include <sys/sysctl.h>
+#include <sys/time.h>
 #include <sys/swap.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <time.h>
-#include <fcntl.h>
 #include <kvm.h>
 #include <limits.h>
 
