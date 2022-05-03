@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #ifdef SAFE_TO_DEFINE_KERNEL
 #define _KERNEL
+struct proc;
 #endif
 #include <sys/param.h>
 #include <sys/proc.h>

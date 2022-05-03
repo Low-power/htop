@@ -10,6 +10,13 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef SAFE_TO_DEFINE_KERNEL
+#define _KERNEL
+#endif
+#ifdef SAFE_TO_DEFINE_KERNEL
+#undef _KERNEL
+#endif
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
