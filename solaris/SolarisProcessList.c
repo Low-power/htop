@@ -2,18 +2,24 @@
 htop - SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "ProcessList.h"
 #include "SolarisProcess.h"
 #include "SolarisProcessList.h"
-
-#include <unistd.h>
-#include <stdlib.h>
+#include "IOUtils.h"
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/user.h>
+#include <sys/sysconf.h>
+#include <sys/sysinfo.h>
+#include <sys/swap.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <err.h>
 #include <limits.h>
 #include <string.h>
@@ -22,18 +28,21 @@ in the source distribution for its full text.
 #include <pwd.h>
 #include <math.h>
 #include <time.h>
+#ifndef HAVE_LIBPROC
+#include <fcntl.h>
+#endif
 
 #define MAXCMDLINE 255
 
 /*{
 
+#include <stdint.h>
 #include <kstat.h>
-#include <sys/param.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
-#include <sys/sysconf.h>
-#include <sys/sysinfo.h>
-#include <sys/swap.h>
+#ifdef HAVE_LIBPROC
+#include <libproc.h>
+#else
+#include <dirent.h>
+#endif
 
 typedef struct CPUData_ {
    double userPercent;
@@ -52,6 +61,10 @@ typedef struct SolarisProcessList_ {
    ProcessList super;
    kstat_ctl_t* kd;
    CPUData* cpus;
+#ifndef HAVE_LIBPROC
+   DIR *proc_dir;
+#endif
+   time_t last_updated;
 } SolarisProcessList;
 
 }*/
@@ -231,8 +244,40 @@ void ProcessList_delete(ProcessList* pl) {
    ProcessList_done(pl);
    free(spl->cpus);
    if (spl->kd) kstat_close(spl->kd);
+#ifndef HAVE_LIBPROC
+   if(spl->proc_dir) closedir(spl->proc_dir);
+#endif
    free(spl);
 }
+
+static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
+   SolarisProcess *sproc = (SolarisProcess *)proc;
+   sproc->taskid            = _psinfo->pr_taskid;
+   sproc->projid            = _psinfo->pr_projid;
+   sproc->poolid            = _psinfo->pr_poolid;
+   sproc->contid            = _psinfo->pr_contract;
+   // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
+   // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
+   // (accessed on 18 November 2017)
+   proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem/(double)32768)*(double)100.0;
+   proc->ruid               = _psinfo->pr_uid;
+   proc->euid               = _psinfo->pr_euid;
+   proc->pgrp               = _psinfo->pr_pgid;
+   proc->nlwp               = _psinfo->pr_nlwp;
+   proc->tty_nr             = _psinfo->pr_ttydev;
+   proc->m_resident         = _psinfo->pr_rssize/PAGE_SIZE_KB;
+   proc->m_size             = _psinfo->pr_size/PAGE_SIZE_KB;
+}
+
+static void fill_last_pass(Process *proc, time_t now) {
+	SolarisProcess *sproc = (SolarisProcess *)proc;
+	struct tm date;
+	sproc->kernel = sproc->realppid <= 0 && sproc->realpid > 1;
+	localtime_r((time_t*) &proc->starttime_ctime, &date);
+	strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
+}
+
+#ifdef HAVE_LIBPROC
 
 /* NOTE: the following is a callback function of type proc_walk_f
  *       and MUST conform to the appropriate definition in order
@@ -241,8 +286,6 @@ void ProcessList_delete(ProcessList* pl) {
  */ 
 
 int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
-   struct timeval tv;
-   struct tm date;
    bool preExisting;
    pid_t getpid;
 
@@ -262,40 +305,33 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
 
-   gettimeofday(&tv, NULL);
-
    // Common code pass 1
+   if(preExisting) {
+      if(proc->ruid != _psinfo->pr_uid) proc->real_user = NULL;
+      if(proc->euid != _psinfo->pr_euid) proc->effective_user = NULL;
+   }
+
+   fill_from_psinfo(proc, _psinfo);
    proc->show               = false;
-   sproc->taskid            = _psinfo->pr_taskid;
-   sproc->projid            = _psinfo->pr_projid;
-   sproc->poolid            = _psinfo->pr_poolid;
-   sproc->contid            = _psinfo->pr_contract;
    proc->priority           = _lwpsinfo->pr_pri;
    proc->nice               = _lwpsinfo->pr_nice - NZERO;
    proc->processor          = _lwpsinfo->pr_onpro;
    proc->state              = _lwpsinfo->pr_sname;
-   // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
-   // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
-   // (accessed on 18 November 2017)
-   proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem/(double)32768)*(double)100.0;
-   proc->ruid               = _psinfo->pr_uid;
-   proc->euid               = _psinfo->pr_euid;
-   proc->pgrp               = _psinfo->pr_pgid;
-   proc->nlwp               = _psinfo->pr_nlwp;
-   proc->tty_nr             = _psinfo->pr_ttydev;
-   proc->m_resident         = _psinfo->pr_rssize/PAGE_SIZE_KB;
-   proc->m_size             = _psinfo->pr_size/PAGE_SIZE_KB;
 
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc); 
-      proc->real_user       = UsersTable_getRef(pl->usersTable, proc->ruid);
-      proc->effective_user  = UsersTable_getRef(pl->usersTable, proc->euid);
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
       proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
+   }
+   if(!proc->real_user) {
+      proc->real_user       = UsersTable_getRef(pl->usersTable, proc->ruid);
+   }
+   if(!proc->effective_user) {
+      proc->effective_user  = UsersTable_getRef(pl->usersTable, proc->euid);
    }
 
    // End common code pass 1
@@ -343,15 +379,10 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
    // Common code pass 2
 
    if (!preExisting) {
-      if ((sproc->realppid <= 0) && !(sproc->realpid <= 1)) {
-         sproc->kernel = true;
-      } else {
-         sproc->kernel = false;
-      }
-      (void) localtime_r((time_t*) &proc->starttime_ctime, &date);
-      strftime(proc->starttime_show, 7, ((proc->starttime_ctime > tv.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+      fill_last_pass(proc, spl->last_updated);
       ProcessList_add(pl, proc);
    }
+
    proc->updated = true;
 
    // End common code pass 2
@@ -362,7 +393,102 @@ int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *
 void ProcessList_goThroughEntries(ProcessList* this) {
    SolarisProcessList_scanCPUTime(this);
    SolarisProcessList_scanMemoryInfo(this);
+   ((SolarisProcessList *)this)->last_updated = time(NULL);
    this->kernel_process_count = 1;
-   proc_walk(&SolarisProcessList_walkproc, this, PR_WALK_LWP);
+   proc_walk(SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }
 
+#else
+
+void ProcessList_goThroughEntries(ProcessList *super) {
+	SolarisProcessList *this = (SolarisProcessList *)super;
+
+	SolarisProcessList_scanCPUTime(super);
+	SolarisProcessList_scanMemoryInfo(super);
+
+	if(this->proc_dir) rewinddir(this->proc_dir);
+	else {
+		this->proc_dir = opendir("/proc");
+		if(!this->proc_dir) return;
+	}
+
+	this->last_updated = time(NULL);
+
+	struct dirent *e;
+	while((e = readdir(this->proc_dir))) {
+		bool is_existing;
+		char *end_p;
+		long int pid = strtol(e->d_name, &end_p, 10);
+		if(*end_p) continue;
+		size_t len = end_p - e->d_name;
+		char path[len + 9];
+		memcpy(path, e->d_name, len);
+		strcpy(path + len, "/psinfo");
+		int fd = openat(dirfd(this->proc_dir), path, O_RDONLY);
+		if(fd == -1) continue;
+
+		psinfo_t info;
+		int s = xread(fd, &info, sizeof info);
+		close(fd);
+		assert((int)sizeof info > 0);
+		if(s < (int)sizeof info) continue;
+		if(info.pr_pid != pid) continue;
+
+		Process *proc = ProcessList_getProcess(super, pid, &is_existing, (Process_New)SolarisProcess_new);
+		SolarisProcess *sol_proc = (SolarisProcess *)proc;
+
+		if(is_existing) {
+			if(proc->ruid != info.pr_uid) proc->real_user = NULL;
+			if(proc->euid != info.pr_euid) proc->effective_user = NULL;
+		}
+		fill_from_psinfo(proc, &info);
+		if(!is_existing) {
+			proc->tgid = info.pr_pid;
+			proc->ppid = info.pr_ppid;
+			sol_proc->realpid = info.pr_pid;
+			sol_proc->realppid = info.pr_ppid;
+			sol_proc->is_lwp = false;
+			sol_proc->lwpid = -1;
+			sol_proc->zoneid = info.pr_zoneid;
+			sol_proc->zname = SolarisProcessList_readZoneName(this->kd, sol_proc); 
+			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
+			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
+			proc->name = xStrdup(info.pr_fname);
+			proc->comm = xStrdup(info.pr_psargs);
+			//proc->commLen = strnlen(info.pr_psargs, PRFNSZ);
+			proc->starttime_ctime = info.pr_start.tv_sec;
+		}
+		proc->percent_cpu = ((uint16_t)info.pr_pctcpu/(double)32768)*(double)100.0;
+		proc->time = info.pr_time.tv_sec * 100 + info.pr_time.tv_nsec / 10000000;
+		proc->nlwp = info.pr_nlwp;
+		proc->state = info.pr_lwp.pr_sname;
+		proc->nice = info.pr_lwp.pr_nice - NZERO;
+		proc->priority = info.pr_lwp.pr_pri;
+		proc->processor = info.pr_lwp.pr_onpro;
+		if(!proc->real_user) {
+			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
+		}
+		if(!proc->effective_user) {
+			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
+		}
+
+		if(!is_existing) {
+			fill_last_pass(proc, this->last_updated);
+			ProcessList_add(super, proc);
+		}
+
+		super->totalTasks++;
+		super->thread_count += proc->nlwp;
+		if(sol_proc->kernel) {
+			super->kernel_process_count++;
+			super->kernel_thread_count += proc->nlwp;
+		}
+		if(proc->state == 'O') super->running_process_count++;
+
+		proc->show = !(super->settings->hide_kernel_processes && sol_proc->kernel);
+
+		proc->updated = true;
+	}
+}
+
+#endif

@@ -30,6 +30,9 @@ in the source distribution for its full text.
 #include <time.h>
 #include <math.h>
 #include <sys/var.h>
+#ifdef HAVE_LIBPROC
+#include <libproc.h>
+#endif
 
 /*{
 #include "Action.h"
@@ -38,9 +41,10 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <sys/mkdev.h>
 #include <sys/proc.h>
-#include <libproc.h>
 
+#ifdef HAVE_LIBPROC
 #define  kill(pid, signal) kill(pid / 1024, signal)
+#endif
 
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
@@ -218,6 +222,8 @@ struct env_accum {
    unsigned int count;
 };
 
+#ifdef HAVE_LIBPROC
+
 static int append_env(void *arg, struct ps_prochandle *handle, uintptr_t addr, const char *s) {
 	struct env_accum *accum = arg;
 	accum->env[accum->count] = xStrdup(s);
@@ -236,3 +242,11 @@ char **Platform_getProcessEnv(pid_t pid) {
    accum.env[accum.count] = NULL;
    return accum.env;
 }
+
+#else
+
+char **Platform_getProcessEnv(pid_t pid) {
+	return NULL;
+}
+
+#endif

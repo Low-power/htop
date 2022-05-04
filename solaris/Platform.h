@@ -11,15 +11,19 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef HAVE_LIBPROC
+#endif
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
 #include <signal.h>
 #include <sys/mkdev.h>
 #include <sys/proc.h>
-#include <libproc.h>
 
+#ifdef HAVE_LIBPROC
 #define  kill(pid, signal) kill(pid / 1024, signal)
+#endif
 
 extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
@@ -52,6 +56,14 @@ void Platform_setMemoryValues(Meter* this);
 void Platform_setSwapValues(Meter* this);
 
 
+#ifdef HAVE_LIBPROC
+
 char **Platform_getProcessEnv(pid_t pid);
+
+#else
+
+char **Platform_getProcessEnv(pid_t pid);
+
+#endif
 
 #endif

@@ -252,8 +252,21 @@ if test "$my_htop_platform" = "openbsd"; then
 fi
 
 if test "$my_htop_platform" = "solaris"; then
+	AC_ARG_WITH([solaris-libproc],
+		[AS_HELP_STRING([--with-solaris-libproc], [Enable use of Solaris libproc(3LIB) [auto detect]])],
+		[], [with_solaris_libproc=check])
+	AS_IF([test "x$with_solaris_libproc" != xno],
+		[
+			if test "x$with_solaris_libproc" != xcheck && test "x$with_solaris_libproc" != xyes; then
+				CPPFLAGS="$CPPFLAGS -I $with_solaris_libproc/include"
+				LDFLAGS="$LDFLAGS -L$with_solaris_libproc/lib"
+                        fi
+			AC_CHECK_HEADER([libproc.h], [
+					AC_CHECK_LIB([proc], [Pgrab_error], [],
+						[test "x$with_solaris_libproc" != xcheck && missing_libraries="$missing_libraries libproc"])
+				], [test "x$with_solaris_libproc" != xcheck && missing_headers="$missing_headers libproc.h"])
+		])
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
-   AC_CHECK_LIB([proc], [Pgrab_error], [], [missing_libraries="$missing_libraries libproc"])
    AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
