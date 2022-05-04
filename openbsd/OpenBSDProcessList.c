@@ -239,8 +239,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    for (i = 0; i < count; i++) {
       struct kinfo_proc *kproc = kprocs + i;
+#ifdef HAVE_STRUCT_KINFO_PROC_P_TID
       if((hide_high_level_processes || kproc->p_pid == 0) && kproc->p_tid == -1) continue;
       pid_t pid = kproc->p_tid == -1 ? kproc->p_pid : kproc->p_tid - THREAD_PID_OFFSET;
+#else
+      pid_t pid = kproc->p_pid;
+#endif
       bool preExisting;
       Process *proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) OpenBSDProcess_new);
       OpenBSDProcess *openbsd_proc = (OpenBSDProcess *)proc;
@@ -290,7 +294,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          default:      proc->state = '?';
       }
 
+#ifdef HAVE_STRUCT_KINFO_PROC_P_TID
       if(kproc->p_tid != -1) {
+#endif
          this->totalTasks++;
          this->thread_count++;
          if (Process_isKernelProcess(proc)) {
@@ -303,7 +309,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             this->running_process_count++;
             this->running_thread_count++;
          }
+#ifdef HAVE_STRUCT_KINFO_PROC_P_TID
       }
+#endif
 
       proc->show =
 #ifdef KERN_PROC_SHOW_THREADS
