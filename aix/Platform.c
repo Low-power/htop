@@ -219,11 +219,11 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
    char* buf;
    struct procentry64 pe;
    /* we only need to fill in the pid, it seems */
-   pe.pi_pid = pid;
+   pe.pi_pid = proc->pid;
    buf = (char*)xMalloc(0x10000);
    if (getevars (&pe, sizeof (pe), buf, 0x10000) == -1) {
       free (buf);

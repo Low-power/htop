@@ -203,8 +203,8 @@ void Platform_setTasksValues(Meter* this) {
    (void)this;	// prevent unused warning
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
    // TODO
-   (void)pid;	// prevent unused warning
+   (void)proc;	// prevent unused warning
    return NULL;
 }

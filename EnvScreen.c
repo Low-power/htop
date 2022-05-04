@@ -49,7 +49,7 @@ void EnvScreen_scan(InfoScreen* this) {
    Panel_prune(panel);
 
    CRT_dropPrivileges();
-   char **env = Platform_getProcessEnv(this->process->pid);
+   char **env = Platform_getProcessEnv(this->process);
    CRT_restorePrivileges();
    if (env) {
       char **p = env;

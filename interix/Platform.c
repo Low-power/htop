@@ -133,9 +133,9 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
    char path[32];
-   xSnprintf(path, sizeof path, "/proc/%d/environ", (int)pid);
+   xSnprintf(path, sizeof path, "/proc/%d/environ", (int)proc->pid);
    FILE *f = fopen(path, "r");
    if(!f) return NULL;
    char **env = xMalloc(sizeof(char *));

@@ -231,10 +231,10 @@ static int append_env(void *arg, struct ps_prochandle *handle, uintptr_t addr, c
 	return 0; 
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
-   pid_t realpid = pid / 1024;
+char **Platform_getProcessEnv(Process *proc) {
+   pid_t pid = ((SolarisProcess *)proc)->realpid;
    int graberr;
-   struct ps_prochandle *handle = Pgrab(realpid, PGRAB_RDONLY, &graberr);
+   struct ps_prochandle *handle = Pgrab(pid, PGRAB_RDONLY, &graberr);
    if(!handle) return NULL;
    struct env_accum accum = { .env = xMalloc(sizeof(char *)) };
    Penv_iter(handle, append_env, &accum); 
@@ -245,7 +245,7 @@ char **Platform_getProcessEnv(pid_t pid) {
 
 #else
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
 	return NULL;
 }
 

@@ -244,13 +244,13 @@ void Platform_setSwapValues(Meter* mtr) {
   mtr->values[0] = swapused.xsu_used / 1024;
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
    int mib[3] = { CTL_KERN, KERN_ARGMAX };
    int argmax;
    size_t bufsz = sizeof(argmax);
    if (sysctl(mib, 2, &argmax, &bufsz, 0, 0) < 0) return NULL;
    mib[1] = KERN_PROCARGS2;
-   mib[2] = pid;
+   mib[2] = proc->pid;
    char *buf = xMalloc(argmax);
    bufsz = argmax;
    if (sysctl(mib, 3, buf, &bufsz, 0, 0) < 0 || bufsz <= sizeof(int)) {

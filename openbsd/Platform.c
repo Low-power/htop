@@ -303,7 +303,7 @@ void Platform_setTasksValues(Meter* this) {
    // TODO
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
    char errbuf[_POSIX2_LINE_MAX];
    char **ptr;
    int count;
@@ -313,7 +313,7 @@ char **Platform_getProcessEnv(pid_t pid) {
    if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
       return NULL;
 
-   if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, pid,
+   if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, proc->pid,
                              sizeof(struct kinfo_proc), &count)) == NULL) {
       (void) kvm_close(kt);
       return NULL;

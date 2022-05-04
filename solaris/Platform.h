@@ -58,11 +58,11 @@ void Platform_setSwapValues(Meter* this);
 
 #ifdef HAVE_LIBPROC
 
-char **Platform_getProcessEnv(pid_t pid);
+char **Platform_getProcessEnv(Process *proc);
 
 #else
 
-char **Platform_getProcessEnv(pid_t pid);
+char **Platform_getProcessEnv(Process *proc);
 
 #endif
 

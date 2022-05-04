@@ -202,9 +202,9 @@ void Platform_setTasksValues(Meter* this) {
    // TODO
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
+char **Platform_getProcessEnv(Process *proc) {
 #ifdef KERN_PROC_ENV
-	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ENV, pid };
+	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ENV, proc->pid };
 	char *buffer = xMalloc(ARG_MAX);
 	size_t len = ARG_MAX;
 	if(sysctl(mib, 4, buffer, &len, NULL, 0) < 0) {

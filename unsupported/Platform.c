@@ -124,7 +124,7 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-char **Platform_getProcessEnv(pid_t pid) {
-   (void) pid;
+char **Platform_getProcessEnv(Process *proc) {
+   (void)proc;
    return NULL;
 }
