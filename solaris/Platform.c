@@ -32,6 +32,10 @@ in the source distribution for its full text.
 #include <sys/var.h>
 #ifdef HAVE_LIBPROC
 #include <libproc.h>
+#else
+#include <procfs.h>
+#include <unistd.h>
+#include <fcntl.h>
 #endif
 
 /*{
@@ -41,6 +45,8 @@ in the source distribution for its full text.
 #include <signal.h>
 #include <sys/mkdev.h>
 #include <sys/proc.h>
+
+#define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
 
 #ifdef HAVE_LIBPROC
 #define  kill(pid, signal) kill(pid / 1024, signal)
@@ -246,7 +252,57 @@ char **Platform_getProcessEnv(Process *proc) {
 #else
 
 char **Platform_getProcessEnv(Process *proc) {
-	return NULL;
+	bool is_64bit;
+	SolarisProcess *sol_proc = (SolarisProcess *)proc;
+	switch(sol_proc->data_model) {
+		case PR_MODEL_ILP32:
+			is_64bit = false;
+			break;
+		case PR_MODEL_LP64:
+			is_64bit = true;
+			break;
+		default:
+			return NULL;
+	}
+	if(Process_isKernelProcess(proc)) return NULL;
+	if(sol_proc->env_offset < 0) return NULL;
+	char path[20];
+	xSnprintf(path, sizeof path, "/proc/%d/as", (int)proc->pid);
+	int fd = open(path, O_RDONLY);
+	if(fd == -1) return NULL;
+	if(lseek(fd, sol_proc->env_offset, SEEK_SET) < 0) {
+		close(fd);
+		return NULL;
+	}
+	char **env = xMalloc(sizeof(char *));
+	unsigned int i = 0;
+	while(true) {
+		off_t offset;
+		if(is_64bit) {
+			uint64_t buffer;
+			if(xread(fd, &buffer, 8) < 8) break;
+			if(buffer > MAX_VALUE_OF(off_t)) continue;
+			offset = buffer;
+		} else {
+			uint32_t buffer;
+			if(xread(fd, &buffer, 4) < 4) break;
+			offset = buffer;
+		}
+		if(!offset) break;
+		env[i] = xMalloc(256);
+		int len = pread(fd, env[i], 256, offset);
+		if(len < 1) {
+			free(env[i]);
+			continue;
+		}
+		len = strnlen(env[i], len);
+		if(len < 255) env[i] = realloc(env[i], len + 1);
+		else if(len == 256) env[i][255] = 0;
+		env = xRealloc(env, (++i + 1) * sizeof(char *));
+	}
+	close(fd);
+	env[i] = NULL;
+	return env;
 }
 
 #endif

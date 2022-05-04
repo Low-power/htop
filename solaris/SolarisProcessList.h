@@ -17,6 +17,7 @@ in the source distribution for its full text.
 #define MAXCMDLINE 255
 
 
+#include "SolarisProcess.h"
 #include <stdint.h>
 #include <kstat.h>
 #ifdef HAVE_LIBPROC

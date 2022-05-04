@@ -39,6 +39,8 @@ typedef struct SolarisProcess_ {
    pid_t      realpid;
    pid_t      realppid;
    pid_t      lwpid;
+   off_t      env_offset;
+   char       data_model;
 } SolarisProcess;
 
 

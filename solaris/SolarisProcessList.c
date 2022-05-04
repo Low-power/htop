@@ -9,8 +9,8 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "ProcessList.h"
-#include "SolarisProcess.h"
 #include "SolarisProcessList.h"
+#include "Platform.h"
 #include "IOUtils.h"
 #include <sys/param.h>
 #include <sys/types.h>
@@ -36,6 +36,7 @@ in the source distribution for its full text.
 
 /*{
 
+#include "SolarisProcess.h"
 #include <stdint.h>
 #include <kstat.h>
 #ifdef HAVE_LIBPROC
@@ -267,6 +268,8 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
    proc->tty_nr             = _psinfo->pr_ttydev;
    proc->m_resident         = _psinfo->pr_rssize/PAGE_SIZE_KB;
    proc->m_size             = _psinfo->pr_size/PAGE_SIZE_KB;
+   sproc->env_offset        = _psinfo->pr_envp > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_envp;
+   sproc->data_model        = _psinfo->pr_dmodel;
 }
 
 static void fill_last_pass(Process *proc, time_t now) {
