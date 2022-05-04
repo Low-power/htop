@@ -50,7 +50,7 @@ ProcessFieldData Process_fields[] = {
    [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [NAME] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
    [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
-   [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping (<20s), I Idle, Q Queued for Run, R running, D disk, Z zombie, T traced, W paging, B Blocked, A AskedPage, C Core, J Jailed)", .flags = 0, },
+   [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping (<20s), I Idle, Q Queued for Run, R running, D disk, Z zombie, T stoppd, W paging, B Blocked, A AskedPage, C Core, J Jailed)", .flags = 0, },
    [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [SESSION] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
@@ -110,7 +110,7 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
    int n = sizeof(buffer);
    switch ((int) field) {
    // add Platform-specific fields here
-   case PID: xSnprintf(buffer, n, Process_pidFormat, (fp->kernel ? -1 : this->pid)); break;
+   case PID: xSnprintf(buffer, n, Process_pidFormat, fp->kernel ? this->tgid : this->pid); break;
    case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
    case JAIL:{
       xSnprintf(buffer, n, "%-11s ", fp->jname); break;

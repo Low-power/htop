@@ -414,31 +414,24 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    int count = 0;
 
-   // TODO Kernel Threads seem to be skipped, need to figure out the correct flag
    struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL, 0, &count);
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
-      bool preExisting = false;
-      bool _UNUSED_ isIdleProcess = false;
+      bool preExisting;
 
       // note: dragonflybsd kernel processes all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-      Process* proc = ProcessList_getProcess(this, kproc->kp_ktaddr ? (pid_t)kproc->kp_ktaddr : kproc->kp_pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
+      pid_t pid = kproc->kp_pid != 1 && (kproc->kp_flags & P_SYSTEM) && kproc->kp_ktaddr ?
+         (pid_t)kproc->kp_ktaddr : kproc->kp_pid;
+      Process* proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) DragonFlyBSDProcess_new);
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
+
+      proc->ppid = kproc->kp_ppid;		// parent process id
 
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
-         if (kproc->kp_ktaddr && kproc->kp_flags & P_SYSTEM) {
-            // dfb kernel threads all have the same pid, so we misuse the kernel thread address to give them a unique identifier
-            proc->pid = (pid_t)kproc->kp_ktaddr;
-            dfp->kernel = 1;
-         } else {
-            proc->pid = kproc->kp_pid;		// process ID
-            dfp->kernel = 0;
-         }
-         proc->ppid = kproc->kp_ppid;		// parent process id
+         dfp->kernel = kproc->kp_pid != 1 && (kproc->kp_flags & P_SYSTEM);
          proc->tpgid = kproc->kp_tpgid;		// tty process group id
-         //proc->tgid = kproc->kp_lwp.kl_tid;	// thread group id
          proc->tgid = kproc->kp_pid;		// thread group id
          proc->pgrp = kproc->kp_pgid;		// process group id
          proc->session = kproc->kp_sid;
@@ -459,9 +452,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             dfp->jid = kproc->kp_jailid;
             free(dfp->jname);
             dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
-         }
-         if (proc->ppid != kproc->kp_ppid) {	// if there are reapers in the system, process can get reparented anytime
-            proc->ppid = kproc->kp_ppid;
          }
          // some processes change users (eg. to lower privs)
          if(proc->ruid != kproc->kp_ruid) {
@@ -488,13 +478,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
       proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
 
-      if (proc->percent_cpu > 0.1) {
-         // system idle process should own all CPU time left regardless of CPU count
-         if ( strcmp("idle", kproc->kp_comm) == 0 ) {
-            isIdleProcess = true;
-         }
-      }
-
       if (kproc->kp_lwp.kl_pid != -1)
          proc->priority = kproc->kp_lwp.kl_prio;
       else
@@ -517,14 +500,13 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       // would be nice if we could store multiple states in proc->state (as enum) and have writeField render them
       switch (kproc->kp_stat) {
-      case SIDL:   proc->state = 'I'; isIdleProcess = true; break;
+      case SIDL:   proc->state = 'I'; break;
       case SACTIVE:
          switch (kproc->kp_lwp.kl_stat) {
             case LSSLEEP:
                if (kproc->kp_lwp.kl_flags & LWP_SINTR)					// interruptable wait short/long
                   if (kproc->kp_lwp.kl_slptime >= MAXSLP) {
                      proc->state = 'I';
-                     isIdleProcess = true;
                   } else {
                      proc->state = 'S';
                   }
@@ -559,12 +541,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       if (kproc->kp_flags & P_SWAPPEDOUT) {
          proc->state = 'W';
-      }
-      if (kproc->kp_flags & P_TRACED) {
-         proc->state = 'T';
-      }
-      if (kproc->kp_flags & P_JAILED) {
-         proc->state = 'J';
       }
       this->totalTasks++;
       this->thread_count += proc->nlwp;
