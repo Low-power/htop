@@ -95,7 +95,9 @@ ProcessFieldData Process_fields[] = {
    [TASKID] = { .name = "TASKID", .title = " TSKID ", .description = "Task ID", .flags = 0, },
    [POOLID] = { .name = "POOLID", .title = " POLID ", .description = "Pool ID", .flags = 0, },
    [CONTID] = { .name = "CONTID", .title = " CNTID ", .description = "Contract ID", .flags = 0, },
+#ifdef HAVE_LIBPROC
    [LWPID] = { .name = "LWPID", .title = " LWPID ", .description = "LWP ID", .flags = 0, },
+#endif
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -107,7 +109,9 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = CONTID, .label = "CNTID" },
    { .id = PID, .label = "PID" },
    { .id = PPID, .label = "PPID" },
+#ifdef HAVE_LIBPROC
    { .id = LWPID, .label = "LWPID" },
+#endif
    { .id = TPGID, .label = "TPGID" },
    { .id = TGID, .label = "TGID" },
    { .id = PGRP, .label = "PGRP" },
@@ -151,7 +155,9 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    }
    case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
    case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
+#ifdef HAVE_LIBPROC
    case LWPID: xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
+#endif
    default:
       Process_writeField(this, str, field);
       return;
@@ -186,8 +192,10 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
       return (p1->realpid - p2->realpid);
    case PPID:
       return (p1->realppid - p2->realppid);
+#ifdef HAVE_LIBPROC
    case LWPID:
       return (p1->lwpid - p2->lwpid);
+#endif
    default:
       return Process_compare(v1, v2);
    }

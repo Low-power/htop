@@ -38,7 +38,11 @@ extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
+#ifdef HAVE_LIBPROC
 extern ProcessField Platform_defaultFields[];
+#else
+extern ProcessField Platform_defaultFields[];
+#endif
 
 extern MeterClass* Platform_meterTypes[];
 
