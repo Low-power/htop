@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "CRT.h"
 #include "StringUtils.h"
+#include "IOUtils.h"
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -121,22 +122,6 @@ typedef struct LinuxProcessList_ {
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
-
-static ssize_t xread(int fd, void *buf, size_t count) {
-  // Read some bytes. Retry on EINTR and when we don't get as many bytes as we requested.
-  size_t alreadyRead = 0;
-  for(;;) {
-     ssize_t res = read(fd, buf, count);
-     if (res == -1 && errno == EINTR) continue;
-     if (res > 0) {
-       buf = ((char*)buf)+res;
-       count -= res;
-       alreadyRead += res;
-     }
-     if (res == -1) return -1;
-     if (count == 0 || res == 0) return alreadyRead;
-  }
-}
 
 static int sortTtyDrivers(const void* va, const void* vb) {
    TtyDriver* a = (TtyDriver*) va;
