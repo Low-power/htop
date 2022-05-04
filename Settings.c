@@ -46,7 +46,6 @@ typedef struct Settings_ {
    bool detailedCPUTime;
    bool treeView;
    bool showProgramPath;
-   bool hideThreads;
    bool shadowOtherUsers;
    bool showThreadNames;
    bool hide_kernel_processes;
@@ -190,8 +189,6 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->direction = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view")) {
          this->treeView = atoi(option[1]);
-      } else if (String_eq(option[0], "hide_threads")) {
-         this->hideThreads = atoi(option[1]);
       } else if (String_eq(option[0], "hide_kernel_processes") || String_eq(option[0], "hide_kernel_threads")) {
          this->hide_kernel_processes = atoi(option[1]);
       } else if (String_eq(option[0], "hide_thread_processes") || String_eq(option[0], "hide_userland_threads")) {
@@ -293,7 +290,6 @@ bool Settings_write(Settings* this) {
    // This "-1" is for compatibility with the older enum format.
    fprintf(f, "sort_key=%d\n", (int) this->sortKey-1);
    fprintf(f, "sort_direction=%d\n", (int) this->direction);
-   fprintf(f, "hide_threads=%d\n", (int) this->hideThreads);
    fprintf(f, "hide_kernel_processes=%d\n", (int) this->hide_kernel_processes);
    fprintf(f, "hide_thread_processes=%d\n", (int) this->hide_thread_processes);
    fprintf(f, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
@@ -324,7 +320,6 @@ Settings* Settings_new(int cpuCount) {
 
    this->sortKey = PERCENT_CPU;
    this->direction = 1;
-   this->hideThreads = false;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
    this->hide_kernel_processes = false;
