@@ -11,6 +11,7 @@ in the source distribution for its full text.
 
 #define DEFAULT_DELAY 15
 
+#include "config.h"
 #include "Process.h"
 #include <stdbool.h>
 
@@ -41,6 +42,9 @@ typedef struct Settings_ {
    bool showThreadNames;
    bool hide_kernel_processes;
    bool hide_thread_processes;
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+   bool hide_high_level_processes;
+#endif
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;

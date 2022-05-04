@@ -249,6 +249,41 @@ if test "$my_htop_platform" = "openbsd"; then
 		], [
 			AC_MSG_RESULT([no])
 		])
+	AC_MSG_CHECKING([whether process ID will be different from main thread ID])
+	AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+			#include <sys/types.h>
+			#include <sys/param.h>
+			#include <sys/sysctl.h>
+			extern char conftest[KERN_PROC_SHOW_THREADS];
+		]])], [
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([
+					#include <sys/types.h>
+					#include <sys/param.h>
+					#include <sys/proc.h>
+					#include <sys/sysctl.h>
+					#include <unistd.h>
+				], [[
+					int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID | KERN_PROC_SHOW_THREADS, getpid(), sizeof(struct kinfo_proc), 0 };
+					size_t size = 0;
+					if(sysctl(mib, 6, NULL, &size, NULL, 0) < 0) return 1;
+					mib[5] = size / sizeof(struct kinfo_proc);
+					struct kinfo_proc info[mib[5]];
+					if(sysctl(mib, 6, &info, &size, NULL, 0) < 0) return 1;
+					return size == 2 * sizeof(struct kinfo_proc) && info[0].p_pid == info[1].p_pid && info[0].p_tid == -1 && info[1].p_pid != info[1].p_tid - THREAD_PID_OFFSET ? 0 : 1;
+				]])], [
+					AC_DEFINE(PID_AND_MAIN_THREAD_ID_DIFFER, 1,
+						[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated])
+					AC_MSG_RESULT([yes])
+				], [
+					AC_MSG_RESULT([no])
+				], [
+					AC_DEFINE(PID_AND_MAIN_THREAD_ID_DIFFER, 1,
+						[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated])
+					AC_MSG_RESULT([guessing yes])
+				])
+		], [
+			AC_MSG_RESULT([no])
+		])
 fi
 
 if test "$my_htop_platform" = "solaris"; then

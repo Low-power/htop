@@ -19,6 +19,7 @@ typedef enum OpenBSDProcessFields {
 typedef struct OpenBSDProcess_ {
    Process super;
    bool is_kernel_process;
+   bool is_main_thread;
 } OpenBSDProcess;
 
 

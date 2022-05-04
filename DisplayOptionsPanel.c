@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "DisplayOptionsPanel.h"
 
 #include "CheckItem.h"
@@ -87,6 +88,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel processes"), &(settings->hide_kernel_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide additional thread processes"), &(settings->hide_thread_processes)));
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+   Panel_add(super, (Object*)CheckItem_newByRef(xStrdup("Hide high-level processes"), &settings->hide_high_level_processes));
+#endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Display additional threads in a different color"), &(settings->highlightThreads)));
    Panel_add(super, (Object*)CheckItem_newByRef(xStrdup("Display kernel processes in a different color"), &(settings->highlight_kernel_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));

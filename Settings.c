@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #define DEFAULT_DELAY 15
 
 /*{
+#include "config.h"
 #include "Process.h"
 #include <stdbool.h>
 
@@ -50,6 +51,9 @@ typedef struct Settings_ {
    bool showThreadNames;
    bool hide_kernel_processes;
    bool hide_thread_processes;
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+   bool hide_high_level_processes;
+#endif
    bool highlightBaseName;
    bool highlightMegabytes;
    bool highlightThreads;
@@ -193,6 +197,10 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->hide_kernel_processes = atoi(option[1]);
       } else if (String_eq(option[0], "hide_thread_processes") || String_eq(option[0], "hide_userland_threads")) {
          this->hide_thread_processes = atoi(option[1]);
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+      } else if (String_eq(option[0], "hide_high_level_processes")) {
+         this->hide_high_level_processes = atoi(option[1]);
+#endif
       } else if (String_eq(option[0], "shadow_other_users")) {
          this->shadowOtherUsers = atoi(option[1]);
       } else if (String_eq(option[0], "show_thread_names")) {
@@ -292,6 +300,9 @@ bool Settings_write(Settings* this) {
    fprintf(f, "sort_direction=%d\n", (int) this->direction);
    fprintf(f, "hide_kernel_processes=%d\n", (int) this->hide_kernel_processes);
    fprintf(f, "hide_thread_processes=%d\n", (int) this->hide_thread_processes);
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+   fprintf(f, "hide_high_level_processes=%d\n", (int)this->hide_high_level_processes);
+#endif
    fprintf(f, "shadow_other_users=%d\n", (int) this->shadowOtherUsers);
    fprintf(f, "show_thread_names=%d\n", (int) this->showThreadNames);
    fprintf(f, "show_program_path=%d\n", (int) this->showProgramPath);
@@ -324,6 +335,9 @@ Settings* Settings_new(int cpuCount) {
    this->showThreadNames = false;
    this->hide_kernel_processes = false;
    this->hide_thread_processes = false;
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+   this->hide_high_level_processes = false;
+#endif
    this->treeView = false;
    this->highlightBaseName = false;
    this->highlightMegabytes = false;

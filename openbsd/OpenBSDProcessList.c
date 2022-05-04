@@ -6,6 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "ProcessList.h"
 #include "OpenBSDProcessList.h"
 #include "OpenBSDProcess.h"
@@ -216,24 +217,29 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
    bool hide_kernel_processes = this->settings->hide_kernel_processes;
    bool hide_thread_processes = this->settings->hide_thread_processes;
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+   bool hide_high_level_processes = this->settings->hide_high_level_processes;
+#else
+   bool hide_high_level_processes = false;
+#endif
    struct timeval now;
    int count = 0;
    int i;
 
    OpenBSDProcessList_scanMemoryInfo(this);
 
-   int op = hide_kernel_processes ? KERN_PROC_ALL : KERN_PROC_KTHREAD;
+   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd,
 #ifdef KERN_PROC_SHOW_THREADS
-   op |= KERN_PROC_SHOW_THREADS;
+      KERN_PROC_SHOW_THREADS |
 #endif
-   struct kinfo_proc* kprocs = kvm_getprocs(opl->kd, op, 0, sizeof(struct kinfo_proc), &count);
+      KERN_PROC_KTHREAD,
+      0, sizeof(struct kinfo_proc), &count);
 
    gettimeofday(&now, NULL);
 
    for (i = 0; i < count; i++) {
       struct kinfo_proc *kproc = kprocs + i;
-      //if(!hide_thread_processes && kproc->p_tid == -1) continue;
-      if(kproc->p_pid == 0 && kproc->p_tid == -1) continue;
+      if((hide_high_level_processes || kproc->p_pid == 0) && kproc->p_tid == -1) continue;
       pid_t pid = kproc->p_tid == -1 ? kproc->p_pid : kproc->p_tid - THREAD_PID_OFFSET;
       bool preExisting;
       Process *proc = ProcessList_getProcess(this, pid, &preExisting, (Process_New) OpenBSDProcess_new);
@@ -253,6 +259,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->p_ustart_sec;
          openbsd_proc->is_kernel_process = (kproc->p_flag & P_SYSTEM);
+         openbsd_proc->is_main_thread = !(kproc->p_flag & P_THREAD);
          ProcessList_add((ProcessList*)this, proc);
          OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);

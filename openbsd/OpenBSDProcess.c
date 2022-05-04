@@ -6,6 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Process.h"
 #include "ProcessList.h"
 #include "OpenBSDProcess.h"
@@ -24,6 +25,7 @@ typedef enum OpenBSDProcessFields {
 typedef struct OpenBSDProcess_ {
    Process super;
    bool is_kernel_process;
+   bool is_main_thread;
 } OpenBSDProcess;
 
 }*/
@@ -220,5 +222,8 @@ bool Process_isKernelProcess(Process *this) {
 }
 
 bool Process_isExtraThreadProcess(Process* this) {
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+	if(this->settings->hide_high_level_processes) return !((OpenBSDProcess *)this)->is_main_thread;
+#endif
 	return this->pid != this->tgid;
 }
