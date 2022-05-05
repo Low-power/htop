@@ -49,6 +49,9 @@ void ProcessList_delete(ProcessList* this);
 /*
  * Taken from OpenBSD's ps(1).
  */
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+#endif
+
 void ProcessList_goThroughEntries(ProcessList* this);
 
 #endif

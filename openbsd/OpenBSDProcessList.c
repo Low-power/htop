@@ -183,6 +183,19 @@ static double getpcpu(const struct kinfo_proc *kp) {
    return (100.0 * fxtofl(kp->p_pctcpu));
 }
 
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+static pid_t get_main_tid(const struct kinfo_proc *procs, unsigned int count, pid_t pid) {
+	for(unsigned int i = 0; i < count; i++) {
+		const struct kinfo_proc *p = procs + i;
+		if(p->p_tid == -1) continue;
+		if(p->p_pid != pid) continue;
+		if(p->p_flag & P_THREAD) continue;
+		return p->p_tid - THREAD_PID_OFFSET;
+	}
+	return -1;
+}
+#endif
+
 void ProcessList_goThroughEntries(ProcessList* this) {
    OpenBSDProcessList* opl = (OpenBSDProcessList*) this;
    bool hide_kernel_processes = this->settings->hide_kernel_processes;
@@ -227,42 +240,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (!preExisting) {
          struct tm date;
          proc->tgid = kproc->p_pid;
-#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
-         if(hide_high_level_processes) {
-            proc->ppid = 0;
-            if(kproc->p_flag & P_THREAD) {
-               if(last_pid == kproc->p_pid) proc->ppid = last_main_tid;
-               else for(int j = 0; j < i; i++) {
-                  struct kinfo_proc *ki = kprocs + j;
-                  if(ki->p_tid == -1) continue;
-                  if(ki->p_pid != kproc->p_pid) continue;
-                  if(ki->p_flag & P_THREAD) continue;
-                  proc->ppid = ki->p_tid - THREAD_PID_OFFSET;
-                  break;
-               }
-            } else {
-               for(int j = i + 1; j < count; j++) {
-                  struct kinfo_proc *ki = kprocs + j;
-                  if(ki->p_tid == -1) continue;
-                  if(ki->p_pid != kproc->p_ppid) continue;
-                  if(ki->p_flag & P_THREAD) continue;
-                  proc->ppid = ki->p_tid - THREAD_PID_OFFSET;
-                  break;
-               }
-               last_pid = kproc->p_pid;
-               last_main_tid = kproc->p_tid - THREAD_PID_OFFSET;
-            }
-         } else
-#endif
-         proc->ppid = kproc->p_ppid;
-         proc->tpgid = kproc->p_tpgid;
-         proc->session = kproc->p_sid;
-         proc->tty_nr = kproc->p_tdev;
-         proc->pgrp = kproc->p__pgid;
-         proc->ruid = kproc->p_ruid;
-         proc->euid = kproc->p_uid;
-         proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
-         proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->p_ustart_sec;
          openbsd_proc->is_kernel_process = (kproc->p_flag & P_SYSTEM);
          openbsd_proc->is_main_thread = !(kproc->p_flag & P_THREAD);
@@ -270,10 +247,48 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
          strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now.tv_sec - 86400) ? "%R " : "%b%d "), &date);
-      } else if (this->settings->updateProcessNames) {
-         free(proc->name);
-         free(proc->comm);
-         OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+      } else {
+         if(proc->ruid != kproc->p_ruid) proc->real_user = NULL;
+         if(proc->euid != kproc->p_uid) proc->effective_user = NULL;
+         if (this->settings->updateProcessNames) {
+            free(proc->name);
+            free(proc->comm);
+            OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+         }
+      }
+
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+      if(hide_high_level_processes) {
+         if(openbsd_proc->is_main_thread) {
+            int remain_count = count - i - 1;
+            if(remain_count > 0) {
+               proc->ppid = get_main_tid(kprocs + i + 1, remain_count, kproc->p_ppid);
+               last_pid = kproc->p_pid;
+               last_main_tid = kproc->p_tid - THREAD_PID_OFFSET;
+            } else {
+               proc->ppid = 0;
+            }
+         } else if(last_pid == kproc->p_pid) {
+            proc->ppid = last_main_tid;
+         } else {
+            proc->ppid = get_main_tid(kprocs, i, kproc->p_pid);
+         }
+      } else
+#endif
+      proc->ppid = kproc->p_ppid;
+
+      proc->tpgid = kproc->p_tpgid;
+      proc->session = kproc->p_sid;
+      proc->tty_nr = kproc->p_tdev;
+      proc->pgrp = kproc->p__pgid;
+      proc->ruid = kproc->p_ruid;
+      proc->euid = kproc->p_uid;
+
+      if(!proc->real_user) {
+         proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);
+      }
+      if(!proc->effective_user) {
+         proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
       }
 
       proc->m_size = kproc->p_vm_dsize;
