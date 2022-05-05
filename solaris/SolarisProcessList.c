@@ -275,7 +275,7 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
 static void fill_last_pass(Process *proc, time_t now) {
 	SolarisProcess *sproc = (SolarisProcess *)proc;
 	struct tm date;
-	sproc->kernel = sproc->realppid <= 0 && sproc->realpid > 1;
+	sproc->kernel = sproc->realppid <= 0 && sproc->realpid != 1;
 	localtime_r((time_t*) &proc->starttime_ctime, &date);
 	strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
 }
