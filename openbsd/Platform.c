@@ -51,7 +51,7 @@ extern ProcessFieldData Process_fields[];
 
 #define MAXCPU 256
 // XXX: probably should be a struct member
-static int64_t old_v[MAXCPU][5];
+static uint64_t old_v[1+MAXCPU][5];
 
 /*
  * Copyright (c) 1984, 1989, William LeFebvre, Rice University
@@ -66,8 +66,8 @@ static int64_t old_v[MAXCPU][5];
  * The routine assumes modulo arithmetic.  This function is especially
  * useful on BSD machines for calculating cpu state percentages.
  */
-static int percentages(int cnt, int64_t *out, int64_t *new, int64_t *old, int64_t *diffs) {
-   int64_t change, total_change, *dp, half_total;
+static void percentages(int cnt, uint64_t *out, uint64_t *new, uint64_t *old, uint64_t *diffs) {
+   uint64_t change, total_change, *dp, half_total;
    int i;
 
    /* initialization */
@@ -76,9 +76,11 @@ static int percentages(int cnt, int64_t *out, int64_t *new, int64_t *old, int64_
 
    /* calculate changes for each state and the overall change */
    for (i = 0; i < cnt; i++) {
-      if ((change = *new - *old) < 0) {
+      if(*new < *old) {
          /* this only happens when the counter wraps */
-         change = INT64_MAX - *old + *new;
+         change = UINT64_MAX - *old + *new;
+      } else {
+         change = (int64_t)(*new - *old);
       }
       total_change += (*dp++ = change);
       *old++ = *new++;
@@ -94,7 +96,7 @@ static int percentages(int cnt, int64_t *out, int64_t *new, int64_t *old, int64_
       *out++ = ((*diffs++ * 1000 + half_total) / total_change);
 
    /* return the total in case the caller wants to use it */
-   return (total_change);
+   //return (total_change);
 }
 
 ProcessField Platform_defaultFields[] = { PID, EFFECTIVE_USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
@@ -211,34 +213,38 @@ int Platform_getMaxPid() {
 #endif
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
+double Platform_setCPUValues(Meter *meter, int cpu) {
    int i;
-   double perc;
-
-   OpenBSDProcessList* pl = (OpenBSDProcessList*) this->pl;
-   CPUData* cpuData = &(pl->cpus[cpu]);
-   int64_t new_v[CPUSTATES], diff_v[CPUSTATES], scratch_v[CPUSTATES];
-   double *v = this->values;
-   size_t size = sizeof(double) * CPUSTATES;
-   int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
-   if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) {
-      return 0.;
+   OpenBSDProcessList* pl = (OpenBSDProcessList*)meter->pl;
+   CPUData* cpuData = pl->cpus + cpu;
+   uint64_t new_v[CPUSTATES], diff_v[CPUSTATES], scratch_v[CPUSTATES];
+   double *v = meter->values;
+   if(cpu) {
+      int mib[] = { CTL_KERN, KERN_CPTIME2, cpu-1 };
+      size_t size = sizeof new_v;
+      if (sysctl(mib, 3, new_v, &size, NULL, 0) == -1) return 0;
+   } else {
+      int mib[] = { CTL_KERN, KERN_CPTIME };
+      long int new_avg_v[CPUSTATES];
+      size_t size = sizeof new_avg_v;
+      if(sysctl(mib, 2, new_avg_v, &size, NULL, 0) < 0) return 0;
+      for(i = 0; i < CPUSTATES; i++) new_v[i] = new_avg_v[i];
    }
 
    // XXX: why?
    cpuData->totalPeriod = 1;
 
    percentages(CPUSTATES, diff_v, new_v,
-         (int64_t *)old_v[cpu-1], scratch_v);
+         old_v[cpu], scratch_v);
 
    for (i = 0; i < CPUSTATES; i++) {
-      old_v[cpu-1][i] = new_v[i];
+      old_v[cpu][i] = new_v[i];
       v[i] = diff_v[i] / 10.;
    }
 
-   Meter_setItems(this, 4);
+   Meter_setItems(meter, 4);
 
-   perc = v[0] + v[1] + v[2] + v[3];
+   double perc = v[0] + v[1] + v[2] + v[3];
 
    if (perc <= 100. && perc >= 0.) {
       return perc;

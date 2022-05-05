@@ -56,30 +56,26 @@ typedef struct OpenBSDProcessList_ {
 #define CLAMP(x, low, high)	(((x) > (high)) ? (high) : MAXIMUM(x, low))
 #endif
 
-static long fscale;
+static int fscale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
-   int mib[] = { CTL_HW, HW_NCPU };
-   int fmib[] = { CTL_KERN, KERN_FSCALE };
-   int i, e;
-   OpenBSDProcessList* opl;
-   ProcessList* pl;
-   size_t size;
-   char errbuf[_POSIX2_LINE_MAX];
+   int i;
 
-   opl = xCalloc(1, sizeof(OpenBSDProcessList));
-   pl = (ProcessList*) opl;
-   size = sizeof(pl->cpuCount);
+   OpenBSDProcessList *opl = xCalloc(1, sizeof(OpenBSDProcessList));
+   ProcessList *pl = (ProcessList*) opl;
    ProcessList_init(pl, Class(OpenBSDProcess), usersTable, pidWhiteList, userId);
 
-   e = sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0);
-   if (e == -1 || pl->cpuCount < 1) {
+   int mib[] = { CTL_HW, HW_NCPU };
+   size_t size = sizeof(pl->cpuCount);
+   if(sysctl(mib, 2, &pl->cpuCount, &size, NULL, 0) < 0 || pl->cpuCount < 1) {
       pl->cpuCount = 1;
    }
-   opl->cpus = xRealloc(opl->cpus, pl->cpuCount * sizeof(CPUData));
+   opl->cpus = xMalloc((1 + pl->cpuCount) * sizeof(CPUData));
 
+   mib[0] = CTL_KERN;
+   mib[1] = KERN_FSCALE;
    size = sizeof(fscale);
-   if (sysctl(fmib, 2, &fscale, &size, NULL, 0) < 0) {
+   if (sysctl(mib, 2, &fscale, &size, NULL, 0) < 0) {
       err(1, "fscale sysctl call failed");
    }
 
@@ -88,6 +84,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       opl->cpus[i].totalPeriod = 1;
    }
 
+   char errbuf[_POSIX2_LINE_MAX];
    opl->kd = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
    if (opl->kd == NULL) {
       errx(1, "kvm_open: %s", errbuf);
@@ -132,33 +129,6 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->cachedMem = bcstats.numbufpages * PAGE_SIZE_KB;
    pl->freeMem = uvmexp.free * PAGE_SIZE_KB;
    pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * PAGE_SIZE_KB;
-
-   /*
-   const OpenBSDProcessList* opl = (OpenBSDProcessList*) pl;
-
-   size_t len = sizeof(pl->totalMem);
-   sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
-   pl->totalMem /= 1024;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(pl->usedMem), &len, NULL, 0);
-   pl->usedMem *= PAGE_SIZE_KB;
-   pl->freeMem = pl->totalMem - pl->usedMem;
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
-   pl->cachedMem *= PAGE_SIZE_KB;
-
-   struct kvm_swap swap[16];
-   int nswap = kvm_getswapinfo(opl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
-   pl->totalSwap = 0;
-   pl->usedSwap = 0;
-   for (int i = 0; i < nswap; i++) {
-      pl->totalSwap += swap[i].ksw_total;
-      pl->usedSwap += swap[i].ksw_used;
-   }
-   pl->totalSwap *= PAGE_SIZE_KB;
-   pl->usedSwap *= PAGE_SIZE_KB;
-
-   pl->sharedMem = 0;  // currently unused
-   pl->buffersMem = 0; // not exposed to userspace
-   */
 }
 
 static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {

@@ -61,7 +61,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
 
-double Platform_setCPUValues(Meter* this, int cpu);
+double Platform_setCPUValues(Meter *meter, int cpu);
 
 void Platform_setMemoryValues(Meter* this);
 

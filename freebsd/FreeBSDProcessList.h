@@ -35,16 +35,15 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   uint64_t memZfsArc;
-
+   //uint64_t memZfsArc;
 
    CPUData* cpus;
 
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
+   long int *cp_time_o;
+   long int *cp_time_n;
 
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
+   long int *cp_times_o;
+   long int *cp_times_n;
 
 } FreeBSDProcessList;
 

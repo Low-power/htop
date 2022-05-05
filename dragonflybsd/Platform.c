@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/proc.h>
 #include <vm/vm_param.h>
 #include <time.h>
 #include <math.h>
@@ -140,13 +141,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   int maxPid;
-   size_t size = sizeof(maxPid);
-   int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
-   if (err) {
-      return 999999;
-   }
-   return maxPid;
+   return PID_MAX;
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {

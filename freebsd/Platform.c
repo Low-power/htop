@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <sys/proc.h>
 #include <vm/vm_param.h>
 #include <string.h>
 #include <time.h>
@@ -142,9 +143,12 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 int Platform_getMaxPid() {
    int maxPid;
    size_t size = sizeof(maxPid);
-   int err = sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0);
-   if (err) {
+   if(sysctlbyname("kern.pid_max", &maxPid, &size, NULL, 0) < 0) {
+#ifdef PID_MAX
+      return PID_MAX;
+#else
       return 99999;
+#endif
    }
    return maxPid;
 }
@@ -204,9 +208,15 @@ void Platform_setTasksValues(Meter* this) {
 
 char **Platform_getProcessEnv(Process *proc) {
 #ifdef KERN_PROC_ENV
-	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ENV, proc->pid };
-	char *buffer = xMalloc(ARG_MAX);
-	size_t len = ARG_MAX;
+	int mib[4] = { CTL_KERN, KERN_ARGMAX };
+	int arg_max;
+	size_t len = sizeof arg_max;
+	if(sysctl(mib, 2, &arg_max, &len, NULL, 0) < 0) arg_max = ARG_MAX; 
+
+	mib[2] = KERN_PROC_ENV;
+	mib[3] = proc->pid;
+	char *buffer = xMalloc(arg_max);
+	len = arg_max;
 	if(sysctl(mib, 4, buffer, &len, NULL, 0) < 0) {
 		free(buffer);
 		return NULL;

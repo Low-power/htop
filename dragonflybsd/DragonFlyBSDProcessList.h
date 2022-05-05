@@ -44,11 +44,11 @@ typedef struct DragonFlyBSDProcessList_ {
 
    CPUData* cpus;
 
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
+   long int *cp_time_o;
+   long int *cp_time_n;
 
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
+   long int *cp_times_o;
+   long int *cp_times_n;
 
    Hashtable *jails;
 } DragonFlyBSDProcessList;

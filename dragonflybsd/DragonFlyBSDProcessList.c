@@ -56,11 +56,11 @@ typedef struct DragonFlyBSDProcessList_ {
 
    CPUData* cpus;
 
-   unsigned long   *cp_time_o;
-   unsigned long   *cp_time_n;
+   long int *cp_time_o;
+   long int *cp_time_n;
 
-   unsigned long  *cp_times_o;
-   unsigned long  *cp_times_n;
+   long int *cp_times_o;
+   long int *cp_times_n;
 
    Hashtable *jails;
 } DragonFlyBSDProcessList;
@@ -71,8 +71,8 @@ typedef struct DragonFlyBSDProcessList_ {
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
-static int pageSize;
-static int pageSizeKb;
+static unsigned int page_size;
+static unsigned int page_size_kib;
 
 static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
@@ -98,13 +98,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    // usable pagesize : vm.stats.vm.v_page_size
    len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
-   len = sizeof(pageSize);
-   if (sysctlbyname("vm.stats.vm.v_page_size", &pageSize, &len, NULL, 0) == -1) {
-      pageSize = PAGE_SIZE;
-      pageSizeKb = PAGE_SIZE_KB;
-   } else {
-      pageSizeKb = pageSize / ONE_BINARY_K;
+   len = sizeof page_size;
+   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == -1) {
+      page_size = PAGE_SIZE;
    }
+   page_size_kib = page_size / ONE_BINARY_K;
 
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
@@ -124,7 +122,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       cpus = 1;
    }
 
-   size_t sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
+   size_t sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
    len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
    dfpl->cp_time_o = xCalloc(cpus, sizeof_cp_time_array);
    dfpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
@@ -193,14 +191,14 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    size_t sizeof_cp_time_array;
 
-   unsigned long     *cp_time_n; // old clicks state
-   unsigned long     *cp_time_o; // current clicks state
+   long int *cp_time_n; // old clicks state
+   long int *cp_time_o; // current clicks state
 
-   unsigned long cp_time_d[CPUSTATES];
-   double        cp_time_p[CPUSTATES];
+   long int cp_time_d[CPUSTATES];
+   double cp_time_p[CPUSTATES];
 
    // get averages or single CPU clicks
-   sizeof_cp_time_array = sizeof(unsigned long) * CPUSTATES;
+   sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
    sysctl(MIB_kern_cp_time, 2, dfpl->cp_time_n, &sizeof_cp_time_array, NULL, 0);
 
    // get rest of CPUs
@@ -209,7 +207,7 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
        // kern.cp_times sysctl OID
        // we store averages in dfpl->cpus[0], and actual cores after that
        maxcpu = cpus + 1;
-       sizeof_cp_time_array = cpus * sizeof(unsigned long) * CPUSTATES;
+       sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
        sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
    }
 
@@ -265,39 +263,55 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) pl;
 
+   union {
+      unsigned int v_uint;
+      long int v_long;
+      unsigned long int v_ulong;
+   } buffer;
+   size_t len;
+
    // @etosan:
    // memory counter relationships seem to be these:
    //  total = active + wired + inactive + cache + free
    //  htop_used (unavail to anybody) = active + wired
    //  htop_cache (for cache meter)   = buffers + cache
    //  user_free (avail to procs)     = buffers + inactive + cache + free
-   size_t len = sizeof(pl->totalMem);
 
-   //disabled for now, as it is always smaller than phycal amount of memory...
-   //...to avoid "where is my memory?" questions
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &(pl->totalMem), &len, NULL, 0);
-   //pl->totalMem *= pageSizeKb;
-   sysctl(MIB_hw_physmem, 2, &(pl->totalMem), &len, NULL, 0);
-   pl->totalMem /= 1024;
+   // disabled for now, as it is always smaller than phycal amount of memory...
+   // ...to avoid "where is my memory?" questions
+   //len = sizeof buffer.v_uint;
+   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
+   //pl->totalMem = buffer.v_uint * page_size_kib;
+   len = sizeof buffer.v_ulong;
+   sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0);
+   pl->totalMem = buffer.v_ulong / 1024;
 
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &(dfpl->memActive), &len, NULL, 0);
-   dfpl->memActive *= pageSizeKb;
+   len = sizeof buffer.v_uint;
+   sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0);
+   dfpl->memActive = buffer.v_uint * page_size_kib;
 
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &(dfpl->memWire), &len, NULL, 0);
-   dfpl->memWire *= pageSizeKb;
+   len = sizeof buffer.v_uint;
+   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0);
+   dfpl->memWire = buffer.v_uint * page_size_kib;
 
-   sysctl(MIB_vfs_bufspace, 2, &(pl->buffersMem), &len, NULL, 0);
-   pl->buffersMem /= 1024;
+   len = sizeof buffer.v_long;
+   sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0);
+   pl->buffersMem = buffer.v_long / 1024;
 
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &(pl->cachedMem), &len, NULL, 0);
-   pl->cachedMem *= pageSizeKb;
+   len = sizeof buffer.v_uint;
+   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0);
+   pl->cachedMem = buffer.v_uint * page_size_kib;
+
    pl->usedMem = dfpl->memActive + dfpl->memWire;
 
-   //currently unused, same as with arc, custom meter perhaps
-   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &(dfpl->memInactive), &len, NULL, 0);
-   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &(dfpl->memFree), &len, NULL, 0);
-   //pl->freeMem  = dfpl->memInactive + dfpl->memFree;
-   //pl->freeMem *= pageSizeKb;
+   // currently unused, same as with arc, custom meter perhaps
+   //len = sizeof buffer.v_uint;
+   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
+   //dfpl->memInactive = buffer.v_uint * page_size_kib;
+   //len = sizeof buffer.v_uint;
+   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
+   //dfpl->memFree = buffer.v_uint * page_size_kib;
+   //pl->freeMem = dfpl->memInactive + dfpl->memFree;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(dfpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
@@ -307,8 +321,8 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= pageSizeKb;
-   pl->usedSwap *= pageSizeKb;
+   pl->totalSwap *= page_size_kib;
+   pl->usedSwap *= page_size_kib;
 
    pl->sharedMem = 0;  // currently unused
 }
@@ -469,14 +483,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          }
       }
 
-      proc->m_size = kproc->kp_vm_map_size / 1024 / pageSizeKb;
+      proc->m_size = kproc->kp_vm_map_size / page_size;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * page_size_kib) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * page_size_kib) / (double)(this->totalMem);
 
       if (kproc->kp_lwp.kl_pid != -1)
          proc->priority = kproc->kp_lwp.kl_prio;
