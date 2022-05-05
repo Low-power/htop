@@ -47,8 +47,8 @@ in the source distribution for its full text.
 #define PAGE_SIZE_KB ( PAGE_SIZE / ONE_BINARY_K )
 
 /*{
+#include "config.h"
 #include "Object.h"
-
 #include <sys/types.h>
 #include <stdbool.h>
 
@@ -186,9 +186,13 @@ typedef struct ProcessClass_ {
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
 
-#define Process_getParentPid(process_)    (process_->tgid == process_->pid ? process_->ppid : process_->tgid)
-
-#define Process_isChildOf(process_, pid_) (process_->tgid == pid_ || (process_->tgid == process_->pid && process_->ppid == pid_))
+#if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
+#define Process_getParentPid(process_) ((process_)->tgid == (process_)->pid || (process_)->settings->hide_high_level_processes ? (process_)->ppid : (process_)->tgid)
+#define Process_isChildOf(process_, pid_) ((process_)->tgid == (pid_) || (((process_)->tgid == (process_)->pid || (process_)->settings->hide_high_level_processes) && (process_)->ppid == (pid_)))
+#else
+#define Process_getParentPid(process_) ((process_)->tgid == (process_)->pid ? (process_)->ppid : (process_)->tgid)
+#define Process_isChildOf(process_, pid_) ((process_)->tgid == (pid_) || ((process_)->tgid == (process_)->pid && (process_)->ppid == (pid_)))
+#endif
 
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 

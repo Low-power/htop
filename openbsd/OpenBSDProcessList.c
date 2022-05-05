@@ -207,6 +207,11 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    gettimeofday(&now, NULL);
 
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+   pid_t last_pid = -1;
+   pid_t last_main_tid = -1;
+#endif
+
    for (i = 0; i < count; i++) {
       struct kinfo_proc *kproc = kprocs + i;
 #ifdef HAVE_STRUCT_KINFO_PROC_P_TID
@@ -222,6 +227,33 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       if (!preExisting) {
          struct tm date;
          proc->tgid = kproc->p_pid;
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+         if(hide_high_level_processes) {
+            proc->ppid = 0;
+            if(kproc->p_flag & P_THREAD) {
+               if(last_pid == kproc->p_pid) proc->ppid = last_main_tid;
+               else for(int j = 0; j < i; i++) {
+                  struct kinfo_proc *ki = kprocs + j;
+                  if(ki->p_tid == -1) continue;
+                  if(ki->p_pid != kproc->p_pid) continue;
+                  if(ki->p_flag & P_THREAD) continue;
+                  proc->ppid = ki->p_tid - THREAD_PID_OFFSET;
+                  break;
+               }
+            } else {
+               for(int j = i + 1; j < count; j++) {
+                  struct kinfo_proc *ki = kprocs + j;
+                  if(ki->p_tid == -1) continue;
+                  if(ki->p_pid != kproc->p_ppid) continue;
+                  if(ki->p_flag & P_THREAD) continue;
+                  proc->ppid = ki->p_tid - THREAD_PID_OFFSET;
+                  break;
+               }
+               last_pid = kproc->p_pid;
+               last_main_tid = kproc->p_tid - THREAD_PID_OFFSET;
+            }
+         } else
+#endif
          proc->ppid = kproc->p_ppid;
          proc->tpgid = kproc->p_tpgid;
          proc->session = kproc->p_sid;
