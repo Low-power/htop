@@ -21,13 +21,10 @@ in the source distribution for its full text.
 #include "SolarisProcessList.h"
 #include "IOUtils.h"
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/resource.h>
-#include <utmpx.h>
 #include <sys/loadavg.h>
 #include <string.h>
 #include <kstat.h>
-#include <time.h>
 #include <math.h>
 #include <sys/var.h>
 #ifdef HAVE_LIBPROC
@@ -140,19 +137,8 @@ int Platform_numberOfFields = LAST_PROCESSFIELD;
 extern char Process_pidFormat[20];
 
 int Platform_getUptime() {
-   int boot_time = 0;
-   int curr_time = time(NULL);   
-   struct utmpx * ent;
-
-   while (( ent = getutxent() )) {
-      if ( !strcmp("system boot", ent->ut_line )) {
-         boot_time = ent->ut_tv.tv_sec;
-      }
-   }
-
-   endutxent();
-
-   return (curr_time-boot_time);
+	// Fallback to utmpx
+	return -1;
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {

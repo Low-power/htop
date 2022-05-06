@@ -17,7 +17,6 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 #include <signal.h>
-#include <utmpx.h>
 #include <stdio.h>
 
 /*{
@@ -97,17 +96,8 @@ void Platform_setBindings(Htop_Action* keys) {
 extern char Process_pidFormat[20];
 
 int Platform_getUptime() {
-   time_t boot_time = -1;
-   time_t curr_time = time(NULL);   
-   struct utmpx *utx;
-   while ((utx = getutxent())) {
-      if(utx->ut_type == BOOT_TIME) {
-         boot_time = utx->ut_tv.tv_sec;
-         break;
-      }
-   }
-   endutxent();
-   return boot_time == -1 ? 0 : curr_time - boot_time;
+	// Fallback to utmpx
+	return -1;
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {

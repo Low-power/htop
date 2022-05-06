@@ -39,7 +39,6 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern int Platform_numberOfFields;
 
-// identical to Solaris, thanks System V
 int Platform_getUptime();
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);

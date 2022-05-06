@@ -19,9 +19,7 @@ in the source distribution for its full text.
 #include "AixProcessList.h"
 
 #include <sys/proc.h>
-#include <utmpx.h>
 #include <string.h>
-#include <time.h>
 #include <math.h>
 #include <procinfo.h>
 
@@ -130,26 +128,9 @@ int Platform_numberOfFields = 101;
 
 extern char Process_pidFormat[20];
 
-// identical to Solaris, thanks System V
 int Platform_getUptime() {
-#ifndef __PASE__
-   int boot_time = 0;
-   int curr_time = time(NULL);
-   struct utmpx * ent;
-
-   while (( ent = getutxent() )) {
-      if ( !strcmp("system boot", ent->ut_line )) {
-         boot_time = ent->ut_tv.tv_sec;
-      }
-   }
-
-   endutxent();
-
-   return (curr_time-boot_time);
-#else
-   // IBM i doesn't expose uptime to PASE, AFAIK
-   return 0;
-#endif
+	// Fallback to utmpx
+	return -1;
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {

@@ -5,9 +5,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "UptimeMeter.h"
 #include "Platform.h"
 #include "CRT.h"
+#ifdef HAVE_UTMPX
+#include <utmpx.h>
+#include <time.h>
+#endif
 
 /*{
 #include "Meter.h"
@@ -17,11 +22,33 @@ int UptimeMeter_attributes[] = {
    UPTIME
 };
 
+static int UptimeMeter_getUptimeFromUtmpx() {
+#ifdef HAVE_UTMPX
+	time_t boot_time = -1;
+	time_t curr_time = time(NULL);   
+	struct utmpx *utx;
+	setutxent();
+	while ((utx = getutxent())) {
+		if(utx->ut_type == BOOT_TIME) {
+			boot_time = utx->ut_tv.tv_sec;
+			break;
+		}
+	}
+	endutxent();
+	return boot_time == -1 ? -1 : curr_time - boot_time;
+#else
+	return -1;
+#endif
+}
+
 static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    int totalseconds = Platform_getUptime();
    if (totalseconds == -1) {
-      xSnprintf(buffer, len, "(unknown)");
-      return;
+      totalseconds = UptimeMeter_getUptimeFromUtmpx();
+      if(totalseconds == -1) {
+         xSnprintf(buffer, len, "(unknown)");
+         return;
+      }
    }
    int seconds = totalseconds % 60;
    int minutes = (totalseconds/60) % 60;

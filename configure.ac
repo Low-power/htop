@@ -87,6 +87,10 @@ AC_C_CONST
 AC_TYPE_PID_T
 AC_TYPE_UID_T
 
+AC_CHECK_TYPE([struct utmpx],
+	[AC_DEFINE(HAVE_UTMPX, 1, Define if 'struct utmpx' is available from utmpx.h)],
+	[], [#include <utmpx.h>])
+
 # Checks for library functions and compiler features.
 # ----------------------------------------------------------------------
 AC_FUNC_CLOSEDIR_VOID

@@ -9,6 +9,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef HAVE_UTMPX
+#endif
+
 #include "Meter.h"
 
 extern int UptimeMeter_attributes[];
