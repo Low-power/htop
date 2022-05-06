@@ -19,7 +19,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "SolarisProcess.h"
 #include "SolarisProcessList.h"
-
+#include "IOUtils.h"
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -56,8 +56,6 @@ extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
 
 }*/
-
-double plat_loadavg[3] = {0};
 
 const SignalItem Platform_signals[] = {
    { .name = " 0 Cancel",      .number =  0 },
@@ -158,7 +156,8 @@ int Platform_getUptime() {
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   getloadavg( plat_loadavg, 3 );
+   double plat_loadavg[LOADAVG_NSTATS];
+   if(getloadavg(plat_loadavg, LOADAVG_NSTATS) < 0) return;
    *one = plat_loadavg[LOADAVG_1MIN];
    *five = plat_loadavg[LOADAVG_5MIN];
    *fifteen = plat_loadavg[LOADAVG_15MIN];
@@ -180,31 +179,22 @@ int Platform_getMaxPid() {
    return vproc; 
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-   SolarisProcessList* spl = (SolarisProcessList*) this->pl;
-   int cpus = this->pl->cpuCount;
-   CPUData* cpuData = NULL;
-
-   if (cpus == 1) {
-     // single CPU box has everything in spl->cpus[0]
-     cpuData = &(spl->cpus[0]);
-   } else {
-     cpuData = &(spl->cpus[cpu]);
-   }
-
+double Platform_setCPUValues(Meter *meter, int cpu) {
+   SolarisProcessList* spl = (SolarisProcessList *)meter->pl;
+   CPUData *cpuData = spl->cpus + (meter->pl->cpuCount > 1 ? cpu : 0);
+   double* v = meter->values;
    double percent;
-   double* v = this->values;
 
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
-      v[CPU_METER_KERNEL]  = cpuData->systemPercent;
-      v[CPU_METER_IRQ]     = cpuData->irqPercent;
-      Meter_setItems(this, 4);
+   if (meter->pl->settings->detailedCPUTime) {
+      v[CPU_METER_KERNEL] = cpuData->systemPercent;
+      v[CPU_METER_IRQ]    = cpuData->irqPercent;
+      Meter_setItems(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
-      Meter_setItems(this, 3);
+      Meter_setItems(meter, 3);
       percent = v[0]+v[1]+v[2];
    }
 
@@ -227,12 +217,12 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
+#ifdef HAVE_LIBPROC
+
 struct env_accum {
    char **env;
    unsigned int count;
 };
-
-#ifdef HAVE_LIBPROC
 
 static int append_env(void *arg, struct ps_prochandle *handle, uintptr_t addr, const char *s) {
 	struct env_accum *accum = arg;

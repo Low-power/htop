@@ -32,8 +32,6 @@ extern ProcessFieldData Process_fields[];
 typedef struct var kvar_t;
 
 
-extern double plat_loadavg[3];
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
@@ -56,14 +54,14 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
 
-double Platform_setCPUValues(Meter* this, int cpu);
+double Platform_setCPUValues(Meter *meter, int cpu);
 
 void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-
 #ifdef HAVE_LIBPROC
+
 
 char **Platform_getProcessEnv(Process *proc);
 
