@@ -202,10 +202,6 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-void Platform_setTasksValues(Meter* this) {
-   // TODO
-}
-
 char **Platform_getProcessEnv(Process *proc) {
 #ifdef KERN_PROC_ENV
 	int mib[4] = { CTL_KERN, KERN_ARGMAX };

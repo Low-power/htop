@@ -291,10 +291,6 @@ void Platform_setSwapValues(Meter *meter) {
    meter->values[0] = pl->usedSwap = used;
 }
 
-void Platform_setTasksValues(Meter* this) {
-   // TODO
-}
-
 char **Platform_getProcessEnv(Process *proc) {
    char errbuf[_POSIX2_LINE_MAX];
    char **ptr;

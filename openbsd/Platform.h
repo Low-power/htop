@@ -73,8 +73,6 @@ void Platform_setMemoryValues(Meter* this);
  */
 void Platform_setSwapValues(Meter *meter);
 
-void Platform_setTasksValues(Meter* this);
-
 char **Platform_getProcessEnv(Process *proc);
 
 #endif

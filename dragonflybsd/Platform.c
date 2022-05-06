@@ -193,11 +193,6 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-void Platform_setTasksValues(Meter* this) {
-   // TODO
-   (void)this;	// prevent unused warning
-}
-
 char **Platform_getProcessEnv(Process *proc) {
    // TODO
    (void)proc;	// prevent unused warning
