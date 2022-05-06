@@ -442,9 +442,7 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 		fill_from_psinfo(proc, &info);
 		if(!is_existing) {
 			proc->tgid = info.pr_pid;
-			proc->ppid = info.pr_ppid;
 			sol_proc->realpid = info.pr_pid;
-			sol_proc->realppid = info.pr_ppid;
 			sol_proc->is_lwp = false;
 			sol_proc->lwpid = -1;
 			sol_proc->zoneid = info.pr_zoneid;
@@ -456,6 +454,8 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 			//proc->commLen = strnlen(info.pr_psargs, PRFNSZ);
 			proc->starttime_ctime = info.pr_start.tv_sec;
 		}
+		proc->ppid = info.pr_ppid;
+		sol_proc->realppid = info.pr_ppid;
 		proc->percent_cpu = ((uint16_t)info.pr_pctcpu/(double)32768)*(double)100.0;
 		proc->time = info.pr_time.tv_sec * 100 + info.pr_time.tv_nsec / 10000000;
 		proc->nlwp = info.pr_nlwp;
