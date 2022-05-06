@@ -269,41 +269,26 @@ void Platform_setMemoryValues(Meter* this) {
  * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
  * All rights reserved.
  *
- * Taken almost directly from OpenBSD's top(1)
+ * Based on OpenBSD's top(1)
  */
-void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
-   struct swapent *swdev;
-   unsigned long long int total, used;
-   int nswap, rnswap, i;
-   nswap = swapctl(SWAP_NSWAP, 0, 0);
-   if (nswap == 0) {
-      return;
-   }
-
-   swdev = xCalloc(nswap, sizeof(*swdev));
-
-   rnswap = swapctl(SWAP_STATS, swdev, nswap);
-   if (rnswap == -1) {
-      free(swdev);
-      return;
-   }
-
-   // if rnswap != nswap, then what?
-
-   /* Total things up */
-   total = used = 0;
-   for (i = 0; i < nswap; i++) {
-      if (swdev[i].se_flags & SWF_ENABLE) {
-         used += (swdev[i].se_inuse / (1024 / DEV_BSIZE));
-         total += (swdev[i].se_nblks / (1024 / DEV_BSIZE));
+void Platform_setSwapValues(Meter *meter) {
+   ProcessList* pl = (ProcessList *)meter->pl;
+   unsigned long long int total = 0, used = 0;
+   int nswap = swapctl(SWAP_NSWAP, 0, 0);
+   if (nswap > 0) {
+      struct swapent *swdev = xCalloc(nswap, sizeof(*swdev));
+      nswap = swapctl(SWAP_STATS, swdev, nswap);
+      while(nswap > 0) {
+         const struct swapent *e = swdev + --nswap;
+         if(e->se_flags & SWF_ENABLE) {
+            used += e->se_inuse / (1024 / DEV_BSIZE);
+            total += e->se_nblks / (1024 / DEV_BSIZE);
+         }
       }
+      free(swdev);
    }
-
-   this->total = pl->totalSwap = total;
-   this->values[0] = pl->usedSwap = used;
-
-   free(swdev);
+   meter->total = pl->totalSwap = total;
+   meter->values[0] = pl->usedSwap = used;
 }
 
 void Platform_setTasksValues(Meter* this) {

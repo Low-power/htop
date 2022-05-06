@@ -69,9 +69,9 @@ void Platform_setMemoryValues(Meter* this);
  * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
  * All rights reserved.
  *
- * Taken almost directly from OpenBSD's top(1)
+ * Based on OpenBSD's top(1)
  */
-void Platform_setSwapValues(Meter* this);
+void Platform_setSwapValues(Meter *meter);
 
 void Platform_setTasksValues(Meter* this);
 
