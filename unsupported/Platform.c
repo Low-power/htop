@@ -97,7 +97,8 @@ ProcessPidColumn Process_pidColumns[] = {
 };
 
 int Platform_getUptime() {
-   return 0;
+   // Will fallback to utmpx if available
+   return -1;
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
