@@ -510,7 +510,12 @@ static Htop_Reaction actionHelp(State* st) {
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
       mvaddstr(7, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
-   mvaddstr( 8, 0, " Status: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
+   mvaddstr(8, 0, "  State: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
+   attrset(CRT_colors[PROCESS_R_STATE]);
+   mvaddch(8, 9, 'R');
+   attrset(CRT_colors[PROCESS_D_STATE]);
+   mvaddch(8, 64, 'D');
+   attrset(CRT_colors[DEFAULT_COLOR]);
    for (int i = 0; helpLeft[i].info; i++) { mvaddstr(9+i, 9,  helpLeft[i].info); }
    for (int i = 0; helpRight[i].info; i++) { mvaddstr(9+i, 49, helpRight[i].info); }
    attrset(CRT_colors[HELP_BOLD]);
