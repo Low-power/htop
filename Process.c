@@ -408,6 +408,10 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    }
    case NAME:
       xSnprintf(buffer, n, "%-15s ", this->name);
+      if(buffer[16]) {
+         buffer[15] = ' ';
+         buffer[16] = 0;
+      }
       break;
    case COMM: {
       if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
@@ -511,7 +515,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          xSnprintf(buffer, n, "%-9d ", (int)this->euid);
       }
    user_end:
-      if (buffer[9] != '\0') {
+      if (buffer[10]) {
          buffer[9] = ' ';
          buffer[10] = '\0';
       }
