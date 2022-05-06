@@ -155,15 +155,15 @@ void String_freeArray(char** s) {
    free(s);
 }
 
-char* String_getToken(const char* line, const unsigned short int numMatch) {
-   const unsigned short int len = strlen(line);
+char* String_getToken(const char* line, const unsigned int numMatch) {
+   const unsigned int len = strlen(line);
    char inWord = 0;
-   unsigned short int count = 0;
+   unsigned int count = 0;
    char match[50];
 
-   unsigned short int foundCount = 0;
+   unsigned int foundCount = 0;
 
-   for (unsigned short int i = 0; i < len; i++) {
+   for (unsigned int i = 0; i < len; i++) {
       char lastState = inWord;
       inWord = line[i] == ' ' ? 0:1;
 
@@ -171,7 +171,7 @@ char* String_getToken(const char* line, const unsigned short int numMatch) {
          count++;
     
       if(inWord == 1){
-         if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n' && line[i] != (char)EOF) {
+         if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n') {
             match[foundCount] = line[i];
             foundCount++;
          }
