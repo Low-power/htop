@@ -146,7 +146,7 @@ void CRT_handleSIGSEGV(int sgn);
 const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
    "-", // TREE_STR_HORZ
    "|", // TREE_STR_VERT
-   "`", // TREE_STR_RTEE
+   "|", // TREE_STR_RTEE
    "`", // TREE_STR_BEND
    ",", // TREE_STR_TEND
    "+", // TREE_STR_OPEN
