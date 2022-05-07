@@ -47,15 +47,13 @@ linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
-	linux/LinuxCRT.h \
 	linux/Battery.h
 
 all_platform_headers += $(linux_platform_headers)
 
 if HTOP_LINUX
-AM_CFLAGS += -rdynamic
 myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c \
-linux/LinuxProcess.c linux/LinuxProcessList.c linux/LinuxCRT.c linux/Battery.c
+linux/LinuxProcess.c linux/LinuxProcessList.c linux/Battery.c
 
 myhtopplatheaders = $(linux_platform_headers)
 endif
@@ -67,14 +65,13 @@ freebsd_platform_headers = \
 	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
-	freebsd/FreeBSDCRT.h \
 	freebsd/Battery.h
 
 all_platform_headers += $(freebsd_platform_headers)
 
 if HTOP_FREEBSD
 myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDProcess.c freebsd/FreeBSDCRT.c freebsd/Battery.c
+freebsd/FreeBSDProcess.c freebsd/Battery.c
 
 myhtopplatheaders = $(freebsd_platform_headers)
 endif
@@ -86,15 +83,14 @@ dragonflybsd_platform_headers = \
 	dragonflybsd/Platform.h \
 	dragonflybsd/DragonFlyBSDProcessList.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
-	dragonflybsd/DragonFlyBSDCRT.h \
 	dragonflybsd/Battery.h
 
 all_platform_headers += $(dragonflybsd_platform_headers)
 
 if HTOP_DRAGONFLYBSD
-AM_LDFLAGS += -lkvm -lkinfo -lexecinfo
+AM_LDFLAGS += -lkvm -lkinfo
 myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
-dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/DragonFlyBSDCRT.c dragonflybsd/Battery.c
+dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/Battery.c
 
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 endif
@@ -106,14 +102,13 @@ openbsd_platform_headers = \
 	openbsd/Platform.h \
 	openbsd/OpenBSDProcessList.h \
 	openbsd/OpenBSDProcess.h \
-	openbsd/OpenBSDCRT.h \
 	openbsd/Battery.h
 
 all_platform_headers += $(openbsd_platform_headers)
 
 if HTOP_OPENBSD
 myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
-openbsd/OpenBSDProcess.c openbsd/OpenBSDCRT.c openbsd/Battery.c
+openbsd/OpenBSDProcess.c openbsd/Battery.c
 
 myhtopplatheaders = $(openbsd_platform_headers)
 endif
@@ -125,7 +120,6 @@ darwin_platform_headers = \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
-	darwin/DarwinCRT.h \
 	darwin/Battery.h
 
 all_platform_headers += $(darwin_platform_headers)
@@ -133,7 +127,7 @@ all_platform_headers += $(darwin_platform_headers)
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
-darwin/DarwinProcessList.c darwin/DarwinCRT.c darwin/Battery.c
+darwin/DarwinProcessList.c darwin/Battery.c
 
 myhtopplatheaders = $(darwin_platform_headers)
 endif
@@ -145,15 +139,16 @@ solaris_platform_headers = \
 	solaris/Platform.h \
 	solaris/SolarisProcess.h \
 	solaris/SolarisProcessList.h \
-	solaris/SolarisCRT.h \
 	solaris/Battery.h
 
 all_platform_headers += $(solaris_platform_headers)
 
 if HTOP_SOLARIS
-myhtopplatsources = solaris/Platform.c \
-solaris/SolarisProcess.c solaris/SolarisProcessList.c \
-solaris/SolarisCRT.c solaris/Battery.c
+myhtopplatsources = \
+	solaris/Platform.c \
+	solaris/SolarisProcess.c \
+	solaris/SolarisProcessList.c \
+	solaris/Battery.c
 
 myhtopplatheaders = $(solaris_platform_headers)
 endif
@@ -165,15 +160,16 @@ aix_platform_headers = \
 	aix/Platform.h \
 	aix/AixProcess.h \
 	aix/AixProcessList.h \
-	aix/AixCRT.h \
 	aix/Battery.h
 
 all_platform_headers += $(aix_platform_headers)
 
 if HTOP_AIX
-myhtopplatsources = aix/Platform.c \
-aix/AixProcess.c aix/AixProcessList.c \
-aix/AixCRT.c aix/Battery.c
+myhtopplatsources = \
+	aix/Platform.c \
+	aix/AixProcess.c \
+	aix/AixProcessList.c \
+	aix/Battery.c
 
 myhtopplatheaders = $(aix_platform_headers)
 endif
@@ -193,8 +189,7 @@ myhtopplatsources = \
 	interix/Platform.c \
 	interix/InterixProcess.c \
 	interix/InterixProcessList.c \
-	interix/Battery.c \
-	unsupported/UnsupportedCRT.c
+	interix/Battery.c
 myhtopplatheaders = $(interix_platform_headers)
 endif
 
@@ -217,8 +212,7 @@ myhtopplatsources = \
 	cygwin/IOPriority.c \
 	cygwin/LinuxProcess.c \
 	cygwin/LinuxProcessList.c \
-	cygwin/Battery.c \
-	unsupported/UnsupportedCRT.c
+	cygwin/Battery.c
 myhtopplatheaders = $(cygwin_platform_headers)
 endif
 
@@ -229,15 +223,16 @@ unsupported_platform_headers = \
 	unsupported/Platform.h \
 	unsupported/UnsupportedProcess.h \
 	unsupported/UnsupportedProcessList.h \
-	unsupported/UnsupportedCRT.h \
 	unsupported/Battery.h
 
 all_platform_headers += $(unsupported_platform_headers)
 
 if HTOP_UNSUPPORTED
-myhtopplatsources = unsupported/Platform.c \
-unsupported/UnsupportedProcess.c unsupported/UnsupportedProcessList.c \
-unsupported/UnsupportedCRT.c unsupported/Battery.c
+myhtopplatsources = \
+	unsupported/Platform.c \
+	unsupported/UnsupportedProcess.c \
+	unsupported/UnsupportedProcessList.c \
+	unsupported/Battery.c
 
 myhtopplatheaders = $(unsupported_platform_headers)
 endif

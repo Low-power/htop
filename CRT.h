@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #endif
 #if HAVE_SETUID_ENABLED
 #endif
+#ifdef HAVE_BACKTRACE
+#endif
 
 #define ColorIndex(i,j) ((7-i)*8+j)
 
@@ -123,10 +125,6 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-void CRT_fatalError(const char* note) __attribute__ ((noreturn));
-
-void CRT_handleSIGSEGV(int sgn);
-
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
 
@@ -160,8 +158,6 @@ extern char* CRT_termType;
 
 extern int CRT_colorScheme;
 
-extern void *backtraceArray[128];
-
 #if HAVE_SETUID_ENABLED
 
 #define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
@@ -187,7 +183,7 @@ void CRT_init(int delay, int colorScheme);
 
 void CRT_done();
 
-void CRT_fatalError(const char* note);
+void __attribute__((__noreturn__)) CRT_fatalError(const char* note);
 
 int CRT_readKey();
 

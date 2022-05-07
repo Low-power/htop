@@ -24,6 +24,9 @@ in the source distribution for its full text.
 #include <unistd.h>
 #include <sys/types.h>
 #endif
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#endif
 
 #define ColorIndex(i,j) ((7-i)*8+j)
 
@@ -134,10 +137,6 @@ typedef enum ColorElements_ {
    CPU_GUEST,
    LAST_COLORELEMENT
 } ColorElements;
-
-void CRT_fatalError(const char* note) __attribute__ ((noreturn));
-
-void CRT_handleSIGSEGV(int sgn);
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
@@ -559,7 +558,27 @@ char* CRT_termType;
 
 int CRT_colorScheme = 0;
 
-void *backtraceArray[128];
+static void CRT_handleAbnormalSignal(int sgn) {
+   CRT_done();
+   fprintf(stderr, "\n\nhtop " VERSION " aborting due to signal %d.\n", sgn);
+   #ifdef BUG_REPORTING_URL
+   if(*BUG_REPORTING_URL) fprintf(stderr, "Please report bug at " BUG_REPORTING_URL "\n");
+   #endif
+   #ifdef HAVE_BACKTRACE
+   static void *backtrace_buffer[128];
+   size_t size = backtrace(backtrace_buffer, sizeof backtrace_buffer / sizeof(void *));
+   fprintf(stderr, "\nPlease include in your report the following backtrace: \n");
+   backtrace_symbols_fd(backtrace_buffer, size, 2);
+   fprintf(stderr, "\nAdditionally, in order to make the above backtrace useful,");
+   fprintf(stderr, "\nplease also run the following command to generate a disassembly of your binary:");
+   fprintf(stderr, "\n\n   objdump -d `which htop` > ~/htop.objdump");
+   fprintf(stderr, "\n\nand then attach the file ~/htop.objdump to your bug report.");
+   fprintf(stderr, "\n\nThank you for helping to improve htop!\n");
+   #endif
+   fputc('\n', stderr);
+   if(sgn == SIGABRT) signal(SIGABRT, SIG_DFL);
+   abort();
+}
 
 static void CRT_handleSIGTERM(int sgn) {
    (void) sgn;
@@ -664,7 +683,9 @@ void CRT_init(int delay, int colorScheme) {
       }
    }
 #ifndef DEBUG
-   signal(11, CRT_handleSIGSEGV);
+   signal(SIGILL, CRT_handleAbnormalSignal);
+   signal(SIGBUS, CRT_handleAbnormalSignal);
+   signal(SIGSEGV, CRT_handleAbnormalSignal);
 #endif
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
@@ -702,7 +723,7 @@ void CRT_done() {
    endwin();
 }
 
-void CRT_fatalError(const char* note) {
+void __attribute__((__noreturn__)) CRT_fatalError(const char* note) {
    char* sysMsg = strerror(errno);
    CRT_done();
    fprintf(stderr, "%s: %s\n", note, sysMsg);

@@ -111,6 +111,72 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],[
 CFLAGS="$save_cflags"
 AC_SUBST(wextra_flag)
 
+AC_ARG_WITH([backtrace],
+	[AS_HELP_STRING([--with-backtrace], [use backtrace(3) in case of crashing [auto detect]])],
+	[with_backtrace="$withval"], [
+		case "$target_os" in
+			*-gnu*)
+				with_backtrace=yes
+				;;
+			freebsd*)
+				# FreeBSD (not GNU/kFreeBSD) backtrace(3) known to produce useless information
+				with_backtrace=no
+				;;
+			darwin*)
+				# No useful information, like FreeBSD
+				with_backtrace=no
+				;;
+			openbsd*)
+				# Seems broken
+				with_backtrace=no
+				;;
+			*)
+				with_backtrace=check
+				;;
+		esac
+	])
+
+# Try to export all symbols if the backtrace(3) GNU extension is expected to use
+if test "x$with_backtrace" != xno && test "x$ac_cv_header_execinfo_h" = xyes; then
+	AC_CHECK_FUNCS([backtrace], [], [
+		AC_CHECK_LIB([execinfo], [backtrace], [
+			ac_cv_func_backtrace=yes
+			AC_DEFINE(HAVE_BACKTRACE)
+			LIBS="$LIBS -lexecinfo"
+		])
+	])
+	if test "x$ac_cv_func_backtrace" = xyes; then
+		save_ldflags="$LDFLAGS"
+		accepted_flag=
+		AC_MSG_CHECKING([for option to export all symbols])
+		case "$target_os" in
+			darwin*)
+				# Can be mislead to '-e xport_dynamic' for other ld(1)
+				extra_option=-Wl,-export_dynamic
+				;;
+			solaris*)
+				extra_option=
+				;;
+			*)
+				extra_option=-rdynamic
+				;;
+		esac
+		for o in -Wl,--export-dynamic -Wl,-E $extra_option; do
+			LDFLAGS="$save_ldflags $o"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])], [
+				accepted_flag="$o"
+				break
+			], [])
+		done
+		if test "x$accepted_flag" = x; then
+			LDFLAGS="$save_ldflags"
+			AC_MSG_RESULT([unsupported])
+		else
+			AC_MSG_RESULT([$accepted_flag])
+		fi
+	fi
+fi
+
 # Checks for features and flags.
 # ----------------------------------------------------------------------
 PROCDIR=/proc
@@ -377,10 +443,17 @@ then
    ])
 fi
 
-AC_ARG_ENABLE(truss-strsize, [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], , test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no)
+AC_ARG_ENABLE(truss-strsize, [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])
 if test "x$enable_truss_strsize" = xyes; then
 	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size])
 fi
+
+AC_ARG_WITH(bug-reporting-url,
+	[AS_HELP_STRING([--bug-reporting-url=URL], [specify where should users report bugs for distribution package])],
+	[
+		test "x$withval" = xyes && AC_MSG_ERROR([option --bug-reporting-url requires the URL to be specified])
+		AC_DEFINE(BUG_REPORTING_URL, "$withval", [Defines where should users report bugs])
+	], [AC_DEFINE(BUG_REPORTING_URL, "ssh://beijing.rivoreo.one:6666/", [Defines where should users report bugs])])
 
 
 # Bail out on errors.
