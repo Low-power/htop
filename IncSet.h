@@ -21,7 +21,7 @@ typedef enum {
    INC_FILTER = 1
 } IncType;
 
-#define IncSet_filter(inc_) (inc_->filtering ? inc_->modes[INC_FILTER].buffer : NULL)
+#define IncSet_filter(inc_) ((inc_)->filtering ? (inc_)->modes[INC_FILTER].buffer : NULL)
 
 typedef struct IncMode_ {
    char buffer[INCMODE_MAX+1];
@@ -40,6 +40,11 @@ typedef struct IncSet_ {
 
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
 
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 IncSet* IncSet_new(FunctionBar* bar);
 

@@ -10,10 +10,6 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "XAlloc.h"
 
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-
 /*{
 
 #include <stdbool.h>
@@ -27,6 +23,15 @@ typedef struct FunctionBar_ {
 } FunctionBar;
 
 }*/
+
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 static const char* const FunctionBar_FKeys[] = {"F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", NULL};
 

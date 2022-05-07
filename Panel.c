@@ -5,26 +5,14 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Panel.h"
-
-#include "CRT.h"
-#include "RichString.h"
-#include "ListItem.h"
-#include "StringUtils.h"
-
-#include <math.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
-#include <assert.h>
-
 //#link curses
 
 /*{
+#include "config.h"
 #include "Object.h"
 #include "Vector.h"
 #include "FunctionBar.h"
+#include "local-curses.h"
 
 typedef struct Panel_ Panel;
 
@@ -39,9 +27,9 @@ typedef enum HandlerResult_ {
 
 #define EVENT_SET_SELECTED -1
 
-#define EVENT_HEADER_CLICK(x_) (-10000 + x_)
-#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ <= -9000)
-#define EVENT_HEADER_CLICK_GET_X(ev_) (ev_ + 10000)
+#define EVENT_HEADER_CLICK(x_) (-10000 + (x_))
+#define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
+#define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
@@ -75,6 +63,24 @@ struct Panel_ {
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
 
 }*/
+
+#include "Panel.h"
+#include "CRT.h"
+#include "RichString.h"
+#include "ListItem.h"
+#include "StringUtils.h"
+#include <math.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <strings.h>
+#include <assert.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

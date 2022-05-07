@@ -21,6 +21,11 @@ typedef struct FunctionBar_ {
 } FunctionBar;
 
 
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
 FunctionBar* FunctionBar_newEnterEsc(const char* enter, const char* esc);
 
 FunctionBar* FunctionBar_new(const char* const* functions, const char* const* keys, const int* events);

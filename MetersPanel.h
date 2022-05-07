@@ -27,6 +27,11 @@ struct MetersPanel_ {
 };
 
 
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".
 // We avoid UTF-8 arrows ← → here as they might display full-width on Chinese

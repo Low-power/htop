@@ -31,6 +31,11 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
 
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
 void MainPanel_updateTreeFunctions(MainPanel* this, bool mode);
 
 void MainPanel_pidSearch(MainPanel* this, int ch);

@@ -11,9 +11,11 @@ in the source distribution for its full text.
 
 //#link curses
 
+#include "config.h"
 #include "Object.h"
 #include "Vector.h"
 #include "FunctionBar.h"
+#include "local-curses.h"
 
 typedef struct Panel_ Panel;
 
@@ -28,9 +30,9 @@ typedef enum HandlerResult_ {
 
 #define EVENT_SET_SELECTED -1
 
-#define EVENT_HEADER_CLICK(x_) (-10000 + x_)
-#define EVENT_IS_HEADER_CLICK(ev_) (ev_ >= -10000 && ev_ <= -9000)
-#define EVENT_HEADER_CLICK_GET_X(ev_) (ev_ + 10000)
+#define EVENT_HEADER_CLICK(x_) (-10000 + (x_))
+#define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
+#define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
 typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
 
@@ -63,6 +65,11 @@ struct Panel_ {
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
 
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

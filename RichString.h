@@ -13,20 +13,8 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include <ctype.h>
-
 #include <assert.h>
-#ifdef HAVE_NCURSESW_CURSES_H
-#include <ncursesw/curses.h>
-#elif HAVE_NCURSES_NCURSES_H
-#include <ncurses/ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#elif HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_CURSES_H
-#include <curses.h>
-#endif
-
+#include "local-curses.h"
 #ifdef HAVE_LIBNCURSESW
 #include <wctype.h>
 #endif

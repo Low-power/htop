@@ -5,14 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "IncSet.h"
-#include "StringUtils.h"
-#include "Panel.h"
-#include "ListItem.h"
-#include "CRT.h"
-#include <string.h>
-#include <stdlib.h>
-
 /*{
 
 #include "FunctionBar.h"
@@ -26,7 +18,7 @@ typedef enum {
    INC_FILTER = 1
 } IncType;
 
-#define IncSet_filter(inc_) (inc_->filtering ? inc_->modes[INC_FILTER].buffer : NULL)
+#define IncSet_filter(inc_) ((inc_)->filtering ? (inc_)->modes[INC_FILTER].buffer : NULL)
 
 typedef struct IncMode_ {
    char buffer[INCMODE_MAX+1];
@@ -46,6 +38,20 @@ typedef struct IncSet_ {
 typedef const char* (*IncMode_GetPanelValue)(Panel*, int);
 
 }*/
+
+#include "IncSet.h"
+#include "StringUtils.h"
+#include "Panel.h"
+#include "ListItem.h"
+#include "CRT.h"
+#include "local-curses.h"
+#include <string.h>
+#include <stdlib.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 static void IncMode_reset(IncMode* mode) {
    mode->index = 0;

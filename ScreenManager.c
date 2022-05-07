@@ -5,17 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ScreenManager.h"
-#include "ProcessList.h"
-
-#include "Object.h"
-#include "CRT.h"
-
-#include <assert.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
 /*{
 #include "FunctionBar.h"
 #include "Vector.h"
@@ -43,6 +32,21 @@ typedef struct ScreenManager_ {
 } ScreenManager;
 
 }*/
+
+#include "ScreenManager.h"
+#include "ProcessList.h"
+#include "Object.h"
+#include "CRT.h"
+#include "local-curses.h"
+#include <assert.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner) {
    ScreenManager* this;

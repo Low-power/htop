@@ -5,13 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "MainPanel.h"
-#include "Process.h"
-#include "Platform.h"
-#include "CRT.h"
-
-#include <stdlib.h>
-
 /*{
 #include "Panel.h"
 #include "Action.h"
@@ -35,6 +28,18 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
 }*/
+
+#include "MainPanel.h"
+#include "Process.h"
+#include "Platform.h"
+#include "CRT.h"
+#include "local-curses.h"
+#include <stdlib.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 static const char* const MainFunctions[]  = {"Help  ", "Setup ", "Search", "Filter", "Tree  ", "SortBy", "Nice -", "Nice +", "Kill  ", "Quit  ", NULL};
 

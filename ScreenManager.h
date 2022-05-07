@@ -35,6 +35,11 @@ typedef struct ScreenManager_ {
 } ScreenManager;
 
 
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
 ScreenManager* ScreenManager_new(int x1, int y1, int x2, int y2, Orientation orientation, const Header* header, const Settings* settings, bool owner);
 
 void ScreenManager_delete(ScreenManager* this);

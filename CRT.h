@@ -9,35 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifndef __ANDROID__
-#endif
-#if HAVE_SETUID_ENABLED
-#endif
-#ifdef HAVE_BACKTRACE
-#endif
-
-#define ColorIndex(i,j) ((7-(i))*8+(j))
-
-#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
-
-#define Black COLOR_BLACK
-#define Red COLOR_RED
-#define Green COLOR_GREEN
-#define Yellow COLOR_YELLOW
-#define Blue COLOR_BLUE
-#define Magenta COLOR_MAGENTA
-#define Cyan COLOR_CYAN
-#define White COLOR_WHITE
-
-#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
-#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
-
-#define KEY_WHEELUP KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK KEY_F(22)
-
-//#link curses
-
 #include <stdbool.h>
 
 typedef enum TreeStr_ {
@@ -127,6 +98,40 @@ typedef enum ColorElements_ {
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + ((x) - 'A'))
 
+
+#ifndef __ANDROID__
+#endif
+#if HAVE_SETUID_ENABLED
+#endif
+#ifdef HAVE_BACKTRACE
+#endif
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
+#define ColorIndex(i,j) ((7-(i))*8+(j))
+
+#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
+
+#define Black COLOR_BLACK
+#define Red COLOR_RED
+#define Green COLOR_GREEN
+#define Yellow COLOR_YELLOW
+#define Blue COLOR_BLUE
+#define Magenta COLOR_MAGENTA
+#define Cyan COLOR_CYAN
+#define White COLOR_WHITE
+
+#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
+#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
+
+#define KEY_WHEELUP KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+#define KEY_RECLICK KEY_F(22)
+
+//#link curses
 
 extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 

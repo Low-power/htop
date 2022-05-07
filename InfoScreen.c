@@ -1,18 +1,5 @@
 #include "InfoScreen.h"
 
-#include "config.h"
-#include "Object.h"
-#include "CRT.h"
-#include "IncSet.h"
-#include "ListItem.h"
-#include "Platform.h"
-#include "StringUtils.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdarg.h>
-
 /*{
 #include "Process.h"
 #include "Panel.h"
@@ -38,7 +25,7 @@ typedef struct InfoScreenClass_ {
 #define InfoScreen_scan(this_)        As_InfoScreen(this_)->scan((InfoScreen*)(this_))
 #define InfoScreen_draw(this_)        As_InfoScreen(this_)->draw((InfoScreen*)(this_))
 #define InfoScreen_onErr(this_)       As_InfoScreen(this_)->onErr((InfoScreen*)(this_))
-#define InfoScreen_onKey(this_, ch_)  As_InfoScreen(this_)->onKey((InfoScreen*)(this_), ch_)
+#define InfoScreen_onKey(this_, ch_)  As_InfoScreen(this_)->onKey((InfoScreen*)(this_), (ch_))
 
 struct InfoScreen_ {
    Object super;
@@ -49,6 +36,24 @@ struct InfoScreen_ {
    Vector* lines;
 };
 }*/
+
+#include "config.h"
+#include "Object.h"
+#include "CRT.h"
+#include "IncSet.h"
+#include "ListItem.h"
+#include "Platform.h"
+#include "StringUtils.h"
+#include "local-curses.h"
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdarg.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 static const char* const InfoScreenFunctions[] = {"Search ", "Filter ", "Refresh", "Done   ", NULL};
 

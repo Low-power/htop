@@ -50,6 +50,8 @@ while read -r line; do case "$state" in
 				;;
 			*"#include"*)
 				;;
+			*"#error"*|*"#warning"*)
+				;;
 			*"htop - "*.c)
 				printf %s\\n "${line%c}h"
 				;;

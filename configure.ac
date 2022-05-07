@@ -286,6 +286,30 @@ if test "x$enable_unicode" = xyes; then
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
+
+	m4_define([HTOP_CHECK_NCURSESW], [
+			AC_CHECK_TYPE([cchar_t], [$1], [$2], [
+					#define NCURSES_WIDECHAR 1
+					#ifdef HAVE_NCURSESW_CURSES_H
+					#include <ncursesw/curses.h>
+					#elif defined HAVE_NCURSES_NCURSES_H
+					#include <ncurses/ncurses.h>
+					#elif defined HAVE_NCURSES_CURSES_H
+					#include <ncurses/curses.h>
+					#elif defined HAVE_NCURSES_H
+					#include <ncurses.h>
+					#else
+					#include <curses.h>
+					#endif
+				])
+		])
+	HTOP_CHECK_NCURSESW([], [
+			AC_MSG_NOTICE([trying to define _XOPEN_SOURCE_EXTENDED to get wide-character support])
+			unset ac_cv_type_cchar_t
+			CPPFLAGS="$CPPFLAGS -D _XOPEN_SOURCE_EXTENDED=1"
+			HTOP_CHECK_NCURSESW([],
+				[AC_MSG_ERROR([libncursesw present but development headers didn't work properly. You may want to use --disable-unicode])])
+		])
 else
    HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config",
     HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config",

@@ -5,12 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "MetersPanel.h"
-
-#include <stdlib.h>
-#include <assert.h>
-#include "CRT.h"
-
 /*{
 #include "Panel.h"
 #include "Settings.h"
@@ -30,6 +24,17 @@ struct MetersPanel_ {
 };
 
 }*/
+
+#include "MetersPanel.h"
+#include "CRT.h"
+#include "local-curses.h"
+#include <stdlib.h>
+#include <assert.h>
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
 
 // Note: In code the meters are known to have bar/text/graph "Modes", but in UI
 // we call them "Styles".

@@ -5,51 +5,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "CRT.h"
-
-#include "StringUtils.h"
-#include "RichString.h"
-
-#include <stdio.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <locale.h>
-#ifndef __ANDROID__
-#include <langinfo.h>
-#endif
-#if HAVE_SETUID_ENABLED
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-#ifdef HAVE_BACKTRACE
-#include <execinfo.h>
-#endif
-
-#define ColorIndex(i,j) ((7-(i))*8+(j))
-
-#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
-
-#define Black COLOR_BLACK
-#define Red COLOR_RED
-#define Green COLOR_GREEN
-#define Yellow COLOR_YELLOW
-#define Blue COLOR_BLUE
-#define Magenta COLOR_MAGENTA
-#define Cyan COLOR_CYAN
-#define White COLOR_WHITE
-
-#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
-#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
-
-#define KEY_WHEELUP KEY_F(20)
-#define KEY_WHEELDOWN KEY_F(21)
-#define KEY_RECLICK KEY_F(22)
-
-//#link curses
-
 /*{
 #include <stdbool.h>
 
@@ -141,6 +96,55 @@ typedef enum ColorElements_ {
 #define KEY_ALT(x) (KEY_F(64 - 26) + ((x) - 'A'))
 
 }*/
+
+#include "config.h"
+#include "CRT.h"
+#include "StringUtils.h"
+#include "RichString.h"
+#include "local-curses.h"
+#include <stdio.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <locale.h>
+#ifndef __ANDROID__
+#include <langinfo.h>
+#endif
+#if HAVE_SETUID_ENABLED
+#include <unistd.h>
+#include <sys/types.h>
+#endif
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#endif
+
+#if defined ERR && ERR > 0
+#undef ERR
+#define ERR (-1)
+#endif
+
+#define ColorIndex(i,j) ((7-(i))*8+(j))
+
+#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
+
+#define Black COLOR_BLACK
+#define Red COLOR_RED
+#define Green COLOR_GREEN
+#define Yellow COLOR_YELLOW
+#define Blue COLOR_BLUE
+#define Magenta COLOR_MAGENTA
+#define Cyan COLOR_CYAN
+#define White COLOR_WHITE
+
+#define ColorPairGrayBlack ColorPair(Magenta,Magenta)
+#define ColorIndexGrayBlack ColorIndex(Magenta,Magenta)
+
+#define KEY_WHEELUP KEY_F(20)
+#define KEY_WHEELDOWN KEY_F(21)
+#define KEY_RECLICK KEY_F(22)
+
+//#link curses
 
 const char *CRT_treeStrAscii[TREE_STR_COUNT] = {
    "-", // TREE_STR_HORZ
