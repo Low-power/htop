@@ -35,7 +35,6 @@ typedef struct TraceScreen_ {
    InfoScreen super;
    bool tracing;
    int child;
-   FILE *trace_f;
    int trace_fd;
    bool contLine;
    bool follow;
@@ -75,7 +74,7 @@ void TraceScreen_delete(Object* cast) {
    if (this->child > 0) {
       kill(this->child, SIGTERM);
       waitpid(this->child, NULL, 0);
-      fclose(this->trace_f);
+      close(this->trace_fd);
    }
    CRT_enableDelay();
    free(InfoScreen_done((InfoScreen*)cast));
@@ -119,47 +118,51 @@ bool TraceScreen_forkTracer(TraceScreen* this) {
    }
    close(fdpair[1]);
    if(fcntl(fdpair[0], F_SETFL, O_NONBLOCK) == -1) return false;
-   this->trace_f = fdopen(fdpair[0], "r");
-   this->trace_fd = fileno(this->trace_f);
+   this->trace_fd = fdpair[0];
    return true;
 }
 
 void TraceScreen_updateTrace(InfoScreen* super) {
    TraceScreen* this = (TraceScreen*) super;
-   char buffer[1001];
+   char buffer[1024];
+   int nready, len;
    fd_set fds;
    FD_ZERO(&fds);
    FD_SET(this->trace_fd, &fds);
-   struct timeval tv;
-   tv.tv_sec = 0; tv.tv_usec = 500;
-   int ready = select(this->trace_fd + 1, &fds, NULL, NULL, &tv);
-   int nread = 0;
-   if (ready > 0 && FD_ISSET(this->trace_fd, &fds)) {
-      nread = fread(buffer, 1, 1000, this->trace_f);
-   }
-   if (nread && this->tracing) {
-      char* line = buffer;
-      buffer[nread] = '\0';
-      for (int i = 0; i < nread; i++) {
-         if (buffer[i] == '\n') {
-            buffer[i] = '\0';
-            if (this->contLine) {
-               InfoScreen_appendLine(&this->super, line);
-               this->contLine = false;
-            } else {
-               InfoScreen_addLine(&this->super, line);
-            }
-            line = buffer+i+1;
+   struct timeval timeout = { .tv_sec = 0, .tv_usec = 500 };
+   do {
+      nready = select(this->trace_fd + 1, &fds, NULL, NULL, &timeout);
+   } while(nready < 0 && errno == EINTR);
+   if(nready <= 0 || !FD_ISSET(this->trace_fd, &fds)) return;
+   do {
+      len = read(this->trace_fd, buffer, sizeof buffer - 1);
+   } while(len < 0 && errno == EINTR);
+   if(len < 1 || !this->tracing) return;
+
+   char* line = buffer;
+   buffer[len] = '\0';
+   for (int i = 0; i < len; i++) switch(buffer[i]) {
+      case 0:
+      case '\n':
+         buffer[i] = '\0';
+         if (this->contLine) {
+            InfoScreen_appendLine(&this->super, line);
+            this->contLine = false;
+         } else {
+            InfoScreen_addLine(&this->super, line);
          }
-      }
-      if (line < buffer+nread) {
-         InfoScreen_addLine(&this->super, line);
-         buffer[nread] = '\0';
-         this->contLine = true;
-      }
-      if (this->follow) {
-         Panel_setSelected(this->super.display, Panel_size(this->super.display)-1);
-      }
+         line = buffer + i + 1;
+         break;
+      case '	':
+         buffer[i] = ' ';
+         break;
+   }
+   if (line < buffer + len) {
+      InfoScreen_addLine(&this->super, line);
+      this->contLine = true;
+   }
+   if (this->follow) {
+      Panel_setSelected(this->super.display, Panel_size(this->super.display)-1);
    }
 }
 

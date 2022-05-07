@@ -15,7 +15,6 @@ typedef struct TraceScreen_ {
    InfoScreen super;
    bool tracing;
    int child;
-   FILE *trace_f;
    int trace_fd;
    bool contLine;
    bool follow;
