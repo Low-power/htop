@@ -28,9 +28,9 @@ in the source distribution for its full text.
 #include <execinfo.h>
 #endif
 
-#define ColorIndex(i,j) ((7-i)*8+j)
+#define ColorIndex(i,j) ((7-(i))*8+(j))
 
-#define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
+#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
 
 #define Black COLOR_BLACK
 #define Red COLOR_RED
@@ -138,7 +138,7 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-#define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
+#define KEY_ALT(x) (KEY_F(64 - 26) + ((x) - 'A'))
 
 }*/
 
@@ -592,7 +592,7 @@ static int CRT_euid = -1;
 
 static int CRT_egid = -1;
 
-#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
+#define DIE(msg) do { CRT_done(); fputs((msg), stderr); exit(1); } while(0)
 
 void CRT_dropPrivileges() {
    CRT_egid = getegid();
@@ -651,17 +651,10 @@ void CRT_init(int delay, int colorScheme) {
    keypad(stdscr, true);
    mouseinterval(0);
    curs_set(0);
-   if (has_colors()) {
-      start_color();
-      CRT_hasColors = true;
-   } else {
-      CRT_hasColors = false;
-   }
+   CRT_hasColors = has_colors();
+   if(CRT_hasColors) start_color();
    CRT_termType = getenv("TERM");
-   if (String_eq(CRT_termType, "linux"))
-      CRT_scrollHAmount = 20;
-   else
-      CRT_scrollHAmount = 5;
+   CRT_scrollHAmount = String_eq(CRT_termType, "linux") ? 20 : 5;
    if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
@@ -676,7 +669,7 @@ void CRT_init(int delay, int colorScheme) {
       define_key("\033[13~", KEY_F(3));
       define_key("\033[14~", KEY_F(4));
       define_key("\033[17;2~", KEY_F(18));
-      char sequence[3] = "\033a";
+      char sequence[3] = { 0x1b };
       for (char c = 'a'; c <= 'z'; c++) {
          sequence[1] = c;
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
@@ -698,10 +691,7 @@ void CRT_init(int delay, int colorScheme) {
    setlocale(LC_CTYPE, "");
 
 #ifdef HAVE_LIBNCURSESW
-   if(strcmp(nl_langinfo(CODESET), "UTF-8") == 0)
-      CRT_utf8 = true;
-   else
-      CRT_utf8 = false;
+   CRT_utf8 = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
 #endif
 
    CRT_treeStr =

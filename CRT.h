@@ -16,9 +16,9 @@ in the source distribution for its full text.
 #ifdef HAVE_BACKTRACE
 #endif
 
-#define ColorIndex(i,j) ((7-i)*8+j)
+#define ColorIndex(i,j) ((7-(i))*8+(j))
 
-#define ColorPair(i,j) COLOR_PAIR(ColorIndex(i,j))
+#define ColorPair(i,j) COLOR_PAIR(ColorIndex((i),(j)))
 
 #define Black COLOR_BLACK
 #define Red COLOR_RED
@@ -125,7 +125,7 @@ typedef enum ColorElements_ {
    LAST_COLORELEMENT
 } ColorElements;
 
-#define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
+#define KEY_ALT(x) (KEY_F(64 - 26) + ((x) - 'A'))
 
 
 extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
@@ -160,7 +160,7 @@ extern int CRT_colorScheme;
 
 #if HAVE_SETUID_ENABLED
 
-#define DIE(msg) do { CRT_done(); fprintf(stderr, msg); exit(1); } while(0)
+#define DIE(msg) do { CRT_done(); fputs((msg), stderr); exit(1); } while(0)
 
 void CRT_dropPrivileges();
 
