@@ -101,19 +101,15 @@ void Header_writeBackToSettings(const Header* this) {
    }
 }
 
-MeterModeId Header_addMeterByName(Header* this, char* name, int column) {
+MeterModeId Header_addMeterByName(Header* this, const char *name, int column) {
    Vector* meters = this->columns[column];
-
-   char* paren = strchr(name, '(');
-   int param = 0;
-   if (paren) {
-      int ok = sscanf(paren, "(%10d)", &param);
-      if (!ok) param = 0;
-      *paren = '\0';
-   }
+   int param;
+   const char *paren = name;
+   while(*paren && *paren != '(') paren++;
+   if(!*paren || sscanf(paren + 1, "%10d)", &param) < 1) param = 0;
    MeterModeId mode = TEXT_METERMODE;
    for (MeterClass** type = Platform_meterTypes; *type; type++) {
-      if (String_eq(name, (*type)->name)) {
+      if (strncmp(name, (*type)->name, paren - name) == 0) {
          Meter* meter = Meter_new(this->pl, param, *type);
          Vector_add(meters, meter);
          mode = meter->mode;
