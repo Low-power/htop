@@ -141,6 +141,8 @@ void TraceScreen_updateTrace(InfoScreen* super) {
 
    char* line = buffer;
    buffer[len] = '\0';
+   bool end_of_call = false;
+   bool skip_space = true;
    for (int i = 0; i < len; i++) switch(buffer[i]) {
       case 0:
       case '\n':
@@ -152,9 +154,25 @@ void TraceScreen_updateTrace(InfoScreen* super) {
             InfoScreen_addLine(&this->super, line);
          }
          line = buffer + i + 1;
+         skip_space = true;
+         break;
+      case ')':
+         end_of_call = true;
          break;
       case '	':
-         buffer[i] = ' ';
+      //case ' ':
+         if(end_of_call && skip_space) {
+            int j = i;
+            while(++j < len && (buffer[j] == ' ' || buffer[j] == '	'));
+            size_t skip_len = j - i - 1;
+            if(skip_len > 0) memmove(buffer + i + 1, buffer + j, len - j);
+            len -= skip_len;
+            buffer[i] = ' ';
+            skip_space = false;
+         }
+         break;
+      default:
+         end_of_call = false;
          break;
    }
    if (line < buffer + len) {
