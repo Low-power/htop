@@ -98,18 +98,34 @@ AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup nanosleep lround getopt_long])
 
-save_cflags="${CFLAGS}"
-CFLAGS="$CFLAGS -Wextra"
-AC_MSG_CHECKING([if compiler supports -Wextra])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [])],[
-   wextra_flag=-Wextra
-   AC_MSG_RESULT([yes])
-],[
-   wextra_flag=
-   AC_MSG_RESULT([no])
-])
-CFLAGS="$save_cflags"
-AC_SUBST(wextra_flag)
+# CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
+m4_define([CHECK_CFLAGS_DEPENDED], [
+		for o in $1; do
+			save_cflags="$CFLAGS"
+			AC_MSG_CHECKING([whether $CC supports $o])
+			CFLAGS="$CFLAGS $o"
+			AC_COMPILE_IFELSE([AC_LANG_SOURCE([])], [
+					eval AS_TR_SH([cc$o])=yes
+					AC_MSG_RESULT([yes])
+				], [
+					eval AS_TR_SH([cc$o])=no
+					CFLAGS="$save_cflags"
+					AC_MSG_RESULT([no])
+					$2
+					break
+				])
+		done
+	])
+
+if test "x$ac_cv_c_compiler_gnu" = xyes; then
+	CHECK_CFLAGS_DEPENDED([-Wall -Wextra])
+else
+	# Try xlc(1) options first
+	CHECK_CFLAGS_DEPENDED(["-q info=c99:cmp:cns:eff:gnr:lan:ord:ret:tru:trx:upg"], [
+			# Fallback to gcc(1)-like options
+			CHECK_CFLAGS_DEPENDED([-Wall -Wextra])
+		])
+fi
 
 AC_ARG_WITH([backtrace],
 	[AS_HELP_STRING([--with-backtrace], [use backtrace(3) in case of crashing [auto detect]])],

@@ -12,9 +12,9 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-AM_CFLAGS = -Wall $(wextra_flag) -D SYSCONFDIR=\"$(sysconfdir)\" -I "$(top_srcdir)/$(my_htop_platform)"
-AM_LDFLAGS =
-AM_CPPFLAGS = -D NDEBUG=1
+AM_CPPFLAGS = $(LOCAL_CPPFLAGS) -D SYSCONFDIR=\"$(sysconfdir)\" -I "$(top_srcdir)/$(my_htop_platform)"
+AM_CFLAGS = $(LOCAL_CFLAGS)
+AM_LDFLAGS = $(LOCAL_LDFLAGS)
 
 myhtopsources = AvailableMetersPanel.c CategoriesPanel.c CheckItem.c \
 ClockMeter.c ColorsPanel.c ColumnsPanel.c CPUMeter.c CRT.c MainPanel.c \
@@ -255,13 +255,13 @@ target:
 	echo $(htop_SOURCES)
 
 profile:
-	$(MAKE) all CFLAGS="-pg" AM_CPPFLAGS="-pg -O2 -DNDEBUG"
+	LOCAL_CPPFLAGS="-D NDEBUG=1" LOCAL_CFLAGS=-pg $(MAKE) all
 
 debug:
-	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-ggdb -DDEBUG"
+	LOCAL_CPPFLAGS="-D DEBUG=1" LOCAL_CFLAGS=-g $(MAKE) all
 
 coverage:
-	$(MAKE) all CFLAGS="" AM_CPPFLAGS="-fprofile-arcs -ftest-coverage -DDEBUG" LDFLAGS="-lgcov"
+	LOCAL_CPPFLAGS="-D DEBUG=1" LOCAL_CFLAGS="-fprofile-arcs -ftest-coverage" LDADD=-lgcov $(MAKE) all
 
 .c.h:
 	@srcdir@/scripts/MakeHeader.sh $< > $@

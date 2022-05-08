@@ -28,7 +28,7 @@ struct Hashtable_ {
    bool owner;
 };
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 int Hashtable_count(Hashtable* this);
 

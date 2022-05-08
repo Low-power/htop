@@ -31,7 +31,7 @@ Vector* Vector_new(ObjectClass* type, bool owner, int size);
 
 void Vector_delete(Vector* this);
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 int Vector_count(Vector* this);
 

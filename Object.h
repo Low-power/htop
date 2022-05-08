@@ -44,7 +44,7 @@ struct Object_ {
 
 extern ObjectClass Object_class;
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 bool Object_isA(Object* o, const ObjectClass* klass);
 
