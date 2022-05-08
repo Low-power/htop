@@ -22,11 +22,7 @@ void* xRealloc(void* ptr, size_t size);
 
 #undef xStrdup
 #undef xStrdup_
-#ifdef NDEBUG
-# define xStrdup_ xStrdup
-#else
-# define xStrdup(str_) (assert(str_), xStrdup_(str_))
-#endif
+#define xStrdup_ xStrdup
 
 #ifndef __has_attribute // Clang's macro
 # define __has_attribute(x) 0
