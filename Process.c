@@ -243,12 +243,20 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, sizeof buffer, "%4.1lfT ", (double)number / ONE_BINARY_G);
+         if(len > sizeof buffer - 1) {
+            strcpy(buffer, "***** ");
+            len = 6;
+         }
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, sizeof buffer, "%4luG ", number / ONE_BINARY_M);
+         if(len > sizeof buffer - 1) {
+            strcpy(buffer, "***** ");
+            len = 6;
+         }
          RichString_appendn(str, largeNumberColor, buffer, len);
          return;
       }
@@ -272,7 +280,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
 }
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
-   char buffer[14];
+   char buffer[22];
 
    int largeNumberColor = CRT_colors[LARGE_NUMBER];
    int processMegabytesColor = CRT_colors[PROCESS_MEGABYTES];
@@ -308,7 +316,7 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    int minutes = (totalSeconds / 60) % 60;
    int seconds = totalSeconds % 60;
    int hundredths = totalHundredths - (totalSeconds * 100);
-   char buffer[11];
+   char buffer[23];
    if (hours >= 100) {
       xSnprintf(buffer, sizeof buffer, "%7lluh ", hours);
       RichString_append(str, CRT_colors[LARGE_NUMBER], buffer);
