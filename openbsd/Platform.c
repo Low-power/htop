@@ -6,6 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Platform.h"
 #include "Meter.h"
 #include "CPUMeter.h"
@@ -293,22 +294,30 @@ void Platform_setSwapValues(Meter *meter) {
 
 char **Platform_getProcessEnv(Process *proc) {
    char errbuf[_POSIX2_LINE_MAX];
-   char **ptr;
+   kvm_t *kvm = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
+   if(!kvm) return NULL;
+
    int count;
-   kvm_t *kt;
-   struct kinfo_proc *kproc;
-
-   if ((kt = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf)) == NULL)
-      return NULL;
-
-   if ((kproc = kvm_getprocs(kt, KERN_PROC_PID, proc->pid,
-                             sizeof(struct kinfo_proc), &count)) == NULL) {
-      (void) kvm_close(kt);
+   struct kinfo_proc *kproc = kvm_getprocs(kvm,
+#ifdef KERN_PROC_SHOW_THREADS
+      KERN_PROC_SHOW_THREADS |
+#endif
+      KERN_PROC_PID, proc->tgid, sizeof(struct kinfo_proc), &count);
+   if(!kproc) {
+      kvm_close(kvm);
       return NULL;
    }
+#ifdef HAVE_STRUCT_KINFO_PROC_P_TID
+   while(count > 0 && kproc->p_tid - THREAD_PID_OFFSET != proc->pid) {
+      count--;
+      kproc++;
+   }
+#endif
+   if(count < 1) return NULL;
 
-   if ((ptr = kvm_getenvv(kt, kproc, 0)) == NULL) {
-      (void) kvm_close(kt);
+   char **ptr = kvm_getenvv(kvm, kproc, 0);
+   if(!ptr) {
+      kvm_close(kvm);
       return NULL;
    }
 
@@ -317,6 +326,6 @@ char **Platform_getProcessEnv(Process *proc) {
    char **env = xMalloc((count + 1) * sizeof(char *));
    env[count] = NULL;
    while(count-- > 0) env[count] = xStrdup(ptr[count]);
-   (void) kvm_close(kt);
+   kvm_close(kvm);
    return env;
 }
