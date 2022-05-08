@@ -243,7 +243,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
          return;
       } else if (number >= (1000 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, sizeof buffer, "%4.1lfT ", (double)number / ONE_BINARY_G);
-         if(len > sizeof buffer - 1) {
+         if((size_t)len > sizeof buffer - 1) {
             strcpy(buffer, "***** ");
             len = 6;
          }
@@ -253,7 +253,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
       #endif
       if(number >= (100 * ONE_DECIMAL_M)) {
          len = snprintf(buffer, sizeof buffer, "%4luG ", number / ONE_BINARY_M);
-         if(len > sizeof buffer - 1) {
+         if((size_t)len > sizeof buffer - 1) {
             strcpy(buffer, "***** ");
             len = 6;
          }
