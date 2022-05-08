@@ -37,7 +37,7 @@ ProcessClass InterixProcess_class = {
       .extends = Class(Process),
       .display = Process_display,
       .delete = Process_delete,
-      //.compare = InterixProcess_compare
+      .compare = InterixProcess_compare
    },
    .writeField = (Process_WriteField)InterixProcess_writeField,
 };
@@ -99,6 +99,26 @@ void InterixProcess_delete(Object* cast) {
    Object_setClass(this, Class(InterixProcess));
    Process_done((Process*)cast);
    free(this);
+}
+
+long int InterixProcess_compare(const void *o1, const void *o2) {
+	const InterixProcess *p1, *p2;
+	const Settings *settings = ((const Process *)o1)->settings;
+	if(settings->direction == 1) {
+		p1 = o1;
+		p2 = o2;
+	} else {
+		p1 = o2;
+		p2 = o1;
+	}
+	switch((int)settings->sortKey) {
+		case NATIVE_PID:
+			return p1->native_pid - p2->native_pid;
+		case NATIVE_SID:
+			return p1->native_sid - p2->native_sid;
+		default:
+			return Process_compare(o1, o2);
+	}
 }
 
 void InterixProcess_writeField(Process *super, RichString *str, ProcessField field) {

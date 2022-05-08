@@ -27,7 +27,7 @@ static long int page_size_ki;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
-   ProcessList_init(this, Class(Process), usersTable, pidWhiteList, userId);
+   ProcessList_init(this, Class(InterixProcess), usersTable, pidWhiteList, userId);
    return this;
 }
 
