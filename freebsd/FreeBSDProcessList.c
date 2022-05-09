@@ -468,15 +468,13 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    if(!kprocs) return;
 #else
    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC };
-   size_t buffer_size = fpl->kip_buffer_size;
-   if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 || !fpl->kip_buffer) {
-      if(fpl->kip_buffer && errno != ENOMEM) return;
+   size_t buffer_size;
+   if(sysctl(mib, 3, NULL, &buffer_size, NULL, 0) < 0) return;
+   if(fpl->kip_buffer_size < buffer_size) {
       fpl->kip_buffer = xRealloc(fpl->kip_buffer, buffer_size);
-      if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) {
-         return;
-      }
       fpl->kip_buffer_size = buffer_size;
    }
+   if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) return;
    struct kinfo_proc *kprocs = fpl->kip_buffer;
    int count = buffer_size / sizeof(struct kinfo_proc);
 #endif
