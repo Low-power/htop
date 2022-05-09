@@ -313,7 +313,10 @@ char **Platform_getProcessEnv(Process *proc) {
       kproc++;
    }
 #endif
-   if(count < 1) return NULL;
+   if(count < 1) {
+      kvm_close(kvm);
+      return NULL;
+   }
 
    char **ptr = kvm_getenvv(kvm, kproc, 0);
    if(!ptr) {
