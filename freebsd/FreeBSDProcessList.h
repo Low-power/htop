@@ -33,6 +33,9 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
 #ifdef HAVE_LIBKVM
    kvm_t* kd;
+#else
+   struct kinfo_proc *kip_buffer;
+   size_t kip_buffer_size;
 #endif
    unsigned long long int memWire;
    unsigned long long int memActive;

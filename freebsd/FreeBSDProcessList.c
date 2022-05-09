@@ -44,6 +44,9 @@ typedef struct FreeBSDProcessList_ {
    ProcessList super;
 #ifdef HAVE_LIBKVM
    kvm_t* kd;
+#else
+   struct kinfo_proc *kip_buffer;
+   size_t kip_buffer_size;
 #endif
    unsigned long long int memWire;
    unsigned long long int memActive;
@@ -173,6 +176,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    if (fpl->kd == NULL) {
       errx(1, "kvm_open: %s", errbuf);
    }
+#else
+   fpl->kip_buffer = NULL;
+   fpl->kip_buffer_size = 0;
 #endif
 
    int mib[] = { CTL_KERN, KERN_ARGMAX };
@@ -183,9 +189,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 }
 
 void ProcessList_delete(ProcessList* this) {
-   const FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
+   FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
 #ifdef HAVE_LIBKVM
    if (fpl->kd) kvm_close(fpl->kd);
+#else
+   free(fpl->kip_buffer);
 #endif
    free(fpl->cp_time_o);
    free(fpl->cp_time_n);
@@ -457,12 +465,19 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 #ifdef HAVE_LIBKVM
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
+   if(!kprocs) return;
 #else
    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC };
-   size_t buffer_size;
-   if(sysctl(mib, 3, NULL, &buffer_size, NULL, 0) < 0) return;
-   struct kinfo_proc *kprocs = xMalloc(buffer_size);
-   if(sysctl(mib, 3, kprocs, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) return;
+   size_t buffer_size = fpl->kip_buffer_size;
+   if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 || !fpl->kip_buffer) {
+      if(fpl->kip_buffer && errno != ENOMEM) return;
+      fpl->kip_buffer = xRealloc(fpl->kip_buffer, buffer_size);
+      if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) {
+         return;
+      }
+      fpl->kip_buffer_size = buffer_size;
+   }
+   struct kinfo_proc *kprocs = fpl->kip_buffer;
    int count = buffer_size / sizeof(struct kinfo_proc);
 #endif
 
@@ -573,8 +588,4 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->updated = true;
    }
-
-#ifndef HAVE_LIBKVM
-   free(kprocs);
-#endif
 }
