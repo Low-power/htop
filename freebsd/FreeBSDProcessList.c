@@ -81,6 +81,12 @@ static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
 
+#ifdef __GLIBC__
+// GNU C Library defines NZERO to 20, which is incorrect for kFreeBSD
+#undef NZERO
+#define NZERO 0
+#endif
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    size_t len;
    FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));

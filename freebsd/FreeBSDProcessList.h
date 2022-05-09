@@ -52,6 +52,12 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 
+#ifdef __GLIBC__
+// GNU C Library defines NZERO to 20, which is incorrect for kFreeBSD
+#undef NZERO
+#define NZERO 0
+#endif
+
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
