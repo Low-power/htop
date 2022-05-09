@@ -209,6 +209,7 @@ char **Platform_getProcessEnv(Process *proc) {
 	size_t len = sizeof arg_max;
 	if(sysctl(mib, 2, &arg_max, &len, NULL, 0) < 0) arg_max = ARG_MAX; 
 
+	mib[1] = KERN_PROC;
 	mib[2] = KERN_PROC_ENV;
 	mib[3] = proc->pid;
 	char *buffer = xMalloc(arg_max);
