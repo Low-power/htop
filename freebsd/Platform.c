@@ -17,13 +17,17 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
-
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/proc.h>
+#include <sys/user.h>
 #include <vm/vm_param.h>
+#include <fcntl.h>
+#include <kvm.h>
+#include <limits.h>
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -233,6 +237,46 @@ char **Platform_getProcessEnv(Process *proc) {
 	env[i] = NULL;
 	return env;
 #else
-	return NULL;
+	char **env = xMalloc(2 * sizeof(char *));
+	env[1] = NULL;
+	char errmsg[_POSIX2_LINE_MAX];
+	kvm_t *kvm = kvm_openfiles(NULL, "/dev/null", NULL, 0, errmsg);
+	if(!kvm) {
+		env[0] = xStrdup(errmsg);
+		return env;
+	}
+	int count;
+	struct kinfo_proc *kip = kvm_getprocs(kvm, KERN_PROC_PID, proc->pid, &count);
+	if(!kip || count < 1) {
+		const char *e = kip ? NULL : kvm_geterr(kvm);
+		if(e && *e) {
+			env[0] = xStrdup(e);
+		} else {
+			free(env);
+			env = NULL;
+		}
+		kvm_close(kvm);
+		return env;
+	}
+	char **v = kvm_getenvv(kvm, kip, 0);
+	if(!v) {
+		const char *e = kvm_geterr(kvm);
+		if(*e) {
+			env[0] = xStrdup(e);
+		} else {
+			free(env);
+			env = NULL;
+		}
+		kvm_close(kvm);
+		return env;
+	}
+	free(env);
+	count = 0;
+	while(v[count]) count++;
+	env = xMalloc((count + 1) * sizeof(char *));
+	env[count] = NULL;
+	while(count-- > 0) env[count] = xStrdup(v[count]);
+	kvm_close(kvm);
+	return env;
 #endif
 }
