@@ -9,8 +9,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
+#include "config.h"
+#ifdef HAVE_LIBKVM
 #include <kvm.h>
+#endif
 #include <sys/param.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
@@ -29,8 +31,9 @@ typedef struct CPUData_ {
 
 typedef struct FreeBSDProcessList_ {
    ProcessList super;
+#ifdef HAVE_LIBKVM
    kvm_t* kd;
-
+#endif
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
@@ -45,6 +48,7 @@ typedef struct FreeBSDProcessList_ {
    long int *cp_times_o;
    long int *cp_times_n;
 
+   int arg_max;
 } FreeBSDProcessList;
 
 

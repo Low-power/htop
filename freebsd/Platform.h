@@ -9,6 +9,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#if !defined KERN_PROC_ENV && defined HAVE_LIBKVM
+#endif
+
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"

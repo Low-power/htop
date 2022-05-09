@@ -28,7 +28,7 @@ case "$target_os" in
 linux*)
    my_htop_platform=linux
    ;;
-freebsd*|kfreebsd*)
+freebsd*|kfreebsd*-*)
    my_htop_platform=freebsd
    ;;
 openbsd*)
@@ -341,7 +341,20 @@ else
 fi
 
 if test "$my_htop_platform" = "freebsd"; then
-   AC_CHECK_LIB([kvm], [kvm_open], [], [missing_libraries="$missing_libraries libkvm"])
+	AC_ARG_WITH([kvm],
+		[AS_HELP_STRING([--with-kvm], [Enable use of kernel virtual memory interface (kvm(3)) [auto detect]])],
+		[], [with_kvm=check])
+	AS_IF([test "x$with_kvm" != xno],
+		[
+			if test "x$with_kvm" != xcheck && test "x$with_kvm" != xyes; then
+				CPPFLAGS="$CPPFLAGS -I $with_kvm/include"
+				LDFLAGS="$LDFLAGS -L$with_kvm/lib"
+                        fi
+			AC_CHECK_HEADER([kvm.h], [
+				AC_CHECK_LIB([kvm], [kvm_getprocs], [],
+						[test "x$with_kvm" != xcheck && missing_libraries="$missing_libraries libkvm"])
+				], [test "x$with_kvm" != xcheck && missing_headers="$missing_headers kvm.h"])
+		])
 fi
 
 if test "$my_htop_platform" = "openbsd"; then

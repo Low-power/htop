@@ -20,8 +20,10 @@ in the source distribution for its full text.
 #include <string.h>
 
 /*{
-
+#include "config.h"
+#ifdef HAVE_LIBKVM
 #include <kvm.h>
+#endif
 #include <sys/param.h>
 #include <sys/jail.h>
 #include <sys/uio.h>
@@ -40,8 +42,9 @@ typedef struct CPUData_ {
 
 typedef struct FreeBSDProcessList_ {
    ProcessList super;
+#ifdef HAVE_LIBKVM
    kvm_t* kd;
-
+#endif
    unsigned long long int memWire;
    unsigned long long int memActive;
    unsigned long long int memInactive;
@@ -56,6 +59,7 @@ typedef struct FreeBSDProcessList_ {
    long int *cp_times_o;
    long int *cp_times_n;
 
+   int arg_max;
 } FreeBSDProcessList;
 
 }*/
@@ -79,7 +83,6 @@ static int kernelFScale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
    size_t len;
-   char errbuf[_POSIX2_LINE_MAX];
    FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
@@ -158,18 +161,26 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       kernelFScale = 2048;
    }
 
+#ifdef HAVE_LIBKVM
+   char errbuf[_POSIX2_LINE_MAX];
    fpl->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
    if (fpl->kd == NULL) {
       errx(1, "kvm_open: %s", errbuf);
    }
+#endif
+
+   int mib[] = { CTL_KERN, KERN_ARGMAX };
+   len = sizeof fpl->arg_max;
+   if(sysctl(mib, 2, &fpl->arg_max, &len, NULL, 0) < 0) fpl->arg_max = ARG_MAX;
 
    return pl;
 }
 
 void ProcessList_delete(ProcessList* this) {
    const FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
+#ifdef HAVE_LIBKVM
    if (fpl->kd) kvm_close(fpl->kd);
-
+#endif
    free(fpl->cp_time_o);
    free(fpl->cp_time_n);
    free(fpl->cp_times_o);
@@ -321,6 +332,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //fpl->memFree = buffer.v_uint * page_size_kib;
    //pl->freeMem = fpl->memInactive + fpl->memFree;
 
+#ifdef HAVE_LIBKVM
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
    pl->totalSwap = 0;
@@ -331,13 +343,33 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= page_size_kib;
    pl->usedSwap *= page_size_kib;
+#else
+   pl->totalSwap = 0;
+   pl->usedSwap = 0;
+#endif
 
    pl->sharedMem = 0;  // currently unused
 }
 
-static void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
    *name = xStrdup(kproc->ki_comm);
-   char** argv = kvm_getargv(kd, kproc, 0);
+#ifdef KERN_PROC_ARGS
+   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, kproc->ki_pid };
+   char buffer[this->arg_max];
+   size_t len = this->arg_max;
+   if(sysctl(mib, 4, buffer, &len, NULL, 0) < 0 || len < 1) {
+      *command = xStrdup(kproc->ki_comm);
+      return;
+   }
+   *command = xMalloc(len);
+   (*command)[--len] = 0;
+   *basenameEnd = 0;
+   while(len-- > 0) {
+      (*command)[len] = buffer[len] ? : ' ';
+      if(!*basenameEnd) *basenameEnd = len;
+   }
+#elif defined HAVE_LIBKVM
+   char** argv = kvm_getargv(this->kd, kproc, 0);
    if (!argv) {
       *command = xStrdup(kproc->ki_comm);
       return;
@@ -359,6 +391,9 @@ static void FreeBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kpr
    }
    at--;
    *at = '\0';
+#else
+   *command = xStrdup(kproc->ki_comm);
+#endif
 }
 
 #define JAIL_ERRMSGLEN 1024
@@ -413,8 +448,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
 
+#ifdef HAVE_LIBKVM
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
+#else
+   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC };
+   size_t buffer_size;
+   if(sysctl(mib, 3, NULL, &buffer_size, NULL, 0) < 0) return;
+   struct kinfo_proc *kprocs = xMalloc(buffer_size);
+   if(sysctl(mib, 3, kprocs, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) return;
+   int count = buffer_size / sizeof(struct kinfo_proc);
+#endif
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
@@ -439,7 +483,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          ProcessList_add((ProcessList*)this, proc);
-         FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+         FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
          if(fp->jid != kproc->ki_jid) {
@@ -464,7 +508,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
-            FreeBSDProcessList_readProcessName(fpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+            FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          }
       }
 
@@ -523,4 +567,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->updated = true;
    }
+
+#ifndef HAVE_LIBKVM
+   free(kprocs);
+#endif
 }

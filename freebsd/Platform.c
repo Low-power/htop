@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Platform.h"
 #include "Meter.h"
 #include "CPUMeter.h"
@@ -25,9 +26,11 @@ in the source distribution for its full text.
 #include <sys/proc.h>
 #include <sys/user.h>
 #include <vm/vm_param.h>
+#if !defined KERN_PROC_ENV && defined HAVE_LIBKVM
 #include <fcntl.h>
 #include <kvm.h>
 #include <limits.h>
+#endif
 #include <string.h>
 #include <time.h>
 #include <math.h>
@@ -208,10 +211,14 @@ void Platform_setSwapValues(Meter* this) {
 
 char **Platform_getProcessEnv(Process *proc) {
 #ifdef KERN_PROC_ENV
-	int mib[4] = { CTL_KERN, KERN_ARGMAX };
-	int arg_max;
-	size_t len = sizeof arg_max;
-	if(sysctl(mib, 2, &arg_max, &len, NULL, 0) < 0) arg_max = ARG_MAX; 
+	static int arg_max;
+	int mib[4] = { CTL_KERN };
+	size_t len;
+	if(!arg_max) {
+		mib[1] = KERN_ARGMAX;
+		len = sizeof arg_max;
+		if(sysctl(mib, 2, &arg_max, &len, NULL, 0) < 0) arg_max = ARG_MAX;
+	}
 
 	mib[1] = KERN_PROC;
 	mib[2] = KERN_PROC_ENV;
@@ -236,7 +243,7 @@ char **Platform_getProcessEnv(Process *proc) {
 	free(buffer);
 	env[i] = NULL;
 	return env;
-#else
+#elif defined HAVE_LIBKVM
 	char **env = xMalloc(2 * sizeof(char *));
 	env[1] = NULL;
 	char errmsg[_POSIX2_LINE_MAX];
@@ -278,5 +285,7 @@ char **Platform_getProcessEnv(Process *proc) {
 	while(count-- > 0) env[count] = xStrdup(v[count]);
 	kvm_close(kvm);
 	return env;
+#else
+	return NULL;
 #endif
 }
