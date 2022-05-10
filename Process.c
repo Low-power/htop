@@ -466,13 +466,16 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
    case M_RESIDENT: Process_humanNumber(str, this->m_resident * PAGE_SIZE_KB, coloring); return;
    case M_SIZE: Process_humanNumber(str, this->m_size * PAGE_SIZE_KB, coloring); return;
-   case NICE: {
-      xSnprintf(buffer, n, "%3ld ", this->nice);
-      attr = this->nice < 0 ? CRT_colors[PROCESS_HIGH_PRIORITY]
-           : this->nice > 0 ? CRT_colors[PROCESS_LOW_PRIORITY]
-           : attr;
+   case NICE:
+      n = snprintf(buffer, n, "%3ld", this->nice);
+      assert(n >= 3);
+      if(n == 3) {
+         buffer[3] = ' ';
+         buffer[4] = 0;
+      }
+      if(this->nice < 0) attr = CRT_colors[PROCESS_HIGH_PRIORITY];
+      else if(this->nice > 0) attr = CRT_colors[PROCESS_LOW_PRIORITY];
       break;
-   }
    case NLWP: xSnprintf(buffer, n, "%4ld ", this->nlwp); break;
    case PGRP: xSnprintf(buffer, n, Process_pidFormat, this->pgrp); break;
    case PID: xSnprintf(buffer, n, Process_pidFormat, this->pid); break;
