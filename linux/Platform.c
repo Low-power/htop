@@ -141,16 +141,11 @@ int Platform_getUptime() {
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   int activeProcs, totalProcs, lastProc;
    *one = 0; *five = 0; *fifteen = 0;
    FILE *f = fopen(PROCDIR "/loadavg", "r");
-   if (f) {
-      int total = fscanf(f, "%32lf %32lf %32lf %32d/%32d %32d", one, five, fifteen,
-         &activeProcs, &totalProcs, &lastProc);
-      (void) total;
-      assert(total == 6);
-      fclose(f);
-   }
+   if(!f) return;
+   fscanf(f, "%32lf %32lf %32lf", one, five, fifteen);
+   fclose(f);
 }
 
 int Platform_getMaxPid() {
