@@ -218,11 +218,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		Process *proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
 		AixProcess *ap = (AixProcess *)proc;
 
+		proc->ppid = pe->pi_ppid;
+
 		if (!preExisting) {
-			ap->kernel = pe->pi_flags & SKPROC ? 1 : 0;
-			proc->pid = pe->pi_pid;
-			proc->ppid = pe->pi_ppid;
-			/* XXX: tpgid? */
+			ap->kernel = pe->pi_flags & SKPROC;
 			proc->tgid = pe->pi_pid;
 			proc->session = pe->pi_sid;
 			proc->tty_nr = pe->pi_ttyd;

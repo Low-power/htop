@@ -477,13 +477,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
+      proc->ppid = kproc->ki_ppid;
+
       if (!preExisting) {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          fp->jid = kproc->ki_jid;
 #endif
          proc->pid = kproc->ki_pid;
          fp->kernel = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
-         proc->ppid = kproc->ki_ppid;
          proc->tpgid = kproc->ki_tpgid;
          proc->tgid = kproc->ki_pid;
          proc->session = kproc->ki_sid;
@@ -506,10 +507,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
 #endif
-         if (proc->ppid != kproc->ki_ppid) {
-            // if there are reapers in the system, process can get reparented anytime
-            proc->ppid = kproc->ki_ppid;
-         }
          // some processes change users (eg. to lower privs)
          if(proc->ruid != kproc->ki_ruid) {
             proc->ruid = kproc->ki_ruid;

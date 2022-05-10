@@ -237,12 +237,10 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
    /* First, the "immutable" parts */
    if(!exists) {
       /* Set the PID/PGID/etc. */
-      proc->pid = ep->p_pid;
-      proc->ppid = ps->kp_eproc.e_ppid;
+      proc->tgid = proc->pid;
       proc->pgrp = ps->kp_eproc.e_pgid;
       proc->session = 0; /* TODO Get the session id */
       proc->tpgid = ps->kp_eproc.e_tpgid;
-      proc->tgid = proc->pid;
       proc->ruid = ps->kp_eproc.e_pcred.p_ruid;
       proc->euid = ps->kp_eproc.e_ucred.cr_uid;
       /* e_tdev = (major << 24) | (minor & 0xffffff) */
@@ -256,6 +254,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
    }
 
    /* Mutable information */
+   proc->ppid = ps->kp_eproc.e_ppid;
    proc->nice = ep->p_nice;
    proc->priority = ep->p_priority;
 
