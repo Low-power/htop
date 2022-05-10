@@ -119,6 +119,10 @@ typedef struct LinuxProcessList_ {
 
 }*/
 
+#ifndef PF_KTHREAD
+#define PF_KTHREAD 0x00200000
+#endif
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
@@ -340,8 +344,9 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    if(*location != ' ' || !*++location) return false;
    process->tpgid = strtol(location, &location, 10);
    if(*location != ' ' || !*++location) return false;
-   process->flags = strtoul(location, &location, 10);
+   unsigned int flags = strtoul(location, &location, 10);
    if(*location != ' ' || !*++location) return true;
+   lp->is_kernel_process = flags & PF_KTHREAD;
    process->minflt = strtoull(location, &location, 10);
    if(*location != ' ' || !*++location) return true;
    lp->cminflt = strtoull(location, &location, 10);
@@ -690,7 +695,6 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    int tokenEnd = 0;
    int lastChar = 0;
    if (amtRead == 0) {
-      ((LinuxProcess*)process)->is_kernel_process = true;
       return true;
    } else if (amtRead < 0) {
       return false;

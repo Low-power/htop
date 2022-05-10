@@ -116,7 +116,6 @@ typedef struct Process_ {
    int tpgid;
    uid_t ruid;
    uid_t euid;
-   unsigned long int flags;
    int processor;
 
    float percent_cpu;

@@ -91,6 +91,10 @@ typedef struct LinuxProcessList_ {
 #endif
 
 
+#ifndef PF_KTHREAD
+#define PF_KTHREAD 0x00200000
+#endif
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
