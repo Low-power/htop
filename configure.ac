@@ -355,6 +355,11 @@ if test "$my_htop_platform" = "freebsd"; then
 						[test "x$with_kvm" != xcheck && missing_libraries="$missing_libraries libkvm"])
 				], [test "x$with_kvm" != xcheck && missing_headers="$missing_headers kvm.h"])
 		])
+	AC_CHECK_MEMBERS([struct kinfo_proc.ki_jid], [], [], [
+			#include <sys/types.h>
+			#include <sys/param.h>
+			#include <sys/user.h>
+		])
 fi
 
 if test "$my_htop_platform" = "openbsd"; then

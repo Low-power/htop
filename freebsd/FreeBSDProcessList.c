@@ -413,13 +413,11 @@ static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct 
 #define JAIL_ERRMSGLEN 1024
 
 static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
-   int    jid;
-   struct iovec jiov[6];
-   char*  jname;
-   char   jnamebuf[MAXHOSTNAMELEN];
-   char   errmsg[JAIL_ERRMSGLEN];
-
-   if (kproc->ki_jid != 0 ){
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
+   if (kproc->ki_jid != 0) {
+      struct iovec jiov[6];
+      char jnamebuf[MAXHOSTNAMELEN];
+      char errmsg[JAIL_ERRMSGLEN];
       memset(jnamebuf, 0, sizeof(jnamebuf));
       *(const void **)&jiov[0].iov_base = "jid";
       jiov[0].iov_len = sizeof("jid");
@@ -434,25 +432,18 @@ static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
       jiov[5].iov_base = errmsg;
       jiov[5].iov_len = JAIL_ERRMSGLEN;
       errmsg[0] = 0;
-      jid = jail_get(jiov, 6, 0);
+      int jid = jail_get(jiov, 6, 0);
       if (jid < 0) {
          if (!errmsg[0]) {
             xSnprintf(errmsg, JAIL_ERRMSGLEN, "jail_get: %s", strerror(errno));
             // TODO: Make use of errmsg
          }
          return NULL;
-      } else if (jid == kproc->ki_jid) {
-         jname = xStrdup(jnamebuf);
-         return jname;
-      } else {
-         return NULL;
       }
-   } else {
-      jnamebuf[0]='-';
-      jnamebuf[1]='\0';
-      jname = xStrdup(jnamebuf);
+      return jid == kproc->ki_jid ? xStrdup(jnamebuf) : NULL;
    }
-   return jname;
+#endif
+   return xStrdup("-");
 }
 
 void ProcessList_goThroughEntries(ProcessList* this) {
@@ -487,7 +478,9 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       if (!preExisting) {
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          fp->jid = kproc->ki_jid;
+#endif
          proc->pid = kproc->ki_pid;
          fp->kernel = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
          proc->ppid = kproc->ki_ppid;
@@ -505,12 +498,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          if(fp->jid != kproc->ki_jid) {
             // process can enter jail anytime
             fp->jid = kproc->ki_jid;
             free(fp->jname);
             fp->jname = FreeBSDProcessList_readJailName(kproc);
          }
+#endif
          if (proc->ppid != kproc->ki_ppid) {
             // if there are reapers in the system, process can get reparented anytime
             proc->ppid = kproc->ki_ppid;
