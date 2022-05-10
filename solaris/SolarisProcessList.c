@@ -358,7 +358,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       proc->show = !(pl->settings->hide_kernel_processes && sproc->kernel);
    } else { // We are not in the master LWP, so jump to the LWP handling code
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768)*(double)100.0;
-      proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _psinfo->pr_time.tv_nsec / 10000000;
+      proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW LWPs
          sproc->is_lwp         = true; 
          proc->basenameOffset  = -1;
