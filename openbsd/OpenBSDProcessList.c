@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "OpenBSDProcessList.h"
 #include "OpenBSDProcess.h"
-
+#include "CRT.h"
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/mount.h>
@@ -115,7 +115,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "uvmexp sysctl call failed");
    }
 
-   pl->totalMem = uvmexp.npages * PAGE_SIZE_KB;
+   pl->totalMem = uvmexp.npages * CRT_page_size_kib;
 
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
    static int bcache_mib[] = {CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT};
@@ -126,9 +126,9 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "cannot get vfs.bcachestat");
    }
 
-   pl->cachedMem = bcstats.numbufpages * PAGE_SIZE_KB;
-   pl->freeMem = uvmexp.free * PAGE_SIZE_KB;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * PAGE_SIZE_KB;
+   pl->cachedMem = bcstats.numbufpages * CRT_page_size_kib;
+   pl->freeMem = uvmexp.free * CRT_page_size_kib;
+   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_page_size_kib;
 }
 
 static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
@@ -293,7 +293,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->m_size = kproc->p_vm_dsize;
       proc->m_resident = kproc->p_vm_rssize;
-      proc->percent_mem = (proc->m_resident * PAGE_SIZE_KB) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
       proc->nice = kproc->p_nice - NZERO;
       proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);

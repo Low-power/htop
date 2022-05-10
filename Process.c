@@ -39,13 +39,6 @@ in the source distribution for its full text.
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
-// On Linux, this works only with glibc 2.1+. On earlier versions
-// the behavior is similar to have a hardcoded page size.
-#ifndef PAGE_SIZE
-#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
-#endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_BINARY_K )
-
 /*{
 #include "config.h"
 #include "Object.h"
@@ -198,14 +191,6 @@ typedef struct ProcessClass_ {
 }*/
 
 static int Process_getuid = -1;
-
-#define ONE_BINARY_K 1024L
-#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
-#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
-
-#define ONE_DECIMAL_K 1000L
-#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
-#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 char Process_pidFormat[20] = "%7d ";
 
@@ -463,8 +448,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    }
    case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
    case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
-   case M_RESIDENT: Process_humanNumber(str, this->m_resident * PAGE_SIZE_KB, coloring); return;
-   case M_SIZE: Process_humanNumber(str, this->m_size * PAGE_SIZE_KB, coloring); return;
+   case M_RESIDENT:
+      Process_humanNumber(str, this->m_resident * CRT_page_size_kib, coloring);
+      return;
+   case M_SIZE:
+      Process_humanNumber(str, this->m_size * CRT_page_size_kib, coloring);
+      return;
    case NICE:
       n = snprintf(buffer, n, "%3ld", this->nice);
       assert(n >= 3);

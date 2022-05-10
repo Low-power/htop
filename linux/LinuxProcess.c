@@ -336,11 +336,11 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    }
    case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
    case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_humanNumber(str, lp->m_drs * PAGE_SIZE_KB, coloring); return;
-   case M_DT: Process_humanNumber(str, lp->m_dt * PAGE_SIZE_KB, coloring); return;
-   case M_LRS: Process_humanNumber(str, lp->m_lrs * PAGE_SIZE_KB, coloring); return;
-   case M_TRS: Process_humanNumber(str, lp->m_trs * PAGE_SIZE_KB, coloring); return;
-   case M_SHARE: Process_humanNumber(str, lp->m_share * PAGE_SIZE_KB, coloring); return;
+   case M_DRS: Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring); return;
+   case M_DT: Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring); return;
+   case M_LRS: Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring); return;
+   case M_TRS: Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring); return;
+   case M_SHARE: Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring); return;
    case UTIME: Process_printTime(str, lp->utime); return;
    case STIME: Process_printTime(str, lp->stime); return;
    case CUTIME: Process_printTime(str, lp->cutime); return;

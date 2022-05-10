@@ -9,7 +9,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "DragonFlyBSDProcessList.h"
 #include "DragonFlyBSDProcess.h"
-
+#include "CRT.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -71,17 +71,12 @@ typedef struct DragonFlyBSDProcessList_ {
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
-static unsigned int page_size;
-static unsigned int page_size_kib;
-
 static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
-
 static int MIB_vfs_bufspace[2];
-
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
@@ -98,11 +93,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    // usable pagesize : vm.stats.vm.v_page_size
    len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
+   unsigned int page_size;
    len = sizeof page_size;
-   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == -1) {
-      page_size = PAGE_SIZE;
+   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
+      // How can this happen?
+      CRT_page_size = page_size;
+      CRT_page_size_kib = page_size / ONE_BINARY_K;
    }
-   page_size_kib = page_size / ONE_BINARY_K;
 
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
@@ -281,18 +278,18 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    // ...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
-   //pl->totalMem = buffer.v_uint * page_size_kib;
+   //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
    len = sizeof buffer.v_ulong;
    sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0);
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0);
-   dfpl->memActive = buffer.v_uint * page_size_kib;
+   dfpl->memActive = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0);
-   dfpl->memWire = buffer.v_uint * page_size_kib;
+   dfpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_long;
    sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0);
@@ -300,17 +297,17 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0);
-   pl->cachedMem = buffer.v_uint * page_size_kib;
+   pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
    pl->usedMem = dfpl->memActive + dfpl->memWire;
 
    // currently unused, same as with arc, custom meter perhaps
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
-   //dfpl->memInactive = buffer.v_uint * page_size_kib;
+   //dfpl->memInactive = buffer.v_uint * CRT_page_size_kib;
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
-   //dfpl->memFree = buffer.v_uint * page_size_kib;
+   //dfpl->memFree = buffer.v_uint * CRT_page_size_kib;
    //pl->freeMem = dfpl->memInactive + dfpl->memFree;
 
    struct kvm_swap swap[16];
@@ -321,8 +318,8 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= page_size_kib;
-   pl->usedSwap *= page_size_kib;
+   pl->totalSwap *= CRT_page_size_kib;
+   pl->usedSwap *= CRT_page_size_kib;
 
    pl->sharedMem = 0;  // currently unused
 }
@@ -483,14 +480,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          }
       }
 
-      proc->m_size = kproc->kp_vm_map_size / page_size;
+      proc->m_size = kproc->kp_vm_map_size / CRT_page_size;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * page_size_kib) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * page_size_kib) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem);
 
       if (kproc->kp_lwp.kl_pid != -1)
          proc->priority = kproc->kp_lwp.kl_prio;

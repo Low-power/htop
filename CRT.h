@@ -101,8 +101,6 @@ typedef enum ColorElements_ {
 
 #ifndef __ANDROID__
 #endif
-#if HAVE_SETUID_ENABLED
-#endif
 #ifdef HAVE_BACKTRACE
 #endif
 
@@ -110,6 +108,14 @@ typedef enum ColorElements_ {
 #undef ERR
 #define ERR (-1)
 #endif
+
+#define ONE_BINARY_K 1024L
+#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
+#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
+
+#define ONE_DECIMAL_K 1000L
+#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 #define ColorIndex(i,j) ((7-(i))*8+(j))
 
@@ -181,6 +187,9 @@ void CRT_restorePrivileges();
 #endif
 
 #endif
+
+extern unsigned int CRT_page_size;
+extern unsigned int CRT_page_size_kib;
 
 // TODO: pass an instance of Settings instead.
 

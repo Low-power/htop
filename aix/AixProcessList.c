@@ -9,7 +9,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "AixProcess.h"
 #include "AixProcessList.h"
-
+#include "CRT.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -241,7 +241,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		// XXX: are the numbers here right? I think these are based on pages or 1K?
 		proc->m_resident = pe->pi_drss + pe->pi_trss;
 		proc->m_size = pe->pi_ru.ru_maxrss;//pe->pi_drss + pe->pi_trss;
-		proc->percent_mem = (pe->pi_drss + pe->pi_trss * PAGE_SIZE_KB) / (double)(super->totalMem) * 100.0;
+		proc->percent_mem = (pe->pi_drss + pe->pi_trss * CRT_page_size_kib) / (double)(super->totalMem) * 100.0;
 		proc->nlwp = pe->pi_thcount;
 		proc->nice = pe->pi_nice - NZERO;
 		ap->utime = pe->pi_ru.ru_utime.tv_sec;

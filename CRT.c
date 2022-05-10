@@ -102,6 +102,8 @@ typedef enum ColorElements_ {
 #include "StringUtils.h"
 #include "RichString.h"
 #include "local-curses.h"
+#include <sys/types.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -111,10 +113,6 @@ typedef enum ColorElements_ {
 #ifndef __ANDROID__
 #include <langinfo.h>
 #endif
-#if HAVE_SETUID_ENABLED
-#include <unistd.h>
-#include <sys/types.h>
-#endif
 #ifdef HAVE_BACKTRACE
 #include <execinfo.h>
 #endif
@@ -123,6 +121,14 @@ typedef enum ColorElements_ {
 #undef ERR
 #define ERR (-1)
 #endif
+
+#define ONE_BINARY_K 1024L
+#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
+#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
+
+#define ONE_DECIMAL_K 1000L
+#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
+#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 #define ColorIndex(i,j) ((7-(i))*8+(j))
 
@@ -632,6 +638,9 @@ void CRT_restorePrivileges() {
 
 #endif
 
+unsigned int CRT_page_size;
+unsigned int CRT_page_size_kib;
+
 // TODO: pass an instance of Settings instead.
 
 void CRT_init(int delay, int colorScheme) {
@@ -710,6 +719,8 @@ void CRT_init(int delay, int colorScheme) {
    mousemask(BUTTON1_RELEASED, NULL);
 #endif
 
+   CRT_page_size = sysconf(_SC_PAGESIZE);
+   CRT_page_size_kib = CRT_page_size / ONE_BINARY_K;
 }
 
 void CRT_done() {

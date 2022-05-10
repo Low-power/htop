@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "FreeBSDProcessList.h"
 #include "FreeBSDProcess.h"
 //#include "KStat.h"
+#include "CRT.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -69,17 +70,12 @@ typedef struct FreeBSDProcessList_ {
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
-static unsigned int page_size;
-static unsigned int page_size_kib;
-
 static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
-
 static int MIB_vfs_bufspace[2];
-
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
 static int kernelFScale;
@@ -101,11 +97,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
    // usable pagesize : vm.stats.vm.v_page_size
    len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
 
+   unsigned int page_size;
    len = sizeof page_size;
-   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == -1) {
-      page_size = PAGE_SIZE;
+   if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
+      // How can this happen?
+      CRT_page_size = page_size;
+      CRT_page_size_kib = page_size / ONE_BINARY_K;
    }
-   page_size_kib = page_size / ONE_BINARY_K;
 
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
@@ -312,18 +310,18 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
-   //pl->totalMem = buffer.v_uint * page_size_kib;
+   //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
    len = sizeof buffer.v_ulong;
    sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0);
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0);
-   fpl->memActive = buffer.v_uint * page_size_kib;
+   fpl->memActive = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0);
-   fpl->memWire = buffer.v_uint * page_size_kib;
+   fpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_long;
    sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0);
@@ -331,7 +329,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0);
-   pl->cachedMem = buffer.v_uint * page_size_kib;
+   pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
    // ZFS ARC size is now handled in ProcessList.c
 
@@ -340,10 +338,10 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    // currently unused, same as with arc, custom meter perhaps
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
-   //fpl->memInactive = buffer.v_uint * page_size_kib;
+   //fpl->memInactive = buffer.v_uint * CRT_page_size_kib;
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
-   //fpl->memFree = buffer.v_uint * page_size_kib;
+   //fpl->memFree = buffer.v_uint * CRT_page_size_kib;
    //pl->freeMem = fpl->memInactive + fpl->memFree;
 
 #ifdef HAVE_LIBKVM
@@ -355,8 +353,8 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= page_size_kib;
-   pl->usedSwap *= page_size_kib;
+   pl->totalSwap *= CRT_page_size_kib;
+   pl->usedSwap *= CRT_page_size_kib;
 #else
    pl->totalSwap = 0;
    pl->usedSwap = 0;
@@ -524,14 +522,14 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
 
       // from FreeBSD source /src/usr.bin/top/machine.c
-      proc->m_size = kproc->ki_size / page_size;
+      proc->m_size = kproc->ki_size / CRT_page_size;
       proc->m_resident = kproc->ki_rssize;
-      proc->percent_mem = (proc->m_resident * page_size_kib) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
 
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * page_size_kib) / (double)(this->totalMem);
+      proc->percent_mem = 100.0 * (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem);
 
       if (proc->percent_cpu > 0.1) {
          // system idle process should own all CPU time left regardless of CPU count

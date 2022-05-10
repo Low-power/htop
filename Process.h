@@ -19,13 +19,6 @@ in the source distribution for its full text.
 #define SYS_ioprio_set __NR_ioprio_set
 #endif
 
-// On Linux, this works only with glibc 2.1+. On earlier versions
-// the behavior is similar to have a hardcoded page size.
-#ifndef PAGE_SIZE
-#define PAGE_SIZE ( sysconf(_SC_PAGESIZE) )
-#endif
-#define PAGE_SIZE_KB ( PAGE_SIZE / ONE_BINARY_K )
-
 #include "config.h"
 #include "Object.h"
 #include <sys/types.h>
@@ -174,14 +167,6 @@ typedef struct ProcessClass_ {
 
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
-
-#define ONE_BINARY_K 1024L
-#define ONE_BINARY_M (ONE_BINARY_K * ONE_BINARY_K)
-#define ONE_BINARY_G (ONE_BINARY_M * ONE_BINARY_K)
-
-#define ONE_DECIMAL_K 1000L
-#define ONE_DECIMAL_M (ONE_DECIMAL_K * ONE_DECIMAL_K)
-#define ONE_DECIMAL_G (ONE_DECIMAL_M * ONE_DECIMAL_K)
 
 extern char Process_pidFormat[20];
 

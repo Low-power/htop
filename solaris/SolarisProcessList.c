@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "SolarisProcessList.h"
 #include "Platform.h"
 #include "IOUtils.h"
+#include "CRT.h"
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/user.h>
@@ -186,19 +187,19 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       kstat_named_t *lockedmem_pgs = kstat_data_lookup(meminfo, "pageslocked");
       kstat_named_t *pages         = kstat_data_lookup(meminfo, "pagestotal");
 
-      pl->totalMem   = totalmem_pgs->value.ui64 * PAGE_SIZE_KB;
-      pl->usedMem    = lockedmem_pgs->value.ui64 * PAGE_SIZE_KB;
+      pl->totalMem   = totalmem_pgs->value.ui64 * CRT_page_size_kib;
+      pl->usedMem    = lockedmem_pgs->value.ui64 * CRT_page_size_kib;
       // Not sure how to implement this on Solaris - suggestions welcome!
       pl->cachedMem  = 0;     
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * PAGE_SIZE_KB;
+      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_page_size_kib;
    } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * PAGE_SIZE;
+      pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_page_size;
       pl->buffersMem = 0;
       pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * PAGE_SIZE);
+      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * CRT_page_size);
    }
    
    // Part 2 - swap
@@ -231,8 +232,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    free(spathbase);
    free(sl);
-   pl->totalSwap = totalswap * PAGE_SIZE_KB;
-   pl->usedSwap  = pl->totalSwap - (totalfree * PAGE_SIZE_KB); 
+   pl->totalSwap = totalswap * CRT_page_size_kib;
+   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_page_size_kib); 
 }
 
 void ProcessList_delete(ProcessList* pl) {
@@ -255,14 +256,14 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
-   proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem/(double)32768)*(double)100.0;
+   proc->percent_mem        = ((uint16_t)_psinfo->pr_pctmem / (double)32768) * (double)100;
    proc->ruid               = _psinfo->pr_uid;
    proc->euid               = _psinfo->pr_euid;
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
-   proc->m_resident         = _psinfo->pr_rssize/PAGE_SIZE_KB;
-   proc->m_size             = _psinfo->pr_size/PAGE_SIZE_KB;
+   proc->m_resident         = _psinfo->pr_rssize / CRT_page_size_kib;
+   proc->m_size             = _psinfo->pr_size / CRT_page_size_kib;
    sproc->env_offset        = _psinfo->pr_envp > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_envp;
    sproc->data_model        = _psinfo->pr_dmodel;
 }

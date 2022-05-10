@@ -7,7 +7,7 @@ in the source distribution for its full text.
 
 #include "Process.h"
 #include "DarwinProcess.h"
-
+#include "CRT.h"
 #include <stdlib.h>
 #include <libproc.h>
 #include <string.h>
@@ -278,8 +278,8 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
 
    proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
    proc->super.nlwp = pti.pti_threadnum;
-   proc->super.m_size = pti.pti_virtual_size / 1024 / PAGE_SIZE_KB;
-   proc->super.m_resident = pti.pti_resident_size / 1024 / PAGE_SIZE_KB;
+   proc->super.m_size = pti.pti_virtual_size / 1024 / CRT_page_size_kib;
+   proc->super.m_resident = pti.pti_resident_size / 1024 / CRT_page_size_kib;
    proc->super.majflt = pti.pti_faults;
    proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
            / (double)dpl->host_info.max_mem;
