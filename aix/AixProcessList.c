@@ -158,7 +158,7 @@ static void AixProcessList_scanMemoryInfo (ProcessList *pl) {
 }
 
 static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, char **command) {
-	*name = xStrdup(pe->pi_comm);
+	*name = xStrdup(pe->pi_pid == 0 && !*pe->pi_comm ? "swapper" : pe->pi_comm);
 
 	char argvbuf[256];
 	if (getargs(pe, sizeof (struct procentry64), argvbuf, sizeof argvbuf) == 0 && *argvbuf) {
@@ -172,46 +172,38 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 		}
 		*command = xStrdup(argvbuf);
 	} else {
-		*command = xStrdup(pe->pi_comm);
+		*command = xStrdup(*name);
 	}
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
-	AixProcessList* apl = (AixProcessList*)super;
 	bool hide_kernel_processes = super->settings->hide_kernel_processes;
 	/* getprocs stuff */
 	struct procentry64 *pes;
 	struct procentry64 *pe;
-	pid_t pid;
-	int count, i;
-	struct tm date;
-	time_t t, pt;
+	pid_t pid = 0;
+	int i;
 
 	AixProcessList_scanMemoryInfo (super);
-	AixProcessList_scanCpuInfo (apl);
+	AixProcessList_scanCpuInfo((AixProcessList *)super);
 
 	// 1000000 is what IBM ps uses; instead of rerunning getprocs with
-	// a PID cookie, get one big clump. also, pid 0 is a strange proc,
-	// seems to maybe represent the kernel? it has no name/argv, and
-	// marked with SKPROC, so if you have the tree view and kernel
-	// threads hidden, everything is hidden. oops? kernel threads seem
-	// to be children of it as well, but having it in the list is odd
-	pid = 1;
-	count = getprocs64 (NULL, 0, NULL, 0, &pid, 1000000);
+	// a PID cookie, get one big clump.
+	int count = getprocs64 (NULL, 0, NULL, 0, &pid, 1000000);
 	if (count < 1) {
 		fprintf (stderr, "htop: ProcessList_goThroughEntries failed; during count: %s\n", strerror (errno));
 		_exit (1);
 	}
 	count += 25; // it's not atomic, new processes could spawn in next call
 	pes = xCalloc (count, sizeof (struct procentry64));
-	pid = 1;
+	pid = 0;
 	count = getprocs64 (pes, sizeof (struct procentry64), NULL, 0, &pid, count);
 	if (count < 1) {
 		fprintf (stderr, "htop: ProcessList_goThroughEntries failed; during listing\n");
 		_exit (1);
 	}
 
-	t = time (NULL);
+	time_t t = time (NULL);
 	for (i = 0; i < count; i++) {
 		bool preExisting;
 		pe = pes + i;
@@ -231,11 +223,12 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
 			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 			proc->starttime_ctime = pe->pi_start;
-			ProcessList_add((ProcessList*)super, proc);
+			ProcessList_add(super, proc);
 			AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
 			// copy so localtime_r works properly
-			pt = pe->pi_start;
-			(void) localtime_r((time_t*) &pt, &date);
+			time_t pt = pe->pi_start;
+			struct tm date;
+			localtime_r(&pt, &date);
 			strftime(proc->starttime_show, 7, ((proc->starttime_ctime > t - 86400) || 0 ? "%R " : "%b%d "), &date);
 		} else {
 			if (super->settings->updateProcessNames) {
