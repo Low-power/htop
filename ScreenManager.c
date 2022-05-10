@@ -33,6 +33,7 @@ typedef struct ScreenManager_ {
 
 }*/
 
+#include "config.h"
 #include "ScreenManager.h"
 #include "ProcessList.h"
 #include "Object.h"
@@ -191,7 +192,9 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
 
       int prevCh = ch;
+#ifdef HAVE_SET_ESCDELAY
       set_escdelay(25);
+#endif
       ch = getch();
 
       HandlerResult result = IGNORED;

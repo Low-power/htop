@@ -285,6 +285,21 @@ m4_define([HTOP_CHECK_LIB],
    ], [$4])
 ])
 
+curses_include="
+#define NCURSES_WIDECHAR 1
+#ifdef HAVE_NCURSESW_CURSES_H
+#include <ncursesw/curses.h>
+#elif defined HAVE_NCURSES_NCURSES_H
+#include <ncurses/ncurses.h>
+#elif defined HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
+#elif defined HAVE_NCURSES_H
+#include <ncurses.h>
+#else
+#include <curses.h>
+#endif
+"
+
 AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
    HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
@@ -303,22 +318,8 @@ if test "x$enable_unicode" = xyes; then
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([ncurses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 
-	m4_define([HTOP_CHECK_NCURSESW], [
-			AC_CHECK_TYPE([cchar_t], [$1], [$2], [
-					#define NCURSES_WIDECHAR 1
-					#ifdef HAVE_NCURSESW_CURSES_H
-					#include <ncursesw/curses.h>
-					#elif defined HAVE_NCURSES_NCURSES_H
-					#include <ncurses/ncurses.h>
-					#elif defined HAVE_NCURSES_CURSES_H
-					#include <ncurses/curses.h>
-					#elif defined HAVE_NCURSES_H
-					#include <ncurses.h>
-					#else
-					#include <curses.h>
-					#endif
-				])
-		])
+	m4_define([HTOP_CHECK_NCURSESW],
+			[AC_CHECK_TYPE([cchar_t], [$1], [$2], [$curses_include])])
 	HTOP_CHECK_NCURSESW([], [
 			AC_MSG_NOTICE([trying to define _XOPEN_SOURCE_EXTENDED to get wide-character support])
 			unset ac_cv_type_cchar_t
@@ -339,6 +340,8 @@ else
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([curses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 fi
+
+AC_CHECK_FUNCS([set_escdelay])
 
 if test "$my_htop_platform" = "freebsd"; then
 	AC_ARG_WITH([kvm],

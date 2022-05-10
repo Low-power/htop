@@ -1,3 +1,4 @@
+#include "config.h"
 #include "InfoScreen.h"
 
 /*{
@@ -123,7 +124,9 @@ void InfoScreen_run(InfoScreen* this) {
       if (this->inc->active) {
          (void) move(LINES-1, CRT_cursorX);
       }
+#ifdef HAVE_SET_ESCDELAY
       set_escdelay(25);
+#endif
       int ch = getch();
       
       if (ch == ERR) {
