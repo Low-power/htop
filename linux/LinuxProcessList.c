@@ -676,7 +676,7 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
 
 static void setCommand(Process* process, const char* command, int len) {
    if (process->comm && process->commLen >= len) {
-      strncpy(process->comm, command, len + 1);
+      memcpy(process->comm, command, len + 1);
    } else {
       free(process->comm);
       process->comm = xStrdup(command);
@@ -874,7 +874,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
 
-      if (Process_isKernelProcess(proc) || (proc->state == 'Z' && proc->basenameOffset == 0)) {
+      if (!proc->comm || (proc->state == 'Z' && proc->basenameOffset == 0)) {
          proc->basenameOffset = -1;
          setCommand(proc, command, commLen);
       } else if (Process_isExtraThreadProcess(proc)) {
