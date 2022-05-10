@@ -316,12 +316,13 @@ void ProcessList_rebuildPanel(ProcessList* this) {
 }
 
 Process* ProcessList_getProcess(ProcessList* this, pid_t pid, bool* preExisting, Process_New constructor) {
-   Process* proc = (Process*) Hashtable_get(this->processTable, pid);
-   *preExisting = proc;
+   Process* proc = Hashtable_get(this->processTable, pid);
    if (proc) {
+      *preExisting = true;
       assert(Vector_indexOf(this->processes, proc, Process_pidCompare) != -1);
       assert(proc->pid == pid);
    } else {
+      *preExisting = false;
       proc = constructor(this->settings);
       assert(proc->comm == NULL);
       proc->pid = pid;
