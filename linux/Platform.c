@@ -60,6 +60,9 @@ const SignalItem Platform_signals[] = {
 #ifdef SIGIOT
    SIG(IOT),
 #endif
+#ifdef SIGEMT
+   SIG(EMT),
+#endif
    SIG(BUS),
    SIG(FPE),
    SIG(KILL),
@@ -87,6 +90,12 @@ const SignalItem Platform_signals[] = {
    SIG(IO),
    SIG(POLL),
    SIG(PWR),
+#ifdef SIGINFO
+   SIG(INFO),
+#endif
+#ifdef SIGLOST
+   SIG(LOST),
+#endif
 #ifdef SIGSYS
    SIG(SYS),
 #endif
