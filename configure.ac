@@ -12,7 +12,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # Required by hwloc scripts
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE([1.11])
+AM_INIT_AUTOMAKE([1.11 no-dependencies])
 
 # Checks for programs.
 # ----------------------------------------------------------------------
