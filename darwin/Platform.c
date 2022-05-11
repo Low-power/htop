@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 
 /*{
+#include "bsd/Platform.h"
 #include "Action.h"
 #include "SignalsPanel.h"
 #include "CPUMeter.h"
@@ -129,20 +130,6 @@ void Platform_setBindings(Htop_Action* keys) {
 }
 
 int Platform_numberOfFields = 100;
-
-int Platform_getUptime() {
-   struct timeval bootTime, currTime;
-   int mib[2] = { CTL_KERN, KERN_BOOTTIME };
-   size_t size = sizeof(bootTime);
-
-   int err = sysctl(mib, 2, &bootTime, &size, NULL, 0);
-   if (err) {
-      return -1;
-   }
-   gettimeofday(&currTime, NULL);
-
-   return (int) difftime(currTime.tv_sec, bootTime.tv_sec);
-}
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    double results[3];

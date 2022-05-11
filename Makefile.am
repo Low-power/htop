@@ -62,6 +62,7 @@ endif
 # -------
 
 freebsd_platform_headers = \
+	bsd/Platform.h \
 	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
@@ -70,8 +71,12 @@ freebsd_platform_headers = \
 all_platform_headers += $(freebsd_platform_headers)
 
 if HTOP_FREEBSD
-myhtopplatsources = freebsd/Platform.c freebsd/FreeBSDProcessList.c \
-freebsd/FreeBSDProcess.c freebsd/Battery.c
+myhtopplatsources = \
+	bsd/Platform.c \
+	freebsd/Platform.c \
+	freebsd/FreeBSDProcessList.c \
+	freebsd/FreeBSDProcess.c \
+	freebsd/Battery.c
 
 myhtopplatheaders = $(freebsd_platform_headers)
 endif
@@ -80,6 +85,7 @@ endif
 # ------------
 
 dragonflybsd_platform_headers = \
+	bsd/Platform.h \
 	dragonflybsd/Platform.h \
 	dragonflybsd/DragonFlyBSDProcessList.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
@@ -89,8 +95,12 @@ all_platform_headers += $(dragonflybsd_platform_headers)
 
 if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo
-myhtopplatsources = dragonflybsd/Platform.c dragonflybsd/DragonFlyBSDProcessList.c \
-dragonflybsd/DragonFlyBSDProcess.c dragonflybsd/Battery.c
+myhtopplatsources = \
+	bsd/Platform.c \
+	dragonflybsd/Platform.c \
+	dragonflybsd/DragonFlyBSDProcessList.c \
+	dragonflybsd/DragonFlyBSDProcess.c \
+	dragonflybsd/Battery.c
 
 myhtopplatheaders = $(dragonflybsd_platform_headers)
 endif
@@ -99,6 +109,7 @@ endif
 # -------
 
 openbsd_platform_headers = \
+	bsd/Platform.h \
 	openbsd/Platform.h \
 	openbsd/OpenBSDProcessList.h \
 	openbsd/OpenBSDProcess.h \
@@ -107,8 +118,12 @@ openbsd_platform_headers = \
 all_platform_headers += $(openbsd_platform_headers)
 
 if HTOP_OPENBSD
-myhtopplatsources = openbsd/Platform.c openbsd/OpenBSDProcessList.c \
-openbsd/OpenBSDProcess.c openbsd/Battery.c
+myhtopplatsources = \
+	bsd/Platform.c \
+	openbsd/Platform.c \
+	openbsd/OpenBSDProcessList.c \
+	openbsd/OpenBSDProcess.c \
+	openbsd/Battery.c
 
 myhtopplatheaders = $(openbsd_platform_headers)
 endif
@@ -117,6 +132,7 @@ endif
 # ------
 
 darwin_platform_headers = \
+	bsd/Platform.h \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
@@ -126,8 +142,12 @@ all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
-myhtopplatsources = darwin/Platform.c darwin/DarwinProcess.c \
-darwin/DarwinProcessList.c darwin/Battery.c
+myhtopplatsources = \
+	bsd/Platform.c \
+	darwin/Platform.c \
+	darwin/DarwinProcess.c \
+	darwin/DarwinProcessList.c \
+	darwin/Battery.c
 
 myhtopplatheaders = $(darwin_platform_headers)
 endif
