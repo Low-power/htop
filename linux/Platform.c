@@ -130,13 +130,12 @@ MeterClass* Platform_meterTypes[] = {
 };
 
 int Platform_getUptime() {
-   double uptime = 0;
+   double uptime;
    FILE *f = fopen(PROCDIR "/uptime", "r");
-   if (f) {
-      int n = fscanf(f, "%64lf", &uptime);
-      fclose(f);
-      if (n <= 0) return 0;
-   }
+   if(!f) return -1;
+   int n = fscanf(f, "%64lf", &uptime);
+   fclose(f);
+   if (n < 1) return -1;
    return (int) floor(uptime);
 }
 
