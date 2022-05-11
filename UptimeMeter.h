@@ -16,6 +16,17 @@ in the source distribution for its full text.
 
 extern int UptimeMeter_attributes[];
 
+// CLOCK_UPTIME excludes suspend time, available since kFreeBSD 7.0
+// CLOCK_BOOTTIME includes suspend time, available since Linux 2.6.39
+// CLOCK_MONOTONIC_RAW excludes suspend time, available since Linux 2.6.28
+#ifndef CLOCK_UPTIME
+#ifdef CLOCK_BOOTTIME
+#define CLOCK_UPTIME CLOCK_BOOTTIME
+#elif defined CLOCK_MONOTONIC_RAW && defined __linux__
+#define CLOCK_UPTIME CLOCK_MONOTONIC_RAW
+#endif
+#endif
+
 extern MeterClass UptimeMeter_class;
 
 #endif

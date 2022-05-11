@@ -11,8 +11,8 @@ in the source distribution for its full text.
 #include "CRT.h"
 #ifdef HAVE_UTMPX
 #include <utmpx.h>
-#include <time.h>
 #endif
+#include <time.h>
 
 /*{
 #include "Meter.h"
@@ -41,14 +41,32 @@ static int UptimeMeter_getUptimeFromUtmpx() {
 #endif
 }
 
+// CLOCK_UPTIME excludes suspend time, available since kFreeBSD 7.0
+// CLOCK_BOOTTIME includes suspend time, available since Linux 2.6.39
+// CLOCK_MONOTONIC_RAW excludes suspend time, available since Linux 2.6.28
+#ifndef CLOCK_UPTIME
+#ifdef CLOCK_BOOTTIME
+#define CLOCK_UPTIME CLOCK_BOOTTIME
+#elif defined CLOCK_MONOTONIC_RAW && defined __linux__
+#define CLOCK_UPTIME CLOCK_MONOTONIC_RAW
+#endif
+#endif
+
+static int UptimeMeter_getUptime() {
+	int totalseconds = Platform_getUptime();
+	if(totalseconds != -1) return totalseconds;
+#ifdef CLOCK_UPTIME
+	struct timespec t;
+	if(clock_gettime(CLOCK_UPTIME, &t) == 0) return t.tv_sec;
+#endif
+	return UptimeMeter_getUptimeFromUtmpx();
+}
+
 static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
-   int totalseconds = Platform_getUptime();
+   int totalseconds = UptimeMeter_getUptime();
    if (totalseconds == -1) {
-      totalseconds = UptimeMeter_getUptimeFromUtmpx();
-      if(totalseconds == -1) {
-         xSnprintf(buffer, len, "(unknown)");
-         return;
-      }
+      xSnprintf(buffer, len, "(unknown)");
+      return;
    }
    int seconds = totalseconds % 60;
    int minutes = (totalseconds/60) % 60;
