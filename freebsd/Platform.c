@@ -89,7 +89,9 @@ const SignalItem Platform_signals[] = {
    SIG(USR1),
    SIG(USR2),
    SIG(THR),
+#ifdef SIGLIBRT
    SIG(LIBRT),
+#endif
 #undef SIG
 };
 
