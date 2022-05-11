@@ -453,22 +453,38 @@ if test "$my_htop_platform" = interix; then
    CPPFLAGS="$CPPFLAGS -D _REENTRANT=1"
 fi
 
-AC_ARG_ENABLE(linux_affinity, [AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])], ,enable_linux_affinity="yes")
-if test "x$enable_linux_affinity" = xyes -a "x$cross_compiling" = xno; then
-   AC_MSG_CHECKING([for usable sched_setaffinity])
-   AC_RUN_IFELSE([
-     AC_LANG_PROGRAM([[
-       #include <sched.h>
-       #include <errno.h>
-       static cpu_set_t cpuset;
-       ]], [[
-       CPU_ZERO(&cpuset);
-       sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
-       if (errno == ENOSYS) return 1;
-       ]])],
-     [AC_MSG_RESULT([yes])],
-     [enable_linux_affinity=no
-      AC_MSG_RESULT([no])])
+AC_ARG_ENABLE(linux_affinity,
+	[AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])],
+	[], [enable_linux_affinity=check])
+if test "x$enable_linux_affinity" != xno; then
+	if test "x$enable_linux_affinity" != xyes && test "x$enable_linux_affinity" != xcheck; then
+		AC_MSG_ERROR([Invalid argument for --enable-linux-affinity])
+	fi
+	AC_CHECK_FUNC([sched_setaffinity], [
+			AC_MSG_CHECKING([for usable sched_setaffinity])
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([
+					#include <sched.h>
+					#include <errno.h>
+					static cpu_set_t cpuset;
+				], [
+					CPU_ZERO(&cpuset);
+					errno = 0;
+					sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+					return errno == ENOSYS ? 1 : 0;
+				])], [
+					AC_MSG_RESULT([yes])
+					enable_linux_affinity=yes
+				], [
+					AC_MSG_RESULT([no])
+					test "x$enable_linux_affinity" = xcheck && enable_linux_affinity=no || AC_MSG_NOTICE([forcibly enabled Linux affinity support as requested])
+				], [
+					AC_MSG_RESULT([guessing yes])
+					enable_linux_affinity=yes
+				])
+		], [
+			test "x$enable_linux_affinity" != xcheck && AC_MSG_ERROR([Linux affinity support not available])
+			enable_linux_affinity=no
+		])
 fi
 if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
