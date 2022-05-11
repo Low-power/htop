@@ -22,6 +22,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "LinuxProcess.h"
+#include <signal.h>
 #include <string.h>
 #include <math.h>
 #include <assert.h>
@@ -48,40 +49,48 @@ ProcessField Platform_defaultFields[] = { PID, EFFECTIVE_USER, PRIORITY, NICE, M
 int Platform_numberOfFields = LAST_PROCESSFIELD;
 
 const SignalItem Platform_signals[] = {
-   { .name = " 0 Cancel",    .number = 0 },
-   { .name = " 1 SIGHUP",    .number = 1 },
-   { .name = " 2 SIGINT",    .number = 2 },
-   { .name = " 3 SIGQUIT",   .number = 3 },
-   { .name = " 4 SIGILL",    .number = 4 },
-   { .name = " 5 SIGTRAP",   .number = 5 },
-   { .name = " 6 SIGABRT",   .number = 6 },
-   { .name = " 6 SIGIOT",    .number = 6 },
-   { .name = " 7 SIGBUS",    .number = 7 },
-   { .name = " 8 SIGFPE",    .number = 8 },
-   { .name = " 9 SIGKILL",   .number = 9 },
-   { .name = "10 SIGUSR1",   .number = 10 },
-   { .name = "11 SIGSEGV",   .number = 11 },
-   { .name = "12 SIGUSR2",   .number = 12 },
-   { .name = "13 SIGPIPE",   .number = 13 },
-   { .name = "14 SIGALRM",   .number = 14 },
-   { .name = "15 SIGTERM",   .number = 15 },
-   { .name = "16 SIGSTKFLT", .number = 16 },
-   { .name = "17 SIGCHLD",   .number = 17 },
-   { .name = "18 SIGCONT",   .number = 18 },
-   { .name = "19 SIGSTOP",   .number = 19 },
-   { .name = "20 SIGTSTP",   .number = 20 },
-   { .name = "21 SIGTTIN",   .number = 21 },
-   { .name = "22 SIGTTOU",   .number = 22 },
-   { .name = "23 SIGURG",    .number = 23 },
-   { .name = "24 SIGXCPU",   .number = 24 },
-   { .name = "25 SIGXFSZ",   .number = 25 },
-   { .name = "26 SIGVTALRM", .number = 26 },
-   { .name = "27 SIGPROF",   .number = 27 },
-   { .name = "28 SIGWINCH",  .number = 28 },
-   { .name = "29 SIGIO",     .number = 29 },
-   { .name = "29 SIGPOLL",   .number = 29 },
-   { .name = "30 SIGPWR",    .number = 30 },
-   { .name = "31 SIGSYS",    .number = 31 },
+   { .name = "Cancel", .number = 0 },
+#define SIG(NAME) { .name = #NAME, .number = SIG##NAME }
+   SIG(HUP),
+   SIG(INT),
+   SIG(QUIT),
+   SIG(ILL),
+   SIG(TRAP),
+   SIG(ABRT),
+#ifdef SIGIOT
+   SIG(IOT),
+#endif
+   SIG(BUS),
+   SIG(FPE),
+   SIG(KILL),
+   SIG(USR1),
+   SIG(SEGV),
+   SIG(USR2),
+   SIG(PIPE),
+   SIG(ALRM),
+   SIG(TERM),
+#ifdef SIGSTKFLT
+   SIG(STKFLT),
+#endif
+   SIG(CHLD),
+   SIG(CONT),
+   SIG(STOP),
+   SIG(TSTP),
+   SIG(TTIN),
+   SIG(TTOU),
+   SIG(URG),
+   SIG(XCPU),
+   SIG(XFSZ),
+   SIG(VTALRM),
+   SIG(PROF),
+   SIG(WINCH),
+   SIG(IO),
+   SIG(POLL),
+   SIG(PWR),
+#ifdef SIGSYS
+   SIG(SYS),
+#endif
+#undef SIG
 };
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);

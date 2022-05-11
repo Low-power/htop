@@ -16,6 +16,8 @@ typedef struct SignalItem_ {
 } SignalItem;
 
 
+#define DEFAULT_SIGNAL SIGTERM
+
 Panel* SignalsPanel_new();
 
 #endif

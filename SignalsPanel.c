@@ -27,24 +27,27 @@ typedef struct SignalItem_ {
 
 }*/
 
+#define DEFAULT_SIGNAL SIGTERM
+
 Panel* SignalsPanel_new() {
+   static char buf[16];
    Panel* this = Panel_new(1, 1, 1, 1, true, Class(ListItem), FunctionBar_newEnterEsc("Send   ", "Cancel "));
-   const int defaultSignal = SIGTERM;
    int defaultPosition = 15;
    unsigned int i;
    for (i = 0; i < Platform_numberOfSignals; i++) {
-      Panel_set(this, i, (Object*) ListItem_new(Platform_signals[i].name, Platform_signals[i].number));
+      const SignalItem *sig = Platform_signals + i;
+      xSnprintf(buf, sizeof buf, "%2d %s", sig->number, sig->name);
+      Panel_set(this, i, (Object*) ListItem_new(buf, sig->number));
       // signal 15 is not always the 15th signal in the table
-      if (Platform_signals[i].number == defaultSignal) {
+      if (sig->number == DEFAULT_SIGNAL) {
          defaultPosition = i;
       }
    }
    #if (defined(SIGRTMIN) && defined(SIGRTMAX))
    if (SIGRTMAX - SIGRTMIN <= 100) {
-      static char buf[16];
       for (int sig = SIGRTMIN; sig <= SIGRTMAX; i++, sig++) {
          int n = sig - SIGRTMIN;
-         xSnprintf(buf, 16, "%2d SIGRTMIN%-+3d", sig, n);
+         xSnprintf(buf, 16, "%2d RTMIN%-+3d", sig, n);
          if (n == 0) {
             buf[11] = '\0';
          }

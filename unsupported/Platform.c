@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include <stdlib.h>
 
 /*{
 #include "Action.h"
@@ -24,7 +25,9 @@ in the source distribution for its full text.
 }*/
 
 const SignalItem Platform_signals[] = {
-   { .name = " 0 Cancel",    .number =  0 },
+   { .name = "Cancel", .number = 0 },
+#define SIG(NAME) { .name = #NAME, .number = SIG##NAME }
+#undef SIG
 };
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
