@@ -284,6 +284,7 @@ coverage:
 	LOCAL_CPPFLAGS="-D DEBUG=1" LOCAL_CFLAGS="-fprofile-arcs -ftest-coverage" LDADD=-lgcov $(MAKE) all
 
 .c.h:
+	@case "$@" in /*) printf %s\\n "Error: attempt to generate header with absolute path '$@'!" 1>&2; exit 1; ;; esac
 	@srcdir@/scripts/MakeHeader.sh $< > $@
 
 cppcheck:
