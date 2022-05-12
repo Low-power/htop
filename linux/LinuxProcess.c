@@ -119,7 +119,7 @@ typedef struct LinuxProcess_ {
    unsigned long long io_write_bytes;
    unsigned long long io_cancelled_write_bytes;
    unsigned long long io_rate_read_time;
-   unsigned long long io_rate_write_time;   
+   unsigned long long io_rate_write_time;
    double io_rate_read_bps;
    double io_rate_write_bps;
    #endif
@@ -325,7 +325,10 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer);
    switch ((int)field) {
-   case TTY_NR: {
+      struct tm tm;
+      time_t start_wall_time;
+      double total_rate;
+   case TTY_NR:
       if (lp->ttyDevice) {
          xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
       } else {
@@ -333,78 +336,133 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          xSnprintf(buffer, n, "?        ");
       }
       break;
-   }
-   case CMINFLT: Process_colorNumber(str, lp->cminflt, coloring); return;
-   case CMAJFLT: Process_colorNumber(str, lp->cmajflt, coloring); return;
-   case M_DRS: Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring); return;
-   case M_DT: Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring); return;
-   case M_LRS: Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring); return;
-   case M_TRS: Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring); return;
-   case M_SHARE: Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring); return;
-   case UTIME: Process_printTime(str, lp->utime); return;
-   case STIME: Process_printTime(str, lp->stime); return;
-   case CUTIME: Process_printTime(str, lp->cutime); return;
-   case CSTIME: Process_printTime(str, lp->cstime); return;
-   case STARTTIME: {
-     struct tm date;
-     time_t starttimewall = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
-     (void) localtime_r(&starttimewall, &date);
-     strftime(buffer, n, ((starttimewall > time(NULL) - 86400) ? "%R " : "%b%d "), &date);
-     break;
-   }
+   case CMINFLT: 
+      Process_colorNumber(str, lp->cminflt, coloring);
+      return;
+   case CMAJFLT:
+      Process_colorNumber(str, lp->cmajflt, coloring);
+      return;
+   case M_DRS:
+      Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring);
+      return;
+   case M_DT:
+      Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring);
+      return;
+   case M_LRS:
+      Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring);
+      return;
+   case M_TRS:
+      Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring);
+      return;
+   case M_SHARE:
+      Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring);
+      return;
+   case UTIME:
+      Process_printTime(str, lp->utime);
+      return;
+   case STIME:
+      Process_printTime(str, lp->stime);
+      return;
+   case CUTIME:
+      Process_printTime(str, lp->cutime);
+      return;
+   case CSTIME:
+      Process_printTime(str, lp->cstime);
+      return;
+   case STARTTIME:
+      start_wall_time = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
+      localtime_r(&start_wall_time, &tm);
+      strftime(buffer, n, (start_wall_time > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
+      break;
    #ifdef HAVE_TASKSTATS
-   case RCHAR:  Process_colorNumber(str, lp->io_rchar, coloring); return;
-   case WCHAR:  Process_colorNumber(str, lp->io_wchar, coloring); return;
-   case SYSCR:  Process_colorNumber(str, lp->io_syscr, coloring); return;
-   case SYSCW:  Process_colorNumber(str, lp->io_syscw, coloring); return;
-   case RBYTES: Process_colorNumber(str, lp->io_read_bytes, coloring); return;
-   case WBYTES: Process_colorNumber(str, lp->io_write_bytes, coloring); return;
-   case CNCLWB: Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring); return;
-   case IO_READ_RATE:  Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring); return;
-   case IO_WRITE_RATE: Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring); return;
-   case IO_RATE: {
-      double totalRate = (lp->io_rate_read_bps != -1)
-                       ? (lp->io_rate_read_bps + lp->io_rate_write_bps)
-                       : -1;
-      Process_outputRate(str, buffer, n, totalRate, coloring); return;
-   }
+   case RCHAR:
+      Process_colorNumber(str, lp->io_rchar, coloring);
+      return;
+   case WCHAR:
+      Process_colorNumber(str, lp->io_wchar, coloring);
+      return;
+   case SYSCR:
+      Process_colorNumber(str, lp->io_syscr, coloring);
+      return;
+   case SYSCW:
+      Process_colorNumber(str, lp->io_syscw, coloring);
+      return;
+   case RBYTES:
+      Process_colorNumber(str, lp->io_read_bytes, coloring);
+      return;
+   case WBYTES:
+      Process_colorNumber(str, lp->io_write_bytes, coloring);
+      return;
+   case CNCLWB:
+      Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring);
+      return;
+   case IO_READ_RATE:
+      Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring);
+      return;
+   case IO_WRITE_RATE:
+      Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring);
+      return;
+   case IO_RATE:
+      total_rate = (lp->io_rate_read_bps != -1) ? lp->io_rate_read_bps + lp->io_rate_write_bps : -1;
+      Process_outputRate(str, buffer, n, total_rate, coloring);
+      return;
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID: xSnprintf(buffer, n, "%7u ", lp->ctid); break;
-   case VPID: xSnprintf(buffer, n, Process_pidFormat, lp->vpid); break;
+   case CTID:
+      xSnprintf(buffer, n, "%7u ", lp->ctid);
+      break;
+   case VPID:
+      xSnprintf(buffer, n, Process_pidFormat, lp->vpid);
+      break;
    #endif
    #ifdef HAVE_VSERVER
-   case VXID: xSnprintf(buffer, n, "%5u ", lp->vxid); break;
+   case VXID:
+      xSnprintf(buffer, n, "%5u ", lp->vxid);
+      break;
    #endif
    #ifdef HAVE_CGROUP
-   case CGROUP: xSnprintf(buffer, n, "%-10s ", lp->cgroup); break;
+   case CGROUP:
+      xSnprintf(buffer, n, "%-10s ", lp->cgroup);
+      break;
    #endif
-   case OOM: xSnprintf(buffer, n, Process_pidFormat, lp->oom); break;
-   case IO_PRIORITY: {
-      int klass = IOPriority_class(lp->ioPriority);
-      if (klass == IOPRIO_CLASS_NONE) {
-         // see note [1] above
-         xSnprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
-      } else if (klass == IOPRIO_CLASS_BE) {
-         xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
-      } else if (klass == IOPRIO_CLASS_RT) {
-         attr = CRT_colors[PROCESS_HIGH_PRIORITY];
-         xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
-      } else if (klass == IOPRIO_CLASS_IDLE) {
-         attr = CRT_colors[PROCESS_LOW_PRIORITY]; 
-         xSnprintf(buffer, n, "id ");
-      } else {
-         xSnprintf(buffer, n, "?? ");
+   case OOM:
+      xSnprintf(buffer, n, Process_pidFormat, lp->oom);
+      break;
+   case IO_PRIORITY:
+      switch(IOPriority_class(lp->ioPriority)) {
+         case IOPRIO_CLASS_NONE:
+            // see note [1] above
+            xSnprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
+            break;
+         case IOPRIO_CLASS_BE:
+            xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
+            break;
+         case IOPRIO_CLASS_RT:
+            attr = CRT_colors[PROCESS_HIGH_PRIORITY];
+            xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
+            break;
+         case IOPRIO_CLASS_IDLE:
+            attr = CRT_colors[PROCESS_LOW_PRIORITY];
+            xSnprintf(buffer, n, "id ");
+            break;
+         default:
+            xSnprintf(buffer, n, "?? ");
+            break;
       }
       break;
-   }
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY: LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n); break;
-   case PERCENT_IO_DELAY: LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n); break;
-   case PERCENT_SWAP_DELAY: LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n); break;
+   case PERCENT_CPU_DELAY:
+      LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n);
+      break;
+   case PERCENT_IO_DELAY:
+      LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n);
+      break;
+   case PERCENT_SWAP_DELAY:
+      LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n);
+      break;
    #endif
    default:
-      Process_writeField((Process*)this, str, field);
+      Process_writeField(this, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
@@ -420,8 +478,8 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       p2 = (LinuxProcess*)v1;
       p1 = (LinuxProcess*)v2;
    }
-   long long diff;
    switch ((int)settings->sortKey) {
+      long long int diff;
    case M_DRS:
       return (p2->m_drs - p1->m_drs);
    case M_DT:
@@ -432,27 +490,52 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return (p2->m_trs - p1->m_trs);
    case M_SHARE:
       return (p2->m_share - p1->m_share);
-   case UTIME:  diff = p2->utime - p1->utime; goto test_diff;
-   case CUTIME: diff = p2->cutime - p1->cutime; goto test_diff;
-   case STIME:  diff = p2->stime - p1->stime; goto test_diff;
-   case CSTIME: diff = p2->cstime - p1->cstime; goto test_diff;
-   case STARTTIME: {
-      if (p1->starttime == p2->starttime)
-         return (p1->super.pid - p2->super.pid);
-      else
-         return (p1->starttime - p2->starttime);
-   }
+   case UTIME:
+      diff = p2->utime - p1->utime;
+      goto test_diff;
+   case CUTIME:
+      diff = p2->cutime - p1->cutime;
+      goto test_diff;
+   case STIME:
+      diff = p2->stime - p1->stime;
+      goto test_diff;
+   case CSTIME:
+      diff = p2->cstime - p1->cstime;
+      goto test_diff;
+   case STARTTIME:
+      return p1->starttime == p2->starttime ?
+         p1->super.pid - p2->super.pid : (long long int)p1->starttime - (long long int)p2->starttime;
    #ifdef HAVE_TASKSTATS
-   case RCHAR:  diff = p2->io_rchar - p1->io_rchar; goto test_diff;
-   case WCHAR:  diff = p2->io_wchar - p1->io_wchar; goto test_diff;
-   case SYSCR:  diff = p2->io_syscr - p1->io_syscr; goto test_diff;
-   case SYSCW:  diff = p2->io_syscw - p1->io_syscw; goto test_diff;
-   case RBYTES: diff = p2->io_read_bytes - p1->io_read_bytes; goto test_diff;
-   case WBYTES: diff = p2->io_write_bytes - p1->io_write_bytes; goto test_diff;
-   case CNCLWB: diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes; goto test_diff;
-   case IO_READ_RATE:  diff = p2->io_rate_read_bps - p1->io_rate_read_bps; goto test_diff;
-   case IO_WRITE_RATE: diff = p2->io_rate_write_bps - p1->io_rate_write_bps; goto test_diff;
-   case IO_RATE: diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps); goto test_diff;
+   case RCHAR:
+      diff = p2->io_rchar - p1->io_rchar;
+      goto test_diff;
+   case WCHAR:
+      diff = p2->io_wchar - p1->io_wchar;
+      goto test_diff;
+   case SYSCR:
+      diff = p2->io_syscr - p1->io_syscr;
+      goto test_diff;
+   case SYSCW:
+      diff = p2->io_syscw - p1->io_syscw;
+      goto test_diff;
+   case RBYTES:
+      diff = p2->io_read_bytes - p1->io_read_bytes;
+      goto test_diff;
+   case WBYTES:
+      diff = p2->io_write_bytes - p1->io_write_bytes;
+      goto test_diff;
+   case CNCLWB:
+      diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes;
+      goto test_diff;
+   case IO_READ_RATE:
+      diff = p2->io_rate_read_bps - p1->io_rate_read_bps;
+      goto test_diff;
+   case IO_WRITE_RATE:
+      diff = p2->io_rate_write_bps - p1->io_rate_write_bps;
+      goto test_diff;
+   case IO_RATE:
+      diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps);
+      goto test_diff;
    #endif
    #ifdef HAVE_OPENVZ
    case CTID:
@@ -482,9 +565,9 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
    default:
       return Process_compare(v1, v2);
-   }
    test_diff:
-   return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
+      return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
+   }
 }
 
 bool Process_isKernelProcess(Process *this) {

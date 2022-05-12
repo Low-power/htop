@@ -190,7 +190,6 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
    //OpenBSDProcess* fp = (OpenBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   //int n = sizeof(buffer) - 1;
    switch (field) {
    // add OpenBSD-specific fields here
    default:

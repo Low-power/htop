@@ -140,23 +140,38 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    int n = sizeof(buffer);
    switch ((int) field) {
    // add Solaris-specific fields here
-   case ZONEID: xSnprintf(buffer, n, Process_pidFormat, sp->zoneid); break;
-   case PROJID: xSnprintf(buffer, n, Process_pidFormat, sp->projid); break;
-   case TASKID: xSnprintf(buffer, n, Process_pidFormat, sp->taskid); break;
-   case POOLID: xSnprintf(buffer, n, Process_pidFormat, sp->poolid); break;
-   case CONTID: xSnprintf(buffer, n, Process_pidFormat, sp->contid); break;
-   case ZONE:{
-      xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname); break;
-      if (buffer[ZONENAME_MAX/4] != '\0') {
+   case ZONEID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->zoneid);
+      break;
+   case PROJID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->projid);
+      break;
+   case TASKID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->taskid);
+      break;
+   case POOLID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->poolid);
+      break;
+   case CONTID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->contid);
+      break;
+   case ZONE:
+      xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname);
+      if (buffer[ZONENAME_MAX/4 + 1]) {
          buffer[ZONENAME_MAX/4] = ' ';
-         buffer[(ZONENAME_MAX/4)+1] = '\0';
+         buffer[ZONENAME_MAX/4 + 1] = 0;
       }
       break;
-   }
-   case PID: xSnprintf(buffer, n, Process_pidFormat, sp->realpid); break;
-   case PPID: xSnprintf(buffer, n, Process_pidFormat, sp->realppid); break;
+   case PID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->realpid);
+      break;
+   case PPID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->realppid);
+      break;
 #ifdef HAVE_LIBPROC
-   case LWPID: xSnprintf(buffer, n, Process_pidFormat, sp->lwpid); break;
+   case LWPID:
+      xSnprintf(buffer, n, Process_pidFormat, sp->lwpid);
+      break;
 #endif
    default:
       Process_writeField(this, str, field);

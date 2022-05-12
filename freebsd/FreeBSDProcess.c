@@ -110,15 +110,16 @@ void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
    int n = sizeof(buffer) - 1;
    switch ((int) field) {
    // add FreeBSD-specific fields here
-   case JID: xSnprintf(buffer, n, Process_pidFormat, fp->jid); break;
-   case JAIL:{
-      xSnprintf(buffer, n, "%-11s ", fp->jname); break;
-      if (buffer[11] != '\0') {
+   case JID:
+      xSnprintf(buffer, n, Process_pidFormat, fp->jid);
+      break;
+   case JAIL:
+      xSnprintf(buffer, n, "%-11s ", fp->jname);
+      if (buffer[12]) {
          buffer[11] = ' ';
          buffer[12] = '\0';
       }
       break;
-   }
    default:
       Process_writeField(this, str, field);
       return;

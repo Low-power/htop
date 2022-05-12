@@ -200,8 +200,10 @@ void AixProcess_writeField(Process* this, RichString* str, ProcessField field) {
    int attr = CRT_colors[DEFAULT_COLOR];
    int n = sizeof(buffer) - 1;
    switch ((int) field) {
-   // add Aix-specific fields here
-   case WPAR_ID: xSnprintf(buffer, n, Process_pidFormat, fp->cid); break;
+   // add AIX-specific fields here
+   case WPAR_ID:
+      xSnprintf(buffer, n, Process_pidFormat, fp->cid);
+      break;
    default:
       Process_writeField(this, str, field);
       return;

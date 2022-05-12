@@ -380,7 +380,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
-   case PERCENT_CPU: {
+   case PERCENT_CPU:
       if (this->percent_cpu > 999.9) {
          xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
       } else if (this->percent_cpu > 99.9) {
@@ -389,15 +389,13 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
       }
       break;
-   }
-   case PERCENT_MEM: {
+   case PERCENT_MEM:
       if (this->percent_mem > 99.9) {
          xSnprintf(buffer, n, "100. ");
       } else {
          xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
       }
       break;
-   }
    case NAME:
       xSnprintf(buffer, n, "%-15s ", this->name);
       if(buffer[16]) {
@@ -405,7 +403,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          buffer[16] = 0;
       }
       break;
-   case COMM: {
+   case COMM:
       if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
          attr = CRT_colors[PROCESS_THREAD];
          baseattr = CRT_colors[PROCESS_THREAD_BASENAME];
@@ -445,9 +443,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          Process_writeCommand(this, attr, baseattr, str);
          return;
       }
-   }
-   case MAJFLT: Process_colorNumber(str, this->majflt, coloring); return;
-   case MINFLT: Process_colorNumber(str, this->minflt, coloring); return;
+   case MAJFLT:
+      Process_colorNumber(str, this->majflt, coloring);
+      return;
+   case MINFLT:
+      Process_colorNumber(str, this->minflt, coloring);
+      return;
    case M_RESIDENT:
       Process_humanNumber(str, this->m_resident * CRT_page_size_kib, coloring);
       return;
@@ -464,21 +465,32 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       if(this->nice < 0) attr = CRT_colors[PROCESS_HIGH_PRIORITY];
       else if(this->nice > 0) attr = CRT_colors[PROCESS_LOW_PRIORITY];
       break;
-   case NLWP: xSnprintf(buffer, n, "%4ld ", this->nlwp); break;
-   case PGRP: xSnprintf(buffer, n, Process_pidFormat, this->pgrp); break;
-   case PID: xSnprintf(buffer, n, Process_pidFormat, this->pid); break;
-   case PPID: xSnprintf(buffer, n, Process_pidFormat, this->ppid); break;
-   case PRIORITY: {
-      if(this->priority <= -100)
-         xSnprintf(buffer, n, " RT ");
-      else
-         xSnprintf(buffer, n, "%3ld ", this->priority);
+   case NLWP:
+      xSnprintf(buffer, n, "%4ld ", this->nlwp);
       break;
-   }
-   case PROCESSOR: xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor)); break;
-   case SESSION: xSnprintf(buffer, n, Process_pidFormat, this->session); break;
-   case STARTTIME: xSnprintf(buffer, n, "%s", this->starttime_show); break;
-   case STATE: {
+   case PGRP:
+      xSnprintf(buffer, n, Process_pidFormat, this->pgrp);
+      break;
+   case PID:
+      xSnprintf(buffer, n, Process_pidFormat, this->pid);
+      break;
+   case PPID:
+      xSnprintf(buffer, n, Process_pidFormat, this->ppid);
+      break;
+   case PRIORITY:
+      if(this->priority <= -100) xSnprintf(buffer, n, " RT ");
+      else xSnprintf(buffer, n, "%3ld ", this->priority);
+      break;
+   case PROCESSOR:
+      xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor));
+      break;
+   case SESSION:
+      xSnprintf(buffer, n, Process_pidFormat, this->session);
+      break;
+   case STARTTIME:
+      xSnprintf(buffer, n, "%s", this->starttime_show);
+      break;
+   case STATE:
       xSnprintf(buffer, n, "%c ", this->state);
       switch(this->state) {
           case 'R':
@@ -489,12 +501,21 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
               break;
       }
       break;
-   }
-   case REAL_UID: xSnprintf(buffer, n, "%6d ", (int)this->ruid); break;
-   case EFFECTIVE_UID: xSnprintf(buffer, n, "%6d ", (int)this->euid); break;
-   case TIME: Process_printTime(str, this->time); return;
-   case TGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid); break;
-   case TPGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid); break;
+   case REAL_UID:
+      xSnprintf(buffer, n, "%6d ", (int)this->ruid);
+      break;
+   case EFFECTIVE_UID:
+      xSnprintf(buffer, n, "%6d ", (int)this->euid);
+      break;
+   case TIME:
+      Process_printTime(str, this->time);
+      return;
+   case TGID:
+      xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid);
+      break;
+   case TPGID:
+      xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid);
+      break;
    case TTY_NR:
       xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
       break;
@@ -641,12 +662,9 @@ long Process_compare(const void* v1, const void* v2) {
       return (p1->processor - p2->processor);
    case SESSION:
       return (p1->session - p2->session);
-   case STARTTIME: {
-      if (p1->starttime_ctime == p2->starttime_ctime)
-         return (p1->pid - p2->pid);
-      else
-         return (p1->starttime_ctime - p2->starttime_ctime);
-   }
+   case STARTTIME:
+      return p1->starttime_ctime == p2->starttime_ctime ?
+         p1->pid - p2->pid : p1->starttime_ctime - p2->starttime_ctime;
    case STATE:
       return (Process_sortState(p1->state) - Process_sortState(p2->state));
    case REAL_UID:
@@ -654,7 +672,7 @@ long Process_compare(const void* v1, const void* v2) {
    case EFFECTIVE_UID:
       return (p1->euid - p2->euid);
    case TIME:
-      return ((p2->time) - (p1->time));
+      return p2->time - p1->time;
    case TGID:
       return (p1->tgid - p2->tgid);
    case TPGID:
