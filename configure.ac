@@ -132,7 +132,9 @@ if test "x$ac_cv_func_clock_gettime" = xno; then
 	AC_CHECK_LIB([rt], [clock_gettime], [
 			ac_cv_func_clock_gettime=yes
 			AC_DEFINE([HAVE_CLOCK_GETTIME])
-			LIBS="$LIBS -lrt"
+			save_libs="$LIBS"
+			LIBS="$LIBS -Wl,--as-needed -lrt"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])], [], [LIBS="$save_libs -lrt"])
 		])
 fi
 
