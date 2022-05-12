@@ -12,7 +12,9 @@ in the source distribution for its full text.
 #ifdef HAVE_UTMPX
 #include <utmpx.h>
 #endif
+#if defined HAVE_UTMPX || defined HAVE_CLOCK_GETTIME
 #include <time.h>
+#endif
 
 /*{
 #include "Meter.h"
@@ -41,6 +43,7 @@ static int UptimeMeter_getUptimeFromUtmpx() {
 #endif
 }
 
+#ifdef HAVE_CLOCK_GETTIME
 // CLOCK_UPTIME excludes suspend time, available since kFreeBSD 7.0
 // CLOCK_BOOTTIME includes suspend time, available since Linux 2.6.39
 // CLOCK_MONOTONIC_RAW excludes suspend time, available since Linux 2.6.28
@@ -51,11 +54,12 @@ static int UptimeMeter_getUptimeFromUtmpx() {
 #define CLOCK_UPTIME CLOCK_MONOTONIC_RAW
 #endif
 #endif
+#endif
 
 static int UptimeMeter_getUptime() {
 	int totalseconds = Platform_getUptime();
 	if(totalseconds != -1) return totalseconds;
-#ifdef CLOCK_UPTIME
+#if defined HAVE_CLOCK_GETTIME && defined CLOCK_UPTIME
 	struct timespec t;
 	if(clock_gettime(CLOCK_UPTIME, &t) == 0) return t.tv_sec;
 #endif

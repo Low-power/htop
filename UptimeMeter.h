@@ -11,11 +11,14 @@ in the source distribution for its full text.
 
 #ifdef HAVE_UTMPX
 #endif
+#if defined HAVE_UTMPX || defined HAVE_CLOCK_GETTIME
+#endif
 
 #include "Meter.h"
 
 extern int UptimeMeter_attributes[];
 
+#ifdef HAVE_CLOCK_GETTIME
 // CLOCK_UPTIME excludes suspend time, available since kFreeBSD 7.0
 // CLOCK_BOOTTIME includes suspend time, available since Linux 2.6.39
 // CLOCK_MONOTONIC_RAW excludes suspend time, available since Linux 2.6.28
@@ -24,6 +27,7 @@ extern int UptimeMeter_attributes[];
 #define CLOCK_UPTIME CLOCK_BOOTTIME
 #elif defined CLOCK_MONOTONIC_RAW && defined __linux__
 #define CLOCK_UPTIME CLOCK_MONOTONIC_RAW
+#endif
 #endif
 #endif
 

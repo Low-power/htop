@@ -96,7 +96,7 @@ AC_CHECK_TYPE([struct utmpx],
 AC_FUNC_CLOSEDIR_VOID
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup nanosleep lround getopt_long])
+AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup nanosleep lround getopt_long clock_gettime])
 
 # CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
 m4_define([CHECK_CFLAGS_DEPENDED], [
@@ -124,6 +124,15 @@ else
 	CHECK_CFLAGS_DEPENDED(["-q info=c99:cmp:cns:eff:gnr:lan:ord:ret:tru:trx:upg"], [
 			# Fallback to gcc(1)-like options
 			CHECK_CFLAGS_DEPENDED([-Wall -Wextra -Wno-unused-parameter])
+		])
+fi
+
+if test "x$ac_cv_func_clock_gettime" = xno; then
+	# Some versions of GNU C Library puts clock_gettime(2) in librt
+	AC_CHECK_LIB([rt], [clock_gettime], [
+			ac_cv_func_clock_gettime=yes
+			AC_DEFINE([HAVE_CLOCK_GETTIME])
+			LIBS="$LIBS -lrt"
 		])
 fi
 
