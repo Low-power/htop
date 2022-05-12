@@ -156,8 +156,9 @@ try_stat:
 					else if(strcmp(line, "stime") == 0) stime = atol(v);
 					else if(strcmp(line, "state") == 0) {
 						int state = atoi(v);
-						proc->state = state < sizeof state_name_map ?
-							state_name_map[state] : '?';
+						proc->state =
+							state < sizeof state_name_map && state >= 0 ?
+								state_name_map[state] : '?';
 					} else if(strcmp(line, "vsize") == 0) {
 						proc->m_size = atol(v) / page_size;
 					} else if(strcmp(line, "sid") == 0) proc->session = atol(v);
