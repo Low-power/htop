@@ -109,7 +109,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   return 4096;	// XXX: Just guessing
+   return 65535;	// XXX: Just guessing
 }
 
 double Platform_setCPUValues(Meter* this, int cpu) {
