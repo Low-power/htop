@@ -125,7 +125,7 @@ void FunctionBar_drawAttr(const FunctionBar* this, char* buffer, int attr) {
    } else {
       curs_set(0);
    }
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_colors[DEFAULT_COLOR]);
 }
 
 int FunctionBar_synthesizeEvent(const FunctionBar* this, int pos) {

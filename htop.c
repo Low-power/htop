@@ -255,9 +255,9 @@ int main(int argc, char** argv) {
 
    ScreenManager_run(scr, NULL, NULL);   
    
-   attron(CRT_colors[RESET_COLOR]);
+   attron(CRT_colors[DEFAULT_COLOR]);
    mvhline(LINES-1, 0, ' ', COLS);
-   attroff(CRT_colors[RESET_COLOR]);
+   attroff(CRT_colors[DEFAULT_COLOR]);
    refresh();
    
    CRT_done();

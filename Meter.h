@@ -50,11 +50,11 @@ typedef struct MeterClass_ {
 #define Meter_init(this_)              As_Meter(this_)->init((Meter*)(this_))
 #define Meter_done(this_)              As_Meter(this_)->done((Meter*)(this_))
 #define Meter_updateModeFn(this_)      As_Meter(this_)->updateMode
-#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
+#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), (m_))
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
 #define Meter_updateValues(this_, buf_, sz_) \
-                                       As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
+                                       As_Meter(this_)->updateValues((Meter*)(this_), (buf_), (sz_))
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_getItems(this_)          As_Meter(this_)->curItems
 #define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)

@@ -34,7 +34,6 @@ typedef enum ColorSchemes_ {
 } ColorSchemes;
 
 typedef enum ColorElements_ {
-   RESET_COLOR,
    DEFAULT_COLOR,
    FUNCTION_BAR,
    FUNCTION_KEY,

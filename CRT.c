@@ -31,7 +31,6 @@ typedef enum ColorSchemes_ {
 } ColorSchemes;
 
 typedef enum ColorElements_ {
-   RESET_COLOR,
    DEFAULT_COLOR,
    FUNCTION_BAR,
    FUNCTION_KEY,
@@ -188,7 +187,6 @@ int* CRT_colors;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [COLORSCHEME_DEFAULT] = {
-      [RESET_COLOR] = ColorPair(White,Black),
       [DEFAULT_COLOR] = ColorPair(White,Black),
       [FUNCTION_BAR] = ColorPair(Black,Cyan),
       [FUNCTION_KEY] = ColorPair(White,Black),
@@ -249,7 +247,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_GUEST] = ColorPair(Cyan,Black),
    },
    [COLORSCHEME_MONOCHROME] = {
-      [RESET_COLOR] = A_NORMAL,
       [DEFAULT_COLOR] = A_NORMAL,
       [FUNCTION_BAR] = A_REVERSE,
       [FUNCTION_KEY] = A_NORMAL,
@@ -310,7 +307,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_GUEST] = A_REVERSE,
    },
    [COLORSCHEME_BLACKONWHITE] = {
-      [RESET_COLOR] = ColorPair(Black,White),
       [DEFAULT_COLOR] = ColorPair(Black,White),
       [FUNCTION_BAR] = ColorPair(Black,Cyan),
       [FUNCTION_KEY] = ColorPair(Black,White),
@@ -371,7 +367,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_GUEST] = ColorPair(Cyan,White),
    },
    [COLORSCHEME_LIGHTTERMINAL] = {
-      [RESET_COLOR] = ColorPair(Black,Black),
       [DEFAULT_COLOR] = ColorPair(Black,Black),
       [FUNCTION_BAR] = ColorPair(Black,Cyan),
       [FUNCTION_KEY] = ColorPair(Black,Black),
@@ -432,7 +427,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_GUEST] = ColorPair(Black,Black),
    },
    [COLORSCHEME_MIDNIGHT] = {
-      [RESET_COLOR] = ColorPair(White,Blue),
       [DEFAULT_COLOR] = ColorPair(White,Blue),
       [FUNCTION_BAR] = ColorPair(Black,Cyan),
       [FUNCTION_KEY] = A_NORMAL,
@@ -493,7 +487,6 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [CPU_GUEST] = ColorPair(White,Blue),
    },
    [COLORSCHEME_BLACKNIGHT] = {
-      [RESET_COLOR] = ColorPair(Cyan,Black),
       [DEFAULT_COLOR] = ColorPair(Cyan,Black),
       [FUNCTION_BAR] = ColorPair(Black,Green),
       [FUNCTION_KEY] = ColorPair(Cyan,Black),

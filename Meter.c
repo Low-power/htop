@@ -63,11 +63,11 @@ typedef struct MeterClass_ {
 #define Meter_init(this_)              As_Meter(this_)->init((Meter*)(this_))
 #define Meter_done(this_)              As_Meter(this_)->done((Meter*)(this_))
 #define Meter_updateModeFn(this_)      As_Meter(this_)->updateMode
-#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), m_)
+#define Meter_updateMode(this_, m_)    As_Meter(this_)->updateMode((Meter*)(this_), (m_))
 #define Meter_drawFn(this_)            As_Meter(this_)->draw
 #define Meter_doneFn(this_)            As_Meter(this_)->done
 #define Meter_updateValues(this_, buf_, sz_) \
-                                       As_Meter(this_)->updateValues((Meter*)(this_), buf_, sz_)
+                                       As_Meter(this_)->updateValues((Meter*)(this_), (buf_), (sz_))
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
 #define Meter_getItems(this_)          As_Meter(this_)->curItems
 #define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
@@ -261,9 +261,8 @@ static void TextMeterMode_draw(Meter* this, int x, int y, int w) {
 
    attrset(CRT_colors[METER_TEXT]);
    mvaddstr(y, x, this->caption);
-   int captionLen = strlen(this->caption);
-   x += captionLen;
-   attrset(CRT_colors[RESET_COLOR]);
+   x += strlen(this->caption);
+   attrset(CRT_colors[DEFAULT_COLOR]);
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
    RichString_printVal(out, y, x);
@@ -291,7 +290,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    x++;
 
    if (w < 1) {
-      attrset(CRT_colors[RESET_COLOR]);
+      attrset(CRT_colors[DEFAULT_COLOR]);
       return;
    }
    char bar[w + 1];
@@ -338,7 +337,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    }
 
    move(y, x + w + 1);
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_colors[DEFAULT_COLOR]);
 }
 
 /* ---------- GraphMeterMode ---------- */
@@ -438,7 +437,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
          colorIdx = GRAPH_2;
       }
    }
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_colors[DEFAULT_COLOR]);
 }
 
 /* ---------- LEDMeterMode ---------- */
@@ -501,7 +500,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
          xx += 1;
       }
    }
-   attrset(CRT_colors[RESET_COLOR]);
+   attrset(CRT_colors[DEFAULT_COLOR]);
    RichString_end(out);
 }
 

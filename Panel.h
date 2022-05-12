@@ -43,7 +43,7 @@ typedef struct PanelClass_ {
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
+#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), (ev_))
 
 struct Panel_ {
    Object super;

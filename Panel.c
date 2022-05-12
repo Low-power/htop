@@ -40,7 +40,7 @@ typedef struct PanelClass_ {
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), ev_)
+#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), (ev_))
 
 struct Panel_ {
    Object super;
@@ -281,16 +281,16 @@ void Panel_draw(Panel* this, bool focus) {
 
    int headerLen = RichString_sizeVal(this->header);
    if (headerLen > 0) {
-      int attr = focus
-               ? CRT_colors[PANEL_HEADER_FOCUS]
-               : CRT_colors[PANEL_HEADER_UNFOCUS];
+      int attr = focus ?
+         CRT_colors[PANEL_HEADER_FOCUS] :
+         CRT_colors[PANEL_HEADER_UNFOCUS];
       attrset(attr);
       mvhline(y, x, ' ', this->w);
       if (scrollH < headerLen) {
          RichString_printoffnVal(this->header, y, x, scrollH,
             MIN(headerLen - scrollH, this->w));
       }
-      attrset(CRT_colors[RESET_COLOR]);
+      attrset(CRT_colors[DEFAULT_COLOR]);
       y++;
    }
 
@@ -334,10 +334,8 @@ void Panel_draw(Panel* this, bool focus) {
             this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);
-         if (amt > 0)
-            RichString_printoffnVal(item, y + line, x, scrollH, amt);
-         if (selected)
-            attrset(CRT_colors[RESET_COLOR]);
+         if (amt > 0) RichString_printoffnVal(item, y + line, x, scrollH, amt);
+         if (selected) attrset(CRT_colors[DEFAULT_COLOR]);
          RichString_end(item);
          line++;
       }
@@ -359,16 +357,18 @@ void Panel_draw(Panel* this, bool focus) {
       int newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
       mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
-      if (scrollH < oldLen)
+      if (scrollH < oldLen) {
          RichString_printoffnVal(old, y+this->oldSelected - first, x,
             scrollH, MIN(oldLen - scrollH, this->w));
+      }
       attrset(selectionColor);
       mvhline(y+this->selected - first, x+0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
-      if (scrollH < newLen)
+      if (scrollH < newLen) {
          RichString_printoffnVal(new, y+this->selected - first, x,
             scrollH, MIN(newLen - scrollH, this->w));
-      attrset(CRT_colors[RESET_COLOR]);
+      }
+      attrset(CRT_colors[DEFAULT_COLOR]);
       RichString_end(new);
       RichString_end(old);
    }
