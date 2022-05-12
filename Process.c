@@ -490,8 +490,8 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    }
-   case REAL_UID: xSnprintf(buffer, n, "%4d ", (int)this->ruid); break;
-   case EFFECTIVE_UID: xSnprintf(buffer, n, "%4d ", (int)this->euid); break;
+   case REAL_UID: xSnprintf(buffer, n, "%6d ", (int)this->ruid); break;
+   case EFFECTIVE_UID: xSnprintf(buffer, n, "%6d ", (int)this->euid); break;
    case TIME: Process_printTime(str, this->time); return;
    case TGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid); break;
    case TPGID: xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid); break;

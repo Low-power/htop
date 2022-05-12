@@ -127,8 +127,8 @@ ProcessFieldData Process_fields[] = {
       .title = "  RES ",
       .description = "Resident set size, size of the text and data sections, plus stack usage",
       .flags = 0, },
-   [REAL_UID] = { .name = "REAL_UID", .title = "RUID ", .description = "Real user ID", .flags = 0, },
-   [EFFECTIVE_UID] = { .name = "EFFECTIVE_UID", .title = "EUID ", .description = "Effective user ID", .flags = 0, },
+   [REAL_UID] = { .name = "REAL_UID", .title = "  RUID ", .description = "Real user ID", .flags = 0, },
+   [EFFECTIVE_UID] = { .name = "EFFECTIVE_UID", .title = "  EUID ", .description = "Effective user ID", .flags = 0, },
    [PERCENT_CPU] = {
       .name = "PERCENT_CPU",
       .title = "CPU% ",
