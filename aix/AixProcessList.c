@@ -232,6 +232,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			strftime(proc->starttime_show, 7, ((proc->starttime_ctime > t - 86400) || 0 ? "%R " : "%b%d "), &date);
 		} else {
 			if (super->settings->updateProcessNames) {
+				free(proc->name);
 				free(proc->comm);
 				AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
 			}
