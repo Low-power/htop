@@ -318,7 +318,7 @@ static Htop_Reaction actionSetAffinity(State* st) {
 
 static Htop_Reaction actionKill(State* st) {
    Panel* signalsPanel = (Panel*) SignalsPanel_new();
-   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 15);
+   ListItem* sgn = (ListItem*) Action_pickFromVector(st, signalsPanel, 14);
    if (sgn) {
       if (sgn->key != 0) {
          Panel_setHeader(st->panel, "Sending...");
