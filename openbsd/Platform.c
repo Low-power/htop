@@ -289,7 +289,13 @@ static char **get_process_vector(const Process *proc, char **(*getv)(kvm_t *, co
    int count;
    struct kinfo_proc *kproc = kvm_getprocs(kvm,
 #ifdef KERN_PROC_SHOW_THREADS
-      KERN_PROC_SHOW_THREADS |
+      (
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+         proc->pid == proc->tgid ? 0 : KERN_PROC_SHOW_THREADS
+#else
+         KERN_PROC_SHOW_THREADS
+#endif
+      ) |
 #endif
       KERN_PROC_PID, proc->tgid, sizeof(struct kinfo_proc), &count);
    if(!kproc) {
@@ -297,6 +303,9 @@ static char **get_process_vector(const Process *proc, char **(*getv)(kvm_t *, co
       return NULL;
    }
 #ifdef HAVE_STRUCT_KINFO_PROC_P_TID
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+   if(proc->pid != proc->tgid)
+#endif
    while(count > 0 && kproc->p_tid - THREAD_PID_OFFSET != proc->pid) {
       count--;
       kproc++;
