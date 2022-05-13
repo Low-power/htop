@@ -15,6 +15,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this);
 
-void ProcessList_goThroughEntries(ProcessList* super);
+void ProcessList_goThroughEntries(ProcessList *this);
 
 #endif

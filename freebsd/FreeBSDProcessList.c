@@ -470,9 +470,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
-      bool preExisting = false;
-      bool isIdleProcess = false;
-      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &preExisting, (Process_New) FreeBSDProcess_new);
+      bool is_existing;
+      Process* proc = ProcessList_getProcess(this, kproc->ki_pid, &is_existing, (Process_New) FreeBSDProcess_new);
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       proc->ppid = kproc->ki_ppid;
@@ -482,7 +481,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->tty_nr = kproc->ki_tdev;
       proc->pgrp = kproc->ki_pgid;
 
-      if (!preExisting) {
+      if (!is_existing) {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          fp->jid = kproc->ki_jid;
 #endif
@@ -530,13 +529,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
       proc->percent_mem = 100.0 * (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem);
 
-      if (proc->percent_cpu > 0.1) {
-         // system idle process should own all CPU time left regardless of CPU count
-         if ( strcmp("idle", kproc->ki_comm) == 0 ) {
-            isIdleProcess = true;
-         }
-      }
-
       proc->priority = kproc->ki_pri.pri_level - PZERO;
 
       if (strcmp("intr", kproc->ki_comm) == 0 && kproc->ki_flag & P_SYSTEM) {
@@ -566,7 +558,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          this->kernel_process_count++;
          this->kernel_thread_count += proc->nlwp;
       }
-      if (proc->state == 'R') {
+      if (proc->state == 'R' && !(kproc->ki_tdflags & TDF_IDLETD)) {
          this->running_process_count++;
          this->running_thread_count++;
       }
