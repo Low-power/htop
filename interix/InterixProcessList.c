@@ -91,7 +91,6 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 			} else proc->state = '?';
 			proc->nlwp = info.pr_nlwp;
 			if(!is_existing) {
-				proc->pid = info.pr_pid;
 				proc->tgid = info.pr_pid;
 				i_proc->native_pid = info.pr_natpid;
 				proc->starttime_ctime = info.pr_start;

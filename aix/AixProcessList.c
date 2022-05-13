@@ -211,31 +211,39 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		AixProcess *ap = (AixProcess *)proc;
 
 		proc->ppid = pe->pi_ppid;
+		proc->session = pe->pi_sid;
+		proc->tty_nr = pe->pi_ttyd;
+		proc->pgrp = pe->pi_pgrp;
 
 		if (!preExisting) {
 			ap->kernel = pe->pi_flags & SKPROC;
 			proc->tgid = pe->pi_pid;
-			proc->session = pe->pi_sid;
-			proc->tty_nr = pe->pi_ttyd;
-			proc->pgrp = pe->pi_pgrp;
-			proc->ruid = pe->pi_uid;
-			proc->euid = pe->pi_uid;	// XXX
-			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
-			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 			proc->starttime_ctime = pe->pi_start;
-			ProcessList_add(super, proc);
 			AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
 			// copy so localtime_r works properly
 			time_t pt = pe->pi_start;
 			struct tm date;
 			localtime_r(&pt, &date);
 			strftime(proc->starttime_show, 7, ((proc->starttime_ctime > t - 86400) || 0 ? "%R " : "%b%d "), &date);
+			ProcessList_add(super, proc);
 		} else {
+			if(proc->ruid != pe->pi_uid) proc->real_user = NULL;
+			if(proc->euid != pe->pi_uid) proc->effective_user = NULL;	// XXX
 			if (super->settings->updateProcessNames) {
 				free(proc->name);
 				free(proc->comm);
 				AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
 			}
+		}
+
+		proc->ruid = pe->pi_uid;
+		proc->euid = pe->pi_uid;	// XXX
+
+		if(!proc->real_user) {
+			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
+		}
+		if(!proc->effective_user) {
+			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 		}
 
 		ap->cid = pe->pi_cid;

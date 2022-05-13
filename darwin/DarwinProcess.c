@@ -234,19 +234,13 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
     * majflt
     */
 
-   /* First, the "immutable" parts */
-   if(!exists) {
-      /* Set the PID/PGID/etc. */
+   if(exists) {
+      if(proc->ruid != ps->kp_eproc.e_pcred.p_ruid) proc->real_user = NULL;
+      if(proc->euid != ps->kp_eproc.e_ucred.cr_uid) proc->effective_user = NULL;
+   } else {
+      /* First, the "immutable" parts */
       proc->tgid = proc->pid;
-      proc->pgrp = ps->kp_eproc.e_pgid;
       proc->session = 0; /* TODO Get the session id */
-      proc->tpgid = ps->kp_eproc.e_tpgid;
-      proc->ruid = ps->kp_eproc.e_pcred.p_ruid;
-      proc->euid = ps->kp_eproc.e_ucred.cr_uid;
-      /* e_tdev = (major << 24) | (minor & 0xffffff) */
-      /* e_tdev == -1 for "no device" */
-      proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
-
       DarwinProcess_setStartTime(proc, ep, now);
       proc->name = xStrdup(ps->kp_proc.p_comm);
       proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
@@ -255,6 +249,13 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
 
    /* Mutable information */
    proc->ppid = ps->kp_eproc.e_ppid;
+   proc->pgrp = ps->kp_eproc.e_pgid;
+   proc->tpgid = ps->kp_eproc.e_tpgid;
+   /* e_tdev = (major << 24) | (minor & 0xffffff) */
+   /* e_tdev == -1 for "no device" */
+   proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
+   proc->ruid = ps->kp_eproc.e_pcred.p_ruid;
+   proc->euid = ps->kp_eproc.e_ucred.cr_uid;
    proc->nice = ep->p_nice;
    proc->priority = ep->p_priority;
 

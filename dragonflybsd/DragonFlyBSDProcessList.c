@@ -438,15 +438,15 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       DragonFlyBSDProcess* dfp = (DragonFlyBSDProcess*) proc;
 
       proc->ppid = kproc->kp_ppid;		// parent process id
+      proc->tpgid = kproc->kp_tpgid;		// tty process group id
+      proc->tgid = kproc->kp_pid;		// thread group id
+      proc->pgrp = kproc->kp_pgid;		// process group id
+      proc->session = kproc->kp_sid;
+      proc->tty_nr = kproc->kp_tdev;		// control terminal device number
 
       if (!preExisting) {
          dfp->jid = kproc->kp_jailid;
          dfp->kernel = kproc->kp_pid != 1 && (kproc->kp_flags & P_SYSTEM);
-         proc->tpgid = kproc->kp_tpgid;		// tty process group id
-         proc->tgid = kproc->kp_pid;		// thread group id
-         proc->pgrp = kproc->kp_pgid;		// process group id
-         proc->session = kproc->kp_sid;
-         proc->tty_nr = kproc->kp_tdev;		// control terminal device number
          proc->ruid = kproc->kp_ruid;		// real user ID
          proc->euid = kproc->kp_uid;		// effective user ID
          proc->processor = kproc->kp_lwp.kl_origcpu;

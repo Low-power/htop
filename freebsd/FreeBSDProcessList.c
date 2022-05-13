@@ -476,18 +476,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       FreeBSDProcess* fp = (FreeBSDProcess*) proc;
 
       proc->ppid = kproc->ki_ppid;
+      proc->tpgid = kproc->ki_tpgid;
+      proc->tgid = kproc->ki_pid;
+      proc->session = kproc->ki_sid;
+      proc->tty_nr = kproc->ki_tdev;
+      proc->pgrp = kproc->ki_pgid;
 
       if (!preExisting) {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          fp->jid = kproc->ki_jid;
 #endif
-         proc->pid = kproc->ki_pid;
          fp->kernel = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
-         proc->tpgid = kproc->ki_tpgid;
-         proc->tgid = kproc->ki_pid;
-         proc->session = kproc->ki_sid;
-         proc->tty_nr = kproc->ki_tdev;
-         proc->pgrp = kproc->ki_pgid;
          proc->ruid = kproc->ki_ruid;
          proc->euid = kproc->ki_uid;
          proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);

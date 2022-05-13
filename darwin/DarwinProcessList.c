@@ -224,11 +224,13 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		if (isScanThreadSupported){
 			DarwinProcess_scanThreads(proc);
 		}
-
-		if(!preExisting) {
+		if(!proc->super.real_user) {
 			proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);
+		}
+		if(!proc->super.effective_user) {
 			proc->super.effective_user = UsersTable_getRef(super->usersTable, proc->super.euid);
-
+		}
+		if(!preExisting) {
 			ProcessList_add(super, &proc->super);
 		}
 	}
