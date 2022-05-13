@@ -30,17 +30,19 @@ void ProcessList_delete(ProcessList* this) {
 void ProcessList_goThroughEntries(ProcessList *this) {
 	bool is_existing;
 	Process *proc = ProcessList_getProcess(this, 1, &is_existing, UnsupportedProcess_new);
-	if(!is_existing) ProcessList_add(this, proc);
+
+	proc->time = proc->time + 10;
+	proc->updated = true;
+
+	if(is_existing) return;
 
 	/* Empty values */
-	proc->time = proc->time + 10;
 	proc->pid  = 1;
 	proc->ppid = 1;
 	proc->tgid = 0;
-	proc->name = "<unsupported>";
-	proc->comm = "<unsupported architecture>";
+	proc->name = xStrdup("<unsupported>");
+	proc->comm = xStrdup("<unsupported architecture>");
 	proc->basenameOffset = 0;
-	proc->updated = true;
 
 	proc->state = 'R';
 	proc->show = true; /* Reflected in proc->settings-> "hideXXX" really */
@@ -60,7 +62,7 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 	proc->priority = 0;
 	proc->nice = 0;
 	proc->nlwp = 1;
-	strncpy(proc->starttime_show, "Jun 01 ", sizeof(proc->starttime_show));
+	strcpy(proc->starttime_show, "Jun 01 ");
 	proc->starttime_ctime = 1433116800; // Jun 01, 2015
 
 	proc->m_size = 100;
@@ -68,4 +70,6 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 
 	proc->minflt = 20;
 	proc->majflt = 20;
+
+	ProcessList_add(this, proc);
 }

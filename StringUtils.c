@@ -80,11 +80,11 @@ char* strcasestr(const char* s, const char* find) {
 #endif
 
 char* String_cat(const char* s1, const char* s2) {
-   int l1 = strlen(s1);
-   int l2 = strlen(s2);
+   size_t l1 = strlen(s1);
+   size_t l2 = strlen(s2);
    char* out = xMalloc(l1 + l2 + 1);
-   strncpy(out, s1, l1);
-   strncpy(out+l1, s2, l2+1);
+   memcpy(out, s1, l1);
+   memcpy(out+l1, s2, l2+1);
    return out;
 }
 
@@ -92,12 +92,12 @@ char* String_trim(const char* in) {
    while (in[0] == ' ' || in[0] == '\t' || in[0] == '\n') {
       in++;
    }
-   int len = strlen(in);
+   size_t len = strlen(in);
    while (len > 0 && (in[len-1] == ' ' || in[len-1] == '\t' || in[len-1] == '\n')) {
       len--;
    }
    char* out = xMalloc(len+1);
-   strncpy(out, in, len);
+   memcpy(out, in, len);
    out[len] = '\0';
    return out;
 }
@@ -120,9 +120,9 @@ char** String_split(const char* s, char sep, int* n) {
    int blocks = rate;
    char* where;
    while ((where = strchr(s, sep)) != NULL) {
-      int size = where - s;
+      size_t size = where - s;
       char* token = xMalloc(size + 1);
-      strncpy(token, s, size);
+      memcpy(token, s, size);
       token[size] = '\0';
       out[ctr] = token;
       ctr++;
@@ -133,9 +133,9 @@ char** String_split(const char* s, char sep, int* n) {
       s += size + 1;
    }
    if (s[0] != '\0') {
-      int size = strlen(s);
+      size_t size = strlen(s);
       char* token = xMalloc(size + 1);
-      strncpy(token, s, size + 1);
+      memcpy(token, s, size + 1);
       out[ctr] = token;
       ctr++;
    }

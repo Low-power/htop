@@ -389,11 +389,12 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
 
 static bool LinuxProcessList_getOwner(Process* process, int pid) {
 	char path[MAX_NAME];
-	xSnprintf(path, sizeof path, PROCDIR "/%d", pid);
+	int len = snprintf(path, sizeof path, PROCDIR "/%d", pid);
+	assert(len < (int)sizeof path - 5);	// Assuming MAX_NAME is large enough to hold the full path
 	struct stat st;
 	if(stat(path, &st) < 0) return false;
 	process->ruid = st.st_uid;
-	strcat(path, "/stat");
+	strcpy(path + len, "/stat");
 	if(stat(path, &st) < 0) return false;
 	process->euid = st.st_uid;
 	return true;
