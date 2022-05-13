@@ -281,7 +281,7 @@ void Platform_setSwapValues(Meter *meter) {
    meter->values[0] = pl->usedSwap = used;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
+static char **get_process_vector(const Process *proc, char **(*getv)(kvm_t *, const struct kinfo_proc *, int)) {
    char errbuf[_POSIX2_LINE_MAX];
    kvm_t *kvm = kvm_openfiles(NULL, NULL, NULL, KVM_NO_FILES, errbuf);
    if(!kvm) return NULL;
@@ -307,7 +307,7 @@ char **Platform_getProcessEnv(Process *proc) {
       return NULL;
    }
 
-   char **ptr = kvm_getenvv(kvm, kproc, 0);
+   char **ptr = getv(kvm, kproc, 0);
    if(!ptr) {
       kvm_close(kvm);
       return NULL;
@@ -315,9 +315,17 @@ char **Platform_getProcessEnv(Process *proc) {
 
    count = 0;
    while(ptr[count]) count++;
-   char **env = xMalloc((count + 1) * sizeof(char *));
-   env[count] = NULL;
-   while(count-- > 0) env[count] = xStrdup(ptr[count]);
+   char **v = xMalloc((count + 1) * sizeof(char *));
+   v[count] = NULL;
+   while(count-- > 0) v[count] = xStrdup(ptr[count]);
    kvm_close(kvm);
-   return env;
+   return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, kvm_getargv);
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, kvm_getenvv);
 }

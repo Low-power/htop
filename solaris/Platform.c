@@ -206,35 +206,7 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-#ifdef HAVE_LIBPROC
-
-struct env_accum {
-   char **env;
-   unsigned int count;
-};
-
-static int append_env(void *arg, struct ps_prochandle *handle, uintptr_t addr, const char *s) {
-	struct env_accum *accum = arg;
-	accum->env[accum->count] = xStrdup(s);
-	accum->env = xRealloc(accum->env, (++accum->count + 1) * sizeof(char *));
-	return 0; 
-}
-
-char **Platform_getProcessEnv(Process *proc) {
-   pid_t pid = ((SolarisProcess *)proc)->realpid;
-   int graberr;
-   struct ps_prochandle *handle = Pgrab(pid, PGRAB_RDONLY, &graberr);
-   if(!handle) return NULL;
-   struct env_accum accum = { .env = xMalloc(sizeof(char *)) };
-   Penv_iter(handle, append_env, &accum); 
-   Prelease(handle, 0);
-   accum.env[accum.count] = NULL;
-   return accum.env;
-}
-
-#else
-
-char **Platform_getProcessEnv(Process *proc) {
+static char **get_process_vector(const Process *proc, bool is_env) {
 	bool is_64bit;
 	SolarisProcess *sol_proc = (SolarisProcess *)proc;
 	switch(sol_proc->data_model) {
@@ -248,16 +220,20 @@ char **Platform_getProcessEnv(Process *proc) {
 			return NULL;
 	}
 	if(Process_isKernelProcess(proc)) return NULL;
-	if(sol_proc->env_offset < 0) return NULL;
+	if((is_env ? sol_proc->envv_offset : sol_proc->argv_offset) < 0) return NULL;
 	char path[20];
+#ifdef HAVE_LIBPROC
+	xSnprintf(path, sizeof path, "/proc/%d/as", (int)sol_proc->realpid);
+#else
 	xSnprintf(path, sizeof path, "/proc/%d/as", (int)proc->pid);
+#endif
 	int fd = open(path, O_RDONLY);
 	if(fd == -1) return NULL;
-	if(lseek(fd, sol_proc->env_offset, SEEK_SET) < 0) {
+	if(lseek(fd, is_env ? sol_proc->envv_offset : sol_proc->argv_offset, SEEK_SET) < 0) {
 		close(fd);
 		return NULL;
 	}
-	char **env = xMalloc(sizeof(char *));
+	char **v = xMalloc(sizeof(char *));
 	unsigned int i = 0;
 	while(true) {
 		off_t offset;
@@ -272,20 +248,56 @@ char **Platform_getProcessEnv(Process *proc) {
 			offset = buffer;
 		}
 		if(!offset) break;
-		env[i] = xMalloc(256);
-		int len = pread(fd, env[i], 256, offset);
+		v[i] = xMalloc(256);
+		int len = pread(fd, v[i], 256, offset);
 		if(len < 1) {
-			free(env[i]);
+			free(v[i]);
 			continue;
 		}
-		len = strnlen(env[i], len);
-		if(len < 255) env[i] = realloc(env[i], len + 1);
-		else if(len == 256) env[i][255] = 0;
-		env = xRealloc(env, (++i + 1) * sizeof(char *));
+		len = strnlen(v[i], len);
+		if(len < 255) v[i] = realloc(v[i], len + 1);
+		else if(len == 256) v[i][255] = 0;
+		v = xRealloc(v, (++i + 1) * sizeof(char *));
 	}
 	close(fd);
-	env[i] = NULL;
-	return env;
+	v[i] = NULL;
+	return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, false);
+}
+
+#ifdef HAVE_LIBPROC
+
+struct env_accum {
+   char **env;
+   unsigned int count;
+};
+
+static int append_env(void *arg, struct ps_prochandle *handle, uintptr_t addr, const char *s) {
+	struct env_accum *accum = arg;
+	accum->env[accum->count] = xStrdup(s);
+	accum->env = xRealloc(accum->env, (++accum->count + 1) * sizeof(char *));
+	return 0; 
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+   pid_t pid = ((SolarisProcess *)proc)->realpid;
+   int graberr;
+   struct ps_prochandle *handle = Pgrab(pid, PGRAB_RDONLY, &graberr);
+   if(!handle) return NULL;
+   struct env_accum accum = { .env = xMalloc(sizeof(char *)) };
+   Penv_iter(handle, append_env, &accum); 
+   Prelease(handle, 0);
+   accum.env[accum.count] = NULL;
+   return accum.env;
+}
+
+#else
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, true);
 }
 
 #endif

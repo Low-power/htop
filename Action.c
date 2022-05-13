@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "AffinityPanel.h"
 #include "CategoriesPanel.h"
 #include "CRT.h"
+#include "ArgScreen.h"
 #include "EnvScreen.h"
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
@@ -559,6 +560,17 @@ static Htop_Reaction actionTagAllChildren(State* st) {
    return HTOP_OK;
 }
 
+static Htop_Reaction show_arg_screen_action(State* st) {
+   Process* p = (Process*) Panel_getSelected(st->panel);
+   if (!p) return HTOP_OK;
+   ArgScreen *s = ArgScreen_new(p);
+   InfoScreen_run((InfoScreen *)s);
+   ArgScreen_delete((Object *)s);
+   clear();
+   CRT_enableDelay();
+   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 static Htop_Reaction actionShowEnvScreen(State* st) {
    Process* p = (Process*) Panel_getSelected(st->panel);
    if (!p) return HTOP_OK;
@@ -623,6 +635,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['?'] = actionHelp;
    keys['U'] = actionUntagAll;
    keys['c'] = actionTagAllChildren;
+   keys['A'] = show_arg_screen_action;
    keys['e'] = actionShowEnvScreen;
 }
 

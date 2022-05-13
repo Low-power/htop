@@ -128,7 +128,10 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
-   (void)proc;
-   return NULL;
+char **Platform_getProcessArgv(const Process *proc) {
+	return NULL;
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return NULL;
 }

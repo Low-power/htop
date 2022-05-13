@@ -47,6 +47,8 @@ void Platform_setMemoryValues(Meter* mtr);
 
 void Platform_setSwapValues(Meter* mtr);
 
-char **Platform_getProcessEnv(Process *proc);
+char **Platform_getProcessArgv(const Process *proc);
+
+char **Platform_getProcessEnvv(const Process *proc);
 
 #endif

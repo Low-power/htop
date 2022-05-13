@@ -230,10 +230,10 @@ long AixProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isKernelProcess(Process *this) {
-	return ((AixProcess *)this)->kernel;
+bool Process_isKernelProcess(const Process *this) {
+	return ((const AixProcess *)this)->kernel;
 }
 
-bool Process_isExtraThreadProcess(Process *this) {
+bool Process_isExtraThreadProcess(const Process *this) {
 	return false;
 }

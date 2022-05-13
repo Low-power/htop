@@ -232,12 +232,12 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
-   char path[32];
-   xSnprintf(path, sizeof path, PROCDIR "/%d/environ", (int)proc->pid);
+static char **get_process_vector(const Process *proc, const char *v_type) {
+   char path[sizeof PROCDIR + 20];
+   xSnprintf(path, sizeof path, PROCDIR "/%d/%s", (int)proc->pid, v_type);
    FILE *f = fopen(path, "r");
    if(!f) return NULL;
-   char **env = xMalloc(sizeof(char *));
+   char **v = xMalloc(sizeof(char *));
    unsigned int i = 0;
    char buffer[4096];
    int c;
@@ -247,12 +247,20 @@ char **Platform_getProcessEnv(Process *proc) {
          if(len < sizeof buffer) buffer[len++] = c;
       }
       if(!len) continue;
-      env[i] = xMalloc(len + 1);
-      memcpy(env[i], buffer, len);
-      env[i][len] = 0;
-      env = xRealloc(env, (++i + 1) * sizeof(char *));
+      v[i] = xMalloc(len + 1);
+      memcpy(v[i], buffer, len);
+      v[i][len] = 0;
+      v = xRealloc(v, (++i + 1) * sizeof(char *));
    } while(c != EOF);
    fclose(f);
-   env[i] = NULL;
-   return env;
+   v[i] = NULL;
+   return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, "cmdline");
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, "environ");
 }

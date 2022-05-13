@@ -149,11 +149,11 @@ void InterixProcess_writeField(Process *super, RichString *str, ProcessField fie
 	RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
 }
 
-bool Process_isKernelProcess(Process *this) {
-	InterixProcess *p = (InterixProcess *)this;
+bool Process_isKernelProcess(const Process *this) {
+	const InterixProcess *p = (const InterixProcess *)this;
 	return p->native_pid == 0 || p->native_pid == 4 || p->native_pid == 8;
 }
 
-bool Process_isExtraThreadProcess(Process *this) {
+bool Process_isExtraThreadProcess(const Process *this) {
 	return false;
 }

@@ -46,6 +46,14 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
-char **Platform_getProcessEnv(Process *proc);
+#if defined KERN_PROC_ARGS || defined KERN_PROC_ENV
+#endif
+
+#if (!defined KERN_PROC_ARGS || !defined KERN_PROC_ENV) && defined HAVE_LIBKVM
+#endif
+
+char **Platform_getProcessArgv(const Process *proc);
+
+char **Platform_getProcessEnvv(const Process *proc);
 
 #endif

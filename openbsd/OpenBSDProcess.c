@@ -216,13 +216,13 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isKernelProcess(Process *this) {
-	return ((OpenBSDProcess *)this)->is_kernel_process;
+bool Process_isKernelProcess(const Process *this) {
+	return ((const OpenBSDProcess *)this)->is_kernel_process;
 }
 
-bool Process_isExtraThreadProcess(Process* this) {
+bool Process_isExtraThreadProcess(const Process* this) {
 #ifdef PID_AND_MAIN_THREAD_ID_DIFFER
-	if(this->settings->hide_high_level_processes) return !((OpenBSDProcess *)this)->is_main_thread;
+	if(this->settings->hide_high_level_processes) return !((const OpenBSDProcess *)this)->is_main_thread;
 #endif
 	return this->pid != this->tgid;
 }

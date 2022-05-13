@@ -125,9 +125,9 @@ void Platform_setSwapValues(Meter* this) {
    (void) this;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
+static char **get_process_vector(const Process *proc, const char *v_type) {
    char path[32];
-   xSnprintf(path, sizeof path, "/proc/%d/environ", (int)proc->pid);
+   xSnprintf(path, sizeof path, "/proc/%d/%s", (int)proc->pid, v_type);
    FILE *f = fopen(path, "r");
    if(!f) return NULL;
    char **env = xMalloc(sizeof(char *));
@@ -148,4 +148,12 @@ char **Platform_getProcessEnv(Process *proc) {
    fclose(f);
    env[i] = NULL;
    return env;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, "cmdline");
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, "environ");
 }

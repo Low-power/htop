@@ -201,8 +201,8 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
-#ifdef KERN_PROC_ENV
+#if defined KERN_PROC_ARGS || defined KERN_PROC_ENV
+static char **get_process_vector_from_sysctl(const Process *proc, int v_type) {
 	static int arg_max;
 	int mib[4] = { CTL_KERN };
 	size_t len;
@@ -213,7 +213,7 @@ char **Platform_getProcessEnv(Process *proc) {
 	}
 
 	mib[1] = KERN_PROC;
-	mib[2] = KERN_PROC_ENV;
+	mib[2] = v_type;
 	mib[3] = proc->pid;
 	char *buffer = xMalloc(arg_max);
 	len = arg_max;
@@ -223,60 +223,82 @@ char **Platform_getProcessEnv(Process *proc) {
 	}
 	char *p = buffer;
 	char *end_p = p + len;
-	char **env = xMalloc(sizeof(char *));
+	char **v = xMalloc(sizeof(char *));
 	unsigned int i = 0;
 	while(p < end_p && *p) {
 		len = strlen(p) + 1;
-		env[i] = xMalloc(len);
-		memcpy(env[i], p, len);
-		env = xRealloc(env, (++i + 1) * sizeof(char *));
+		v[i] = xMalloc(len);
+		memcpy(v[i], p, len);
+		v = xRealloc(v, (++i + 1) * sizeof(char *));
 		p += len;
 	}
 	free(buffer);
-	env[i] = NULL;
-	return env;
-#elif defined HAVE_LIBKVM
-	char **env = xMalloc(2 * sizeof(char *));
-	env[1] = NULL;
+	v[i] = NULL;
+	return v;
+}
+#endif
+
+#if (!defined KERN_PROC_ARGS || !defined KERN_PROC_ENV) && defined HAVE_LIBKVM
+static char **get_process_vector_from_kvm(const Process *proc, char **(*getv)(kvm_t *, const struct kinfo_proc *, int)) {
+	char **v = xMalloc(2 * sizeof(char *));
+	v[1] = NULL;
 	char errmsg[_POSIX2_LINE_MAX];
 	kvm_t *kvm = kvm_openfiles(NULL, "/dev/null", NULL, 0, errmsg);
 	if(!kvm) {
-		env[0] = xStrdup(errmsg);
-		return env;
+		v[0] = xStrdup(errmsg);
+		return v;
 	}
 	int count;
 	struct kinfo_proc *kip = kvm_getprocs(kvm, KERN_PROC_PID, proc->pid, &count);
 	if(!kip || count < 1) {
 		const char *e = kip ? NULL : kvm_geterr(kvm);
 		if(e && *e) {
-			env[0] = xStrdup(e);
+			v[0] = xStrdup(e);
 		} else {
-			free(env);
-			env = NULL;
+			free(v);
+			v = NULL;
 		}
 		kvm_close(kvm);
-		return env;
+		return v;
 	}
-	char **v = kvm_getenvv(kvm, kip, 0);
-	if(!v) {
+	char **tmp_v = getv(kvm, kip, 0);
+	if(!tmp_v) {
 		const char *e = kvm_geterr(kvm);
 		if(*e) {
-			env[0] = xStrdup(e);
+			v[0] = xStrdup(e);
 		} else {
-			free(env);
-			env = NULL;
+			free(v);
+			v = NULL;
 		}
 		kvm_close(kvm);
-		return env;
+		return v;
 	}
-	free(env);
+	free(v);
 	count = 0;
-	while(v[count]) count++;
-	env = xMalloc((count + 1) * sizeof(char *));
-	env[count] = NULL;
-	while(count-- > 0) env[count] = xStrdup(v[count]);
+	while(tmp_v[count]) count++;
+	v = xMalloc((count + 1) * sizeof(char *));
+	v[count] = NULL;
+	while(count-- > 0) v[count] = xStrdup(tmp_v[count]);
 	kvm_close(kvm);
-	return env;
+	return v;
+}
+#endif
+
+char **Platform_getProcessArgv(const Process *proc) {
+#ifdef KERN_PROC_ARGS
+	return get_process_vector_from_sysctl(proc, KERN_PROC_ARGS);
+#elif defined HAVE_LIBKVM
+	return get_process_vector_from_kvm(proc, kvm_getargv);
+#else
+	return NULL;
+#endif
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+#ifdef KERN_PROC_ENV
+	return get_process_vector_from_sysctl(proc, KERN_PROC_ENV);
+#elif defined HAVE_LIBKVM
+	return get_process_vector_from_kvm(proc, kvm_getenvv);
 #else
 	return NULL;
 #endif

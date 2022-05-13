@@ -185,48 +185,56 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
+static char **get_process_vector(const Process *proc, char **(*getv)(kvm_t *, const struct kinfo_proc *, int)) {
 	if(Process_isKernelProcess(proc)) return NULL;
 
-	char **env = xMalloc(2 * sizeof(char *));
-	env[1] = NULL;
+	char **v = xMalloc(2 * sizeof(char *));
+	v[1] = NULL;
 	char errmsg[_POSIX2_LINE_MAX];
 	kvm_t *kvm = kvm_openfiles(NULL, "/dev/null", NULL, 0, errmsg);
 	if(!kvm) {
-		env[0] = xStrdup(errmsg);
-		return env;
+		v[0] = xStrdup(errmsg);
+		return v;
 	}
 	int count;
 	struct kinfo_proc *kip = kvm_getprocs(kvm, KERN_PROC_PID, proc->pid, &count);
 	if(!kip || count < 1) {
 		const char *e = kip ? NULL : kvm_geterr(kvm);
 		if(e && *e) {
-			env[0] = xStrdup(e);
+			v[0] = xStrdup(e);
 		} else {
-			free(env);
-			env = NULL;
+			free(v);
+			v = NULL;
 		}
 		kvm_close(kvm);
-		return env;
+		return v;
 	}
-	char **v = kvm_getenvv(kvm, kip, 0);
-	if(!v) {
+	char **tmp_v = getv(kvm, kip, 0);
+	if(!tmp_v) {
 		const char *e = kvm_geterr(kvm);
 		if(*e) {
-			env[0] = xStrdup(e);
+			v[0] = xStrdup(e);
 		} else {
-			free(env);
-			env = NULL;
+			free(v);
+			v = NULL;
 		}
 		kvm_close(kvm);
-		return env;
+		return v;
 	}
-	free(env);
+	free(v);
 	count = 0;
-	while(v[count]) count++;
-	env = xMalloc((count + 1) * sizeof(char *));
-	env[count] = NULL;
-	while(count-- > 0) env[count] = xStrdup(v[count]);
+	while(tmp_v[count]) count++;
+	v = xMalloc((count + 1) * sizeof(char *));
+	v[count] = NULL;
+	while(count-- > 0) v[count] = xStrdup(tmp_v[count]);
 	kvm_close(kvm);
-	return env;
+	return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, kvm_getargv);
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, kvm_getenvv);
 }

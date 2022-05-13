@@ -49,15 +49,15 @@ void EnvScreen_scan(InfoScreen* this) {
    Panel_prune(panel);
 
    CRT_dropPrivileges();
-   char **env = Platform_getProcessEnv(this->process);
+   char **envv = Platform_getProcessEnvv(this->process);
    CRT_restorePrivileges();
-   if (env) {
-      char **p = env;
+   if (envv) {
+      char **p = envv;
       while(*p) {
          InfoScreen_addLine(this, *p);
          free(*p++);
       }
-      free(env);
+      free(envv);
    }
    else {
       InfoScreen_addLine(this, "Could not read process environment.");

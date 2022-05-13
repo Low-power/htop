@@ -264,7 +264,8 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
    proc->tty_nr             = _psinfo->pr_ttydev;
    proc->m_resident         = _psinfo->pr_rssize / CRT_page_size_kib;
    proc->m_size             = _psinfo->pr_size / CRT_page_size_kib;
-   sproc->env_offset        = _psinfo->pr_envp > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_envp;
+   sproc->argv_offset       = _psinfo->pr_argv > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_argv;
+   sproc->envv_offset       = _psinfo->pr_envp > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_envp;
    sproc->data_model        = _psinfo->pr_dmodel;
 }
 

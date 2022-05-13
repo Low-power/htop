@@ -37,8 +37,8 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 
 long OpenBSDProcess_compare(const void* v1, const void* v2);
 
-bool Process_isKernelProcess(Process *this);
+bool Process_isKernelProcess(const Process *this);
 
-bool Process_isExtraThreadProcess(Process* this);
+bool Process_isExtraThreadProcess(const Process* this);
 
 #endif

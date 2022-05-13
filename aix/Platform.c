@@ -201,26 +201,32 @@ void Platform_setSwapValues(Meter* this) {
    this->values[0] = pl->usedSwap;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
-   char* buf;
-   struct procentry64 pe;
+static char **get_process_vector(const Process *proc, int (*getv)(void *, int, char *, int)) {
    /* we only need to fill in the pid, it seems */
-   pe.pi_pid = proc->pid;
-   buf = (char*)xMalloc(0x10000);
-   if (getevars (&pe, sizeof (pe), buf, 0x10000) == -1) {
-      free (buf);
+   struct procentry64 pe = { .pi_pid = proc->pid };
+   char *buf = xMalloc(0x10000);
+   if (getv(&pe, sizeof pe, buf, 0x10000) == -1) {
+      free(buf);
       return NULL;
    }
-   char **env = xMalloc(sizeof(char *));
+   char **v = xMalloc(sizeof(char *));
    unsigned int i = 0;
    char *p = buf;
    while(*p) {
       size_t len = strlen(p) + 1;
-      env[i] = xMalloc(len);
-      memcpy(env[i], p, len);
-      env = xRealloc(env, (++i + 1) * sizeof(char *));
+      v[i] = xMalloc(len);
+      memcpy(v[i], p, len);
+      v = xRealloc(v, (++i + 1) * sizeof(char *));
       p += len;
    }
-   env[i] = NULL;
-   return env;
+   v[i] = NULL;
+   return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, getargs);
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, getevars);
 }

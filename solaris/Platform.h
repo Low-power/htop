@@ -60,14 +60,16 @@ void Platform_setMemoryValues(Meter* this);
 
 void Platform_setSwapValues(Meter* this);
 
+char **Platform_getProcessArgv(const Process *proc);
+
 #ifdef HAVE_LIBPROC
 
 
-char **Platform_getProcessEnv(Process *proc);
+char **Platform_getProcessEnvv(const Process *proc);
 
 #else
 
-char **Platform_getProcessEnv(Process *proc);
+char **Platform_getProcessEnvv(const Process *proc);
 
 #endif
 

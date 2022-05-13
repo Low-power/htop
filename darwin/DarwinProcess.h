@@ -29,9 +29,9 @@ DarwinProcess* DarwinProcess_new(Settings* settings);
 
 void Process_delete(Object* cast);
 
-bool Process_isKernelProcess(Process* this);
+bool Process_isKernelProcess(const Process* this);
 
-bool Process_isExtraThreadProcess(Process* this);
+bool Process_isExtraThreadProcess(const Process* this);
 
 void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, time_t now);
 

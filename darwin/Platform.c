@@ -233,7 +233,7 @@ void Platform_setSwapValues(Meter* mtr) {
   mtr->values[0] = swapused.xsu_used / 1024;
 }
 
-char **Platform_getProcessEnv(Process *proc) {
+static char **get_process_vector(const Process *proc, bool is_env) {
    int mib[3] = { CTL_KERN, KERN_ARGMAX };
    int argmax;
    size_t bufsz = sizeof(argmax);
@@ -247,11 +247,11 @@ char **Platform_getProcessEnv(Process *proc) {
       return NULL;
    }
 
-   char **env = xMalloc(sizeof(char *));
+   char **v = xMalloc(sizeof(char *));
    unsigned int i = 0;
 
    char *p = buf, *endp = buf + bufsz;
-   int argc = *(int*)p;
+   int argc = *(int *)p;
    p += sizeof(int);
 
    // skip exe
@@ -260,22 +260,32 @@ char **Platform_getProcessEnv(Process *proc) {
    // skip padding
    while(!*p && p < endp) ++p;
 
-   // skip argv
-   while(argc-- && p < endp) p = strrchr(p, 0) + 1;
+   if(is_env) {
+      // skip argv
+      while(argc-- && p < endp) p = strrchr(p, 0) + 1;
 
-   // skip padding
-   while(!*p && p < endp) ++p;
+      // skip padding
+      while(!*p && p < endp) ++p;
+   }
 
-   while(p < endp && *p) {
+   while(p < endp && *p && (is_env || argc-- > 0)) {
       size_t len = strlen(p) + 1;
-      env[i] = xMalloc(len);
-      memcpy(env[i], p, len);
-      env = xRealloc(env, (++i + 1) * sizeof(char *));
+      v[i] = xMalloc(len);
+      memcpy(v[i], p, len);
+      v = xRealloc(v, (++i + 1) * sizeof(char *));
       p += len;
    }
 
    free(buf);
 
-   env[i] = NULL;
-   return env;
+   v[i] = NULL;
+   return v;
+}
+
+char **Platform_getProcessArgv(const Process *proc) {
+	return get_process_vector(proc, false);
+}
+
+char **Platform_getProcessEnvv(const Process *proc) {
+	return get_process_vector(proc, true);
 }

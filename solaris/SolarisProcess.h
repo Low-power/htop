@@ -39,7 +39,8 @@ typedef struct SolarisProcess_ {
    pid_t      realpid;
    pid_t      realppid;
    pid_t      lwpid;
-   off_t      env_offset;
+   off_t      argv_offset;
+   off_t      envv_offset;
    char       data_model;
 } SolarisProcess;
 
@@ -58,8 +59,8 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
 
 long SolarisProcess_compare(const void* v1, const void* v2);
 
-bool Process_isKernelProcess(Process *this);
+bool Process_isKernelProcess(const Process *this);
 
-bool Process_isExtraThreadProcess(Process* this);
+bool Process_isExtraThreadProcess(const Process* this);
 
 #endif

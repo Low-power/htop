@@ -58,11 +58,11 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-bool Process_isKernelProcess(Process* this) {
-	return ((DarwinProcess *)this)->is_kernel_process;
+bool Process_isKernelProcess(const Process* this) {
+	return ((const DarwinProcess *)this)->is_kernel_process;
 }
 
-bool Process_isExtraThreadProcess(Process* this) {
+bool Process_isExtraThreadProcess(const Process* this) {
    (void) this;
    return false;
 }

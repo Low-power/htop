@@ -45,7 +45,8 @@ typedef struct SolarisProcess_ {
    pid_t      realpid;
    pid_t      realppid;
    pid_t      lwpid;
-   off_t      env_offset;
+   off_t      argv_offset;
+   off_t      envv_offset;
    char       data_model;
 } SolarisProcess;
 
@@ -216,11 +217,11 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    }
 }
 
-bool Process_isKernelProcess(Process *this) {
-	return ((SolarisProcess *)this)->kernel;
+bool Process_isKernelProcess(const Process *this) {
+	return ((const SolarisProcess *)this)->kernel;
 }
 
-bool Process_isExtraThreadProcess(Process* this) {
-   SolarisProcess* fp = (SolarisProcess*) this;
+bool Process_isExtraThreadProcess(const Process* this) {
+   const SolarisProcess *fp = (const SolarisProcess *)this;
    return fp->is_lwp;
 }
