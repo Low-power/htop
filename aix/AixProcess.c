@@ -194,18 +194,18 @@ void AixProcess_delete(Object* cast) {
    free(this);
 }
 
-void AixProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   AixProcess* fp = (AixProcess*) this;
+void AixProcess_writeField(Process *super, RichString* str, ProcessField field) {
+   AixProcess *this = (AixProcess *)super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   int n = sizeof buffer;
    switch ((int) field) {
    // add AIX-specific fields here
    case WPAR_ID:
-      xSnprintf(buffer, n, Process_pidFormat, fp->cid);
+      xSnprintf(buffer, n, Process_pidFormat, this->cid);
       break;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(super, str, field);
       return;
    }
    RichString_append(str, attr, buffer);

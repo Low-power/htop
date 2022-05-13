@@ -103,25 +103,25 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void FreeBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   FreeBSDProcess* fp = (FreeBSDProcess*) this;
+void FreeBSDProcess_writeField(Process *super, RichString* str, ProcessField field) {
+   FreeBSDProcess *this = (FreeBSDProcess *)super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[DEFAULT_COLOR];
-   int n = sizeof(buffer) - 1;
+   int n = sizeof buffer;
    switch ((int) field) {
    // add FreeBSD-specific fields here
    case JID:
-      xSnprintf(buffer, n, Process_pidFormat, fp->jid);
+      xSnprintf(buffer, n, Process_pidFormat, this->jid);
       break;
    case JAIL:
-      xSnprintf(buffer, n, "%-11s ", fp->jname);
+      xSnprintf(buffer, n, "%-11s ", this->jname);
       if (buffer[12]) {
          buffer[11] = ' ';
          buffer[12] = '\0';
       }
       break;
    default:
-      Process_writeField(this, str, field);
+      Process_writeField(super, str, field);
       return;
    }
    RichString_append(str, attr, buffer);
