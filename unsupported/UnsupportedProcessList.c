@@ -30,6 +30,7 @@ void ProcessList_delete(ProcessList* this) {
 void ProcessList_goThroughEntries(ProcessList *this) {
 	bool is_existing;
 	Process *proc = ProcessList_getProcess(this, 1, &is_existing, UnsupportedProcess_new);
+	if(!is_existing) ProcessList_add(this, proc);
 
 	/* Empty values */
 	proc->time = proc->time + 10;
@@ -49,7 +50,6 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 	proc->tpgid = 0;
 	proc->ruid = 0;
 	proc->euid = 0;
-	proc->flags = 0;
 	proc->processor = 0;
 
 	proc->percent_cpu = 2.5;
