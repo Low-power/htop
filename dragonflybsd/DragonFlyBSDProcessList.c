@@ -1,5 +1,5 @@
 /*
-htop - DragonFlyBSDProcessList.c
+htop - dragonflybsd/DragonFlyBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
 Released under the GNU GPL, see the COPYING file

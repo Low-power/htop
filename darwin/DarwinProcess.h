@@ -3,7 +3,7 @@
 #ifndef HEADER_darwin_DarwinProcess
 #define HEADER_darwin_DarwinProcess
 /*
-htop - DarwinProcess.h
+htop - darwin/DarwinProcess.h
 (C) 2015 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

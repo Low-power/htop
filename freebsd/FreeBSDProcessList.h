@@ -3,7 +3,7 @@
 #ifndef HEADER_freebsd_FreeBSDProcessList
 #define HEADER_freebsd_FreeBSDProcessList
 /*
-htop - FreeBSDProcessList.h
+htop - freebsd/FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

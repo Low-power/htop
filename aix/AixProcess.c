@@ -1,5 +1,5 @@
 /*
-htop - AixProcess.c
+htop - aix/AixProcess.c
 (C) 2015 Hisham H. Muhammad
 (C) 2018 Calvin Buckley
 Released under the GNU GPL, see the COPYING file

@@ -3,7 +3,7 @@
 #ifndef HEADER_dragonflybsd_DragonFlyBSDProcessList
 #define HEADER_dragonflybsd_DragonFlyBSDProcessList
 /*
-htop - DragonFlyBSDProcessList.h
+htop - dragonflybsd/DragonFlyBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
 Released under the GNU GPL, see the COPYING file

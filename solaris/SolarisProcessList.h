@@ -3,7 +3,7 @@
 #ifndef HEADER_solaris_SolarisProcessList
 #define HEADER_solaris_SolarisProcessList
 /*
-htop - SolarisProcessList.h
+htop - solaris/SolarisProcessList.h
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
 Copyright 2015-2022 Rivoreo

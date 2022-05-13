@@ -1,5 +1,5 @@
 /*
-htop - SolarisProcess.c
+htop - solaris/SolarisProcess.c
 (C) 2015 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
 Released under the GNU GPL, see the COPYING file

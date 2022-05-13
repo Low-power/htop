@@ -3,7 +3,7 @@
 #ifndef HEADER_freebsd_FreeBSDProcess
 #define HEADER_freebsd_FreeBSDProcess
 /*
-htop - FreeBSDProcess.h
+htop - freebsd/FreeBSDProcess.h
 (C) 2015 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

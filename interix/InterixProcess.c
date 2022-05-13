@@ -1,5 +1,5 @@
 /*
-htop - InterixProcess.c
+htop - interix/InterixProcess.c
 (C) 2015 Hisham H. Muhammad
 Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file

@@ -3,7 +3,7 @@
 #ifndef HEADER_linux_IOPriorityPanel
 #define HEADER_linux_IOPriorityPanel
 /*
-htop - IOPriorityPanel.h
+htop - linux/IOPriorityPanel.h
 (C) 2004-2012 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

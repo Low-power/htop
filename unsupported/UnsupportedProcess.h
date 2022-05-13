@@ -3,7 +3,7 @@
 #ifndef HEADER_unsupported_UnsupportedProcess
 #define HEADER_unsupported_UnsupportedProcess
 /*
-htop - UnsupportedProcess.h
+htop - unsupported/UnsupportedProcess.h
 (C) 2015 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

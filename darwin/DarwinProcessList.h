@@ -3,7 +3,7 @@
 #ifndef HEADER_darwin_DarwinProcessList
 #define HEADER_darwin_DarwinProcessList
 /*
-htop - DarwinProcessList.h
+htop - darwin/DarwinProcessList.h
 (C) 2014 Hisham H. Muhammad
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.

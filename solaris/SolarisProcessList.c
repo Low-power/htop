@@ -1,5 +1,5 @@
 /*
-htop - SolarisProcessList.c
+htop - solaris/SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
 Copyright 2015-2022 Rivoreo

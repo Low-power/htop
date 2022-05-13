@@ -1,5 +1,5 @@
 /*
-htop - OpenBSDProcessList.c
+htop - openbsd/OpenBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
 Released under the GNU GPL, see the COPYING file

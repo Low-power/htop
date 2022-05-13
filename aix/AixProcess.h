@@ -3,7 +3,7 @@
 #ifndef HEADER_aix_AixProcess
 #define HEADER_aix_AixProcess
 /*
-htop - AixProcess.h
+htop - aix/AixProcess.h
 (C) 2015 Hisham H. Muhammad
 (C) 2018 Calvin Buckley
 Released under the GNU GPL, see the COPYING file

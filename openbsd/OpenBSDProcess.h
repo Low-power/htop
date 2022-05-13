@@ -3,7 +3,7 @@
 #ifndef HEADER_openbsd_OpenBSDProcess
 #define HEADER_openbsd_OpenBSDProcess
 /*
-htop - OpenBSDProcess.h
+htop - openbsd/OpenBSDProcess.h
 (C) 2015 Hisham H. Muhammad
 (C) 2015 Michael McConville
 Released under the GNU GPL, see the COPYING file
