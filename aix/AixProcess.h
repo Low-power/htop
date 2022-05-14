@@ -15,7 +15,7 @@ in the source distribution for its full text.
 
 #define Process_delete AixProcess_delete
 
-typedef enum AixProcessFields {
+typedef enum {
    // Add platform-specific fields here, with ids >= 100
    WPAR_ID = 100,
    LAST_PROCESSFIELD = 101,

@@ -17,7 +17,7 @@ in the source distribution for its full text.
 
 /*{
 
-typedef enum OpenBSDProcessFields {
+typedef enum {
    // Add platform-specific fields here, with ids >= 100
    LAST_PROCESSFIELD = 100,
 } OpenBSDProcessField;

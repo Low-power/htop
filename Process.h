@@ -26,7 +26,7 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_IO 0x0001
 
-typedef enum ProcessFields {
+typedef enum {
    NULL_PROCESSFIELD = 0,
    PID = 1,
    NAME = 2,

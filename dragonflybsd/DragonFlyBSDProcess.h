@@ -11,7 +11,7 @@ in the source distribution for its full text.
 */
 
 
-typedef enum DragonFlyBSDProcessFields {
+typedef enum {
    // Add platform-specific fields here, with ids >= 100
    JID   = 100,
    JAIL  = 101,

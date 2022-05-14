@@ -22,7 +22,7 @@ typedef enum TreeStr_ {
    TREE_STR_COUNT
 } TreeStr;
 
-typedef enum ColorSchemes_ {
+typedef enum {
    DEFAULT_COLOR_SCHEME = 0,
    MONOCHROME_COLOR_SCHEME = 1,
    BLACKONWHITE_COLOR_SCHEME = 2,
@@ -31,9 +31,9 @@ typedef enum ColorSchemes_ {
    BLACKNIGHT_COLOR_SCHEME = 5,
    BROKENGRAY_COLOR_SCHEME = 6,
    LAST_COLORSCHEME = 7,
-} ColorSchemes;
+} ColorScheme;
 
-typedef enum ColorElements_ {
+typedef enum {
    HTOP_DEFAULT_COLOR,
    HTOP_FUNCTION_BAR_COLOR,
    HTOP_FUNCTION_KEY_COLOR,
@@ -93,7 +93,7 @@ typedef enum ColorElements_ {
    HTOP_CPU_STEAL_COLOR,
    HTOP_CPU_GUEST_COLOR,
    LAST_COLORELEMENT
-} ColorElements;
+} ColorElement;
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + ((x) - 'A'))
 

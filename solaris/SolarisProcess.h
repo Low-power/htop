@@ -14,7 +14,7 @@ in the source distribution for its full text.
 #include <zone.h>
 #include <sys/proc.h>
 
-typedef enum SolarisProcessFields {
+typedef enum {
    // Add platform-specific fields here, with ids >= 100
    ZONEID   = 100,
    ZONE  = 101,

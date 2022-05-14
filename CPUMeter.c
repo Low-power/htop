@@ -29,7 +29,7 @@ typedef enum {
    CPU_METER_GUEST = 6,
    CPU_METER_IOWAIT = 7,
    CPU_METER_ITEMCOUNT = 8, // number of entries in this enum
-} CPUMeterValues;
+} CPUMeterValue;
 
 }*/
 

@@ -27,7 +27,7 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_CGROUP   0x0800
 #define PROCESS_FLAG_LINUX_OOM      0x1000
 
-typedef enum UnsupportedProcessFields {
+typedef enum {
    FLAGS = 9,
    ITREALVALUE = 20,
    VSIZE = 22,
@@ -48,7 +48,7 @@ typedef enum UnsupportedProcessFields {
    EXIT_SIGNAL = 37,
 } UnsupportedProcessField;
 
-typedef enum LinuxProcessFields {
+typedef enum {
    CMINFLT = 11,
    CMAJFLT = 13,
    UTIME = 14,
