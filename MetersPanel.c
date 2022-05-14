@@ -104,64 +104,52 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
    bool sideMove = false;
 
    switch(ch) {
+         int mode;
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
-      {
-         if (!Vector_size(this->meters))
-            break;
+         if (!Vector_size(this->meters)) break;
          MetersPanel_setMoving(this, !(this->moving));
          result = HANDLED;
          break;
-      }
       case ' ':
       case KEY_F(4):
       case 't':
-      {
-         if (!Vector_size(this->meters))
-            break;
+         if (!Vector_size(this->meters)) break;
          Meter* meter = (Meter*) Vector_get(this->meters, selected);
-         int mode = meter->mode + 1;
+         mode = meter->mode + 1;
          if (mode == LAST_METERMODE) mode = 1;
          Meter_setMode(meter, mode);
          Panel_set(super, selected, (Object*) Meter_toListItem(meter, this->moving));
          result = HANDLED;
          break;
-      }
       case KEY_UP:
-      {
+      case KEY_PPAGE:
          if (!this->moving) {
             break;
          }
-      }
          /* else fallthrough */
       case KEY_F(7):
       case '[':
       case '-':
-      {
          Vector_moveUp(this->meters, selected);
          Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
-      }
       case KEY_DOWN:
-      {
+      case KEY_NPAGE:
          if (!this->moving) {
             break;
          }
-      }
          /* else fallthrough */
       case KEY_F(8):
       case ']':
       case '+':
-      {
          Vector_moveDown(this->meters, selected);
          Panel_moveSelectedDown(super);
          result = HANDLED;
          break;
-      }
       case KEY_RIGHT:
-      {
          sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
          if (this->moving && !sideMove) {
             // lock user here until it exits positioning-mode
@@ -170,20 +158,15 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          // if user is free, don't set HANDLED;
          // let ScreenManager handle focus.
          break;
-      }
       case KEY_LEFT:
-      {
          sideMove = moveToNeighbor(this, this->leftNeighbor, selected);
          if (this->moving && !sideMove) {
             result = HANDLED;
          }
          break;
-      }
       case KEY_F(9):
       case KEY_DC:
-      {
-         if (!Vector_size(this->meters))
-            break;
+         if (!Vector_size(this->meters)) break;
          if (selected < Vector_size(this->meters)) {
             Vector_remove(this->meters, selected);
             Panel_remove(super, selected);
@@ -191,7 +174,6 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          MetersPanel_setMoving(this, false);
          result = HANDLED;
          break;
-      }
    }
    if (result == HANDLED || sideMove) {
       Header* header = (Header*) this->scr->header;
