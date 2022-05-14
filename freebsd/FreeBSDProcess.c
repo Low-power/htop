@@ -106,7 +106,7 @@ void Process_delete(Object* cast) {
 void FreeBSDProcess_writeField(Process *super, RichString* str, ProcessField field) {
    FreeBSDProcess *this = (FreeBSDProcess *)super;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof buffer;
    switch ((int) field) {
    // add FreeBSD-specific fields here

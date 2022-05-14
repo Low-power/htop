@@ -37,13 +37,10 @@ static void CheckItem_delete(Object* cast) {
 static void CheckItem_display(Object* cast, RichString* out) {
    CheckItem* this = (CheckItem*)cast;
    assert (this != NULL);
-   RichString_write(out, CRT_colors[CHECK_BOX], "[");
-   if (CheckItem_get(this))
-      RichString_append(out, CRT_colors[CHECK_MARK], "x");
-   else
-      RichString_append(out, CRT_colors[CHECK_MARK], " ");
-   RichString_append(out, CRT_colors[CHECK_BOX], "] ");
-   RichString_append(out, CRT_colors[CHECK_TEXT], this->text);
+   RichString_write(out, CRT_colors[HTOP_CHECK_BOX_COLOR], "[");
+   RichString_append(out, CRT_colors[HTOP_CHECK_MARK_COLOR], CheckItem_get(this) ? "x" : " ");
+   RichString_append(out, CRT_colors[HTOP_CHECK_BOX_COLOR], "] ");
+   RichString_append(out, CRT_colors[HTOP_CHECK_TEXT_COLOR], this->text);
 }
 
 ObjectClass CheckItem_class = {

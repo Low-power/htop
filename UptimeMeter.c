@@ -21,7 +21,7 @@ in the source distribution for its full text.
 }*/
 
 int UptimeMeter_attributes[] = {
-   UPTIME
+   HTOP_UPTIME_COLOR
 };
 
 static int UptimeMeter_getUptimeFromUtmpx() {

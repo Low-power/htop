@@ -146,7 +146,7 @@ void InterixProcess_writeField(Process *super, RichString *str, ProcessField fie
 		buffer[7] = 0;
 #endif
 	}
-	RichString_append(str, CRT_colors[DEFAULT_COLOR], buffer);
+	RichString_append(str, CRT_colors[HTOP_DEFAULT_COLOR], buffer);
 }
 
 bool Process_isKernelProcess(const Process *this) {

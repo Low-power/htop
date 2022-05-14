@@ -322,7 +322,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    LinuxProcess* lp = (LinuxProcess*) this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof(buffer);
    switch ((int)field) {
       struct tm tm;
@@ -332,7 +332,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
       if (lp->ttyDevice) {
          xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
       } else {
-         attr = CRT_colors[PROCESS_SHADOW];
+         attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
          xSnprintf(buffer, n, "?        ");
       }
       break;
@@ -438,11 +438,11 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
             xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
             break;
          case IOPRIO_CLASS_RT:
-            attr = CRT_colors[PROCESS_HIGH_PRIORITY];
+            attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
             xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
             break;
          case IOPRIO_CLASS_IDLE:
-            attr = CRT_colors[PROCESS_LOW_PRIORITY];
+            attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
             xSnprintf(buffer, n, "id ");
             break;
          default:

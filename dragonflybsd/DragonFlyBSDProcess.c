@@ -106,7 +106,7 @@ void Process_delete(Object* cast) {
 void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
    DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof(buffer);
    switch ((int) field) {
    // add Platform-specific fields here

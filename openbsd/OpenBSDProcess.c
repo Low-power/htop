@@ -189,7 +189,7 @@ void Process_delete(Object* cast) {
 void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
    //OpenBSDProcess* fp = (OpenBSDProcess*) this;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    switch (field) {
    // add OpenBSD-specific fields here
    default:

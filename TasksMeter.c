@@ -15,7 +15,7 @@ in the source distribution for its full text.
 }*/
 
 int TasksMeter_attributes[] = {
-   PROCESS, PROCESS_THREAD, CPU_KERNEL, CPU_KERNEL, TASKS_RUNNING
+   HTOP_PROCESS_COLOR, HTOP_PROCESS_THREAD_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_TASKS_RUNNING_COLOR
 };
 
 static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
@@ -41,38 +41,38 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    Settings* settings = this->pl->settings;
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
-   RichString_write(out, CRT_colors[METER_VALUE], buffer);
-   RichString_append(out, CRT_colors[METER_TEXT], " proc");
+   RichString_write(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " proc");
    int threadValueColor, threadCaptionColor;
    if (settings->highlightThreads) {
-      threadValueColor = CRT_colors[PROCESS_THREAD_BASENAME];
-      threadCaptionColor = CRT_colors[PROCESS_THREAD];
+      threadValueColor = CRT_colors[HTOP_PROCESS_THREAD_BASENAME_COLOR];
+      threadCaptionColor = CRT_colors[HTOP_PROCESS_THREAD_COLOR];
    } else {
-      threadValueColor = CRT_colors[METER_VALUE];
-      threadCaptionColor = CRT_colors[METER_TEXT];
+      threadValueColor = CRT_colors[HTOP_METER_VALUE_COLOR];
+      threadCaptionColor = CRT_colors[HTOP_METER_TEXT_COLOR];
    }
    if (this->values[1] > 0) {
-      RichString_append(out, CRT_colors[METER_TEXT], ", ");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " thr");
    }
    if (!settings->hide_kernel_processes) {
-      RichString_append(out, CRT_colors[METER_TEXT], ", ");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[2]);
-      RichString_append(out, CRT_colors[METER_VALUE], buffer);
-      RichString_append(out, CRT_colors[METER_TEXT], " kproc");
+      RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " kproc");
       if(this->values[3] > 0) {
-         RichString_append(out, CRT_colors[METER_TEXT], ", ");
+         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], ", ");
          xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[3]);
          RichString_append(out, threadValueColor, buffer);
          RichString_append(out, threadCaptionColor, " kthr");
       }
    }
-   RichString_append(out, CRT_colors[METER_TEXT], "; ");
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "; ");
    xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[4]);
-   RichString_append(out, CRT_colors[TASKS_RUNNING], buffer);
-   RichString_append(out, CRT_colors[METER_TEXT], " running");
+   RichString_append(out, CRT_colors[HTOP_TASKS_RUNNING_COLOR], buffer);
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " running");
 }
 
 MeterClass TasksMeter_class = {

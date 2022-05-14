@@ -197,7 +197,7 @@ void AixProcess_delete(Object* cast) {
 void AixProcess_writeField(Process *super, RichString* str, ProcessField field) {
    AixProcess *this = (AixProcess *)super;
    char buffer[256]; buffer[255] = '\0';
-   int attr = CRT_colors[DEFAULT_COLOR];
+   int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof buffer;
    switch ((int) field) {
    // add AIX-specific fields here

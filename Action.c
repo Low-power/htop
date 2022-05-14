@@ -368,7 +368,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
 
 Htop_Reaction Action_follow(State* st) {
    st->pl->following = MainPanel_selectedPid((MainPanel*)st->panel);
-   Panel_setSelectionColor(st->panel, CRT_colors[PANEL_SELECTION_FOLLOW]);
+   Panel_setSelectionColor(st->panel, CRT_colors[HTOP_PANEL_SELECTION_FOLLOW_COLOR]);
    return HTOP_KEEP_FOLLOWING;
 }
 
@@ -462,7 +462,7 @@ static Htop_Reaction actionHelp(State* st) {
    Settings* settings = st->settings;
 
    clear();
-   attrset(CRT_colors[HELP_BOLD]);
+   attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
 
    for (int i = 0; i < LINES-1; i++)
       mvhline(i, 0, ' ', COLS);
@@ -470,77 +470,77 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT);
    mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
 
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    mvaddstr(3, 0, "CPU usage bar: ");
-#define addattrstr(a,s) do { attrset(a); addstr(s); attrset(CRT_colors[DEFAULT_COLOR]); } while(0)
-   addattrstr(CRT_colors[BAR_BORDER], "[");
+#define addattrstr(a,s) do { attrset(a); addstr(s); attrset(CRT_colors[HTOP_DEFAULT_COLOR]); } while(0)
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "[");
    if (settings->detailedCPUTime) {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low");
+      addattrstr(CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], "low");
       addch('/');
-      addattrstr(CRT_colors[CPU_NORMAL], "normal");
+      addattrstr(CRT_colors[HTOP_CPU_NORMAL_COLOR], "normal");
       addch('/');
-      addattrstr(CRT_colors[CPU_KERNEL], "kernel");
+      addattrstr(CRT_colors[HTOP_CPU_KERNEL_COLOR], "kernel");
       addch('/');
-      addattrstr(CRT_colors[CPU_IRQ], "irq");
+      addattrstr(CRT_colors[HTOP_CPU_IRQ_COLOR], "irq");
       addch('/');
-      addattrstr(CRT_colors[CPU_SOFTIRQ], "soft-irq");
+      addattrstr(CRT_colors[HTOP_CPU_SOFTIRQ_COLOR], "soft-irq");
       addch('/');
-      addattrstr(CRT_colors[CPU_STEAL], "steal");
+      addattrstr(CRT_colors[HTOP_CPU_STEAL_COLOR], "steal");
       addch('/');
-      addattrstr(CRT_colors[CPU_GUEST], "guest");
+      addattrstr(CRT_colors[HTOP_CPU_GUEST_COLOR], "guest");
       addch('/');
-      addattrstr(CRT_colors[CPU_IOWAIT], "io-wait");
-      addattrstr(CRT_colors[BAR_SHADOW], " used%");
+      addattrstr(CRT_colors[HTOP_CPU_IOWAIT_COLOR], "io-wait");
+      addattrstr(CRT_colors[HTOP_BAR_SHADOW_COLOR], " used%");
    } else {
-      addattrstr(CRT_colors[CPU_NICE_TEXT], "low-priority");
+      addattrstr(CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], "low-priority");
       addch('/');
-      addattrstr(CRT_colors[CPU_NORMAL], "normal");
+      addattrstr(CRT_colors[HTOP_CPU_NORMAL_COLOR], "normal");
       addch('/');
-      addattrstr(CRT_colors[CPU_KERNEL], "kernel");
+      addattrstr(CRT_colors[HTOP_CPU_KERNEL_COLOR], "kernel");
       addch('/');
-      addattrstr(CRT_colors[CPU_GUEST], "virtualiz");
-      addattrstr(CRT_colors[BAR_SHADOW], "               used%");
+      addattrstr(CRT_colors[HTOP_CPU_GUEST_COLOR], "virtualiz");
+      addattrstr(CRT_colors[HTOP_BAR_SHADOW_COLOR], "               used%");
    }
-   addattrstr(CRT_colors[BAR_BORDER], "]");
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "]");
    mvaddstr(4, 0, "Memory bar:    ");
-   addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[MEMORY_USED], "used");
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "[");
+   addattrstr(CRT_colors[HTOP_MEMORY_USED_COLOR], "used");
    addch('/');
-   addattrstr(CRT_colors[MEMORY_BUFFERS_TEXT], "buffers");
+   addattrstr(CRT_colors[HTOP_MEMORY_BUFFERS_TEXT_COLOR], "buffers");
    addch('/');
-   addattrstr(CRT_colors[MEMORY_CACHE], "cache");
+   addattrstr(CRT_colors[HTOP_MEMORY_CACHE_COLOR], "cache");
    addch('/');
-   addattrstr(CRT_colors[MEMORY_ZFS_ARC], "zfs-arc");
-   addattrstr(CRT_colors[BAR_SHADOW], "                    used/total");
-   addattrstr(CRT_colors[BAR_BORDER], "]");
+   addattrstr(CRT_colors[HTOP_MEMORY_ZFS_ARC_COLOR], "zfs-arc");
+   addattrstr(CRT_colors[HTOP_BAR_SHADOW_COLOR], "                    used/total");
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "]");
    mvaddstr(5, 0, "Swap bar:      ");
-   addattrstr(CRT_colors[BAR_BORDER], "[");
-   addattrstr(CRT_colors[SWAP], "used");
-   addattrstr(CRT_colors[BAR_SHADOW], "                                          used/total");
-   addattrstr(CRT_colors[BAR_BORDER], "]");
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "[");
+   addattrstr(CRT_colors[HTOP_SWAP_COLOR], "used");
+   addattrstr(CRT_colors[HTOP_BAR_SHADOW_COLOR], "                                          used/total");
+   addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "]");
 #undef addattrstr
    mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
    if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
       mvaddstr(7, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
    mvaddstr(8, 0, "  State: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");
-   attrset(CRT_colors[PROCESS_R_STATE]);
+   attrset(CRT_colors[HTOP_PROCESS_R_STATE_COLOR]);
    mvaddch(8, 9, 'R');
-   attrset(CRT_colors[PROCESS_D_STATE]);
+   attrset(CRT_colors[HTOP_PROCESS_D_STATE_COLOR]);
    mvaddch(8, 64, 'D');
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    for (int i = 0; helpLeft[i].info; i++) { mvaddstr(9+i, 9,  helpLeft[i].info); }
    for (int i = 0; helpRight[i].info; i++) { mvaddstr(9+i, 49, helpRight[i].info); }
-   attrset(CRT_colors[HELP_BOLD]);
+   attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
    for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
    for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
-   attrset(CRT_colors[PROCESS_THREAD]);
+   attrset(CRT_colors[HTOP_PROCESS_THREAD_COLOR]);
    mvaddstr(16, 19, "thread");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
 
-   attrset(CRT_colors[HELP_BOLD]);
+   attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
    mvaddstr(23,0, "Press any key to return.");
-   attrset(CRT_colors[DEFAULT_COLOR]);
+   attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    refresh();
    CRT_readKey();
    clear();

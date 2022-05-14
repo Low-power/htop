@@ -138,7 +138,7 @@ static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelVa
    if (found)
       FunctionBar_draw(mode->bar, mode->buffer);
    else
-      FunctionBar_drawAttr(mode->bar, mode->buffer, CRT_colors[FAILED_SEARCH]);
+      FunctionBar_drawAttr(mode->bar, mode->buffer, CRT_colors[HTOP_FAILED_SEARCH_COLOR]);
    return found;
 }
 

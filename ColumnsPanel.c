@@ -53,7 +53,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_RECLICK:
          if (selected < size - 1) {
             this->moving = !(this->moving);
-            Panel_setSelectionColor(super, this->moving ? CRT_colors[PANEL_SELECTION_FOLLOW] : CRT_colors[PANEL_SELECTION_FOCUS]);
+            Panel_setSelectionColor(super, CRT_colors[this->moving ? HTOP_PANEL_SELECTION_FOLLOW_COLOR : HTOP_PANEL_SELECTION_FOCUS_COLOR]);
             ((ListItem*)Panel_getSelected(super))->moving = this->moving;
             result = HANDLED;
          }
