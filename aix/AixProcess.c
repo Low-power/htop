@@ -39,7 +39,7 @@ ProcessClass AixProcess_class = {
       .delete = Process_delete,
       .compare = AixProcess_compare
    },
-   .writeField = (Process_WriteField) AixProcess_writeField,
+   .writeField = AixProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -212,14 +212,14 @@ void AixProcess_writeField(Process *super, RichString* str, ProcessField field) 
 }
 
 long AixProcess_compare(const void* v1, const void* v2) {
-   AixProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const AixProcess *p1, *p2;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (AixProcess*)v1;
-      p2 = (AixProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (AixProcess*)v1;
-      p1 = (AixProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch ((int) settings->sortKey) {
    // add Aix-specific fields here

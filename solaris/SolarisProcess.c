@@ -59,7 +59,7 @@ ProcessClass SolarisProcess_class = {
       .delete = Process_delete,
       .compare = SolarisProcess_compare
    },
-   .writeField = (Process_WriteField) SolarisProcess_writeField,
+   .writeField = SolarisProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -182,14 +182,14 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
 }
 
 long SolarisProcess_compare(const void* v1, const void* v2) {
-   SolarisProcess *p1, *p2;
-   Settings* settings = ((Process*)v1)->settings;
+   const SolarisProcess *p1, *p2;
+   const Settings* settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (SolarisProcess*)v1;
-      p2 = (SolarisProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (SolarisProcess*)v1;
-      p1 = (SolarisProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch ((int) settings->sortKey) {
    case ZONEID:
@@ -203,6 +203,7 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
    case CONTID:
       return (p1->contid - p2->contid);
    case ZONE:
+      if(!p1->zname && !p2->zname) return p1->zoneid - p2->zoneid;
       return strcmp(p1->zname ? p1->zname : "global", p2->zname ? p2->zname : "global");
    case PID:
       return (p1->realpid - p2->realpid);

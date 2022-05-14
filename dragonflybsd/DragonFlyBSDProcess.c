@@ -42,7 +42,7 @@ ProcessClass DragonFlyBSDProcess_class = {
       .delete = Process_delete,
       .compare = DragonFlyBSDProcess_compare
    },
-   .writeField = (Process_WriteField) DragonFlyBSDProcess_writeField,
+   .writeField = DragonFlyBSDProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -131,14 +131,14 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
 }
 
 long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
-   DragonFlyBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const DragonFlyBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (DragonFlyBSDProcess*)v1;
-      p2 = (DragonFlyBSDProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (DragonFlyBSDProcess*)v1;
-      p1 = (DragonFlyBSDProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch ((int) settings->sortKey) {
    // add Platform-specific fields here

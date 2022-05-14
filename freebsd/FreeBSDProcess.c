@@ -41,7 +41,7 @@ ProcessClass FreeBSDProcess_class = {
       .delete = Process_delete,
       .compare = FreeBSDProcess_compare
    },
-   .writeField = (Process_WriteField) FreeBSDProcess_writeField,
+   .writeField = FreeBSDProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -128,14 +128,14 @@ void FreeBSDProcess_writeField(Process *super, RichString* str, ProcessField fie
 }
 
 long FreeBSDProcess_compare(const void* v1, const void* v2) {
-   FreeBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const FreeBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (FreeBSDProcess*)v1;
-      p2 = (FreeBSDProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (FreeBSDProcess*)v1;
-      p1 = (FreeBSDProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch ((int) settings->sortKey) {
    // add FreeBSD-specific fields here

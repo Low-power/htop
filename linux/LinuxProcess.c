@@ -260,7 +260,7 @@ ProcessClass LinuxProcess_class = {
       .delete = Process_delete,
       .compare = LinuxProcess_compare
    },
-   .writeField = (Process_WriteField) LinuxProcess_writeField,
+   .writeField = LinuxProcess_writeField,
 };
 
 LinuxProcess* LinuxProcess_new(Settings* settings) {
@@ -469,14 +469,14 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
 }
 
 long LinuxProcess_compare(const void* v1, const void* v2) {
-   LinuxProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const LinuxProcess *p1, *p2;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (LinuxProcess*)v1;
-      p2 = (LinuxProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (LinuxProcess*)v1;
-      p1 = (LinuxProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch ((int)settings->sortKey) {
       long long int diff;

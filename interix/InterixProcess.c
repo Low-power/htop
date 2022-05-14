@@ -39,7 +39,7 @@ ProcessClass InterixProcess_class = {
       .delete = Process_delete,
       .compare = InterixProcess_compare
    },
-   .writeField = (Process_WriteField)InterixProcess_writeField,
+   .writeField = InterixProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {

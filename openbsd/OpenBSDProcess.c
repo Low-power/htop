@@ -37,7 +37,7 @@ ProcessClass OpenBSDProcess_class = {
       .delete = Process_delete,
       .compare = OpenBSDProcess_compare
    },
-   .writeField = (Process_WriteField) OpenBSDProcess_writeField,
+   .writeField = OpenBSDProcess_writeField,
 };
 
 ProcessFieldData Process_fields[] = {
@@ -200,14 +200,14 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
 }
 
 long OpenBSDProcess_compare(const void* v1, const void* v2) {
-   OpenBSDProcess *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const OpenBSDProcess *p1, *p2;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (OpenBSDProcess*)v1;
-      p2 = (OpenBSDProcess*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (OpenBSDProcess*)v1;
-      p1 = (OpenBSDProcess*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch (settings->sortKey) {
    // add OpenBSD-specific fields here

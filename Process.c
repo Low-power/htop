@@ -609,25 +609,25 @@ bool Process_changePriorityBy(Process* this, int delta) {
 
 void Process_sendSignal(Process* this, int sgn) {
    CRT_dropPrivileges();
-   kill(this->pid, (int) sgn);
+   kill(this->pid, sgn);
    CRT_restorePrivileges();
 }
 
 long Process_pidCompare(const void* v1, const void* v2) {
-   Process* p1 = (Process*)v1;
-   Process* p2 = (Process*)v2;
+   const Process *p1 = v1;
+   const Process *p2 = v2;
    return (p1->pid - p2->pid);
 }
 
 long Process_compare(const void* v1, const void* v2) {
-   Process *p1, *p2;
-   Settings *settings = ((Process*)v1)->settings;
+   const Process *p1, *p2;
+   Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
-      p1 = (Process*)v1;
-      p2 = (Process*)v2;
+      p1 = v1;
+      p2 = v2;
    } else {
-      p2 = (Process*)v1;
-      p1 = (Process*)v2;
+      p2 = v1;
+      p1 = v2;
    }
    switch (settings->sortKey) {
    case PERCENT_CPU:
