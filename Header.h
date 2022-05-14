@@ -16,7 +16,7 @@ in the source distribution for its full text.
 typedef struct Header_ {
    Vector** columns;
    Settings* settings;
-   struct ProcessList_* pl;
+   ProcessList *pl;
    int nrColumns;
    int pad;
    int height;
@@ -31,7 +31,7 @@ typedef struct Header_ {
 #define Header_forEachColumn(this_, i_) for (int (i_)=0; (i_) < (this_)->nrColumns; ++(i_))
 #endif
 
-Header* Header_new(struct ProcessList_* pl, Settings* settings, int nrColumns);
+Header* Header_new(ProcessList *pl, Settings* settings, int nrColumns);
 
 void Header_delete(Header* this);
 

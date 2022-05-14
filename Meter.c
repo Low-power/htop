@@ -29,7 +29,7 @@ in the source distribution for its full text.
 
 /*{
 #include "ListItem.h"
-
+#include "ProcessList.h"
 #include <sys/time.h>
 
 typedef struct Meter_ Meter;
@@ -84,7 +84,7 @@ struct Meter_ {
    int param;
    void* drawData;
    int h;
-   struct ProcessList_* pl;
+   ProcessList *pl;
    double* values;
    double total;
 };
@@ -137,7 +137,7 @@ MeterClass Meter_class = {
    }
 };
 
-Meter* Meter_new(struct ProcessList_* pl, int param, MeterClass* type) {
+Meter* Meter_new(ProcessList *pl, int param, MeterClass* type) {
    Meter* this = xCalloc(1, sizeof(Meter));
    Object_setClass(this, type);
    this->h = 1;
