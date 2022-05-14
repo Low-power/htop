@@ -314,7 +314,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       nextOffset = CLAMP(nextOffset, 0, w);
       for (int j = offset; j < nextOffset; j++)
          if (bar[j] == ' ') {
-            if (CRT_colorScheme == COLORSCHEME_MONOCHROME) {
+            if (CRT_colorScheme == MONOCHROME_COLOR_SCHEME) {
                bar[j] = BarMeterMode_characters[i];
             } else {
                bar[j] = '|';

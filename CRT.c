@@ -20,13 +20,13 @@ typedef enum TreeStr_ {
 } TreeStr;
 
 typedef enum ColorSchemes_ {
-   COLORSCHEME_DEFAULT = 0,
-   COLORSCHEME_MONOCHROME = 1,
-   COLORSCHEME_BLACKONWHITE = 2,
-   COLORSCHEME_LIGHTTERMINAL = 3,
-   COLORSCHEME_MIDNIGHT = 4,
-   COLORSCHEME_BLACKNIGHT = 5,
-   COLORSCHEME_BROKENGRAY = 6,
+   DEFAULT_COLOR_SCHEME = 0,
+   MONOCHROME_COLOR_SCHEME = 1,
+   BLACKONWHITE_COLOR_SCHEME = 2,
+   LIGHTTERMINAL_COLOR_SCHEME = 3,
+   MIDNIGHT_COLOR_SCHEME = 4,
+   BLACKNIGHT_COLOR_SCHEME = 5,
+   BROKENGRAY_COLOR_SCHEME = 6,
    LAST_COLORSCHEME = 7,
 } ColorSchemes;
 
@@ -186,7 +186,7 @@ int CRT_delay = 0;
 int* CRT_colors;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
-   [COLORSCHEME_DEFAULT] = {
+   [DEFAULT_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(White,Black),
       [HTOP_FUNCTION_BAR_COLOR] = ColorPair(Black,Cyan),
       [HTOP_FUNCTION_KEY_COLOR] = ColorPair(White,Black),
@@ -246,7 +246,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,Black),
    },
-   [COLORSCHEME_MONOCHROME] = {
+   [MONOCHROME_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = A_NORMAL,
       [HTOP_FUNCTION_BAR_COLOR] = A_REVERSE,
       [HTOP_FUNCTION_KEY_COLOR] = A_NORMAL,
@@ -306,7 +306,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = A_REVERSE,
       [HTOP_CPU_GUEST_COLOR] = A_REVERSE,
    },
-   [COLORSCHEME_BLACKONWHITE] = {
+   [BLACKONWHITE_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Black,White),
       [HTOP_FUNCTION_BAR_COLOR] = ColorPair(Black,Cyan),
       [HTOP_FUNCTION_KEY_COLOR] = ColorPair(Black,White),
@@ -366,7 +366,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,White),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,White),
    },
-   [COLORSCHEME_LIGHTTERMINAL] = {
+   [LIGHTTERMINAL_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Black,Black),
       [HTOP_FUNCTION_BAR_COLOR] = ColorPair(Black,Cyan),
       [HTOP_FUNCTION_KEY_COLOR] = ColorPair(Black,Black),
@@ -426,7 +426,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Black,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Black,Black),
    },
-   [COLORSCHEME_MIDNIGHT] = {
+   [MIDNIGHT_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(White,Blue),
       [HTOP_FUNCTION_BAR_COLOR] = ColorPair(Black,Cyan),
       [HTOP_FUNCTION_KEY_COLOR] = A_NORMAL,
@@ -486,7 +486,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = ColorPair(White,Blue),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(White,Blue),
    },
-   [COLORSCHEME_BLACKNIGHT] = {
+   [BLACKNIGHT_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Cyan,Black),
       [HTOP_FUNCTION_BAR_COLOR] = ColorPair(Black,Green),
       [HTOP_FUNCTION_KEY_COLOR] = ColorPair(Cyan,Black),
@@ -546,7 +546,7 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,Black),
    },
-   [COLORSCHEME_BROKENGRAY] = { 0 } // dynamically generated.
+   [BROKENGRAY_COLOR_SCHEME] = { 0 } // dynamically generated.
 };
 
 int CRT_cursorX = 0;
@@ -647,8 +647,9 @@ void CRT_init(int delay, int colorScheme) {
    CRT_colorScheme = colorScheme;
    
    for (int i = 0; i < LAST_COLORELEMENT; i++) {
-      unsigned int color = CRT_colorSchemes[COLORSCHEME_DEFAULT][i];
-      CRT_colorSchemes[COLORSCHEME_BROKENGRAY][i] = color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White,Black) : color;
+      unsigned int color = CRT_colorSchemes[DEFAULT_COLOR_SCHEME][i];
+      CRT_colorSchemes[BROKENGRAY_COLOR_SCHEME][i] =
+         color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White,Black) : color;
    }
    
    halfdelay(CRT_delay);
@@ -753,18 +754,14 @@ void CRT_setColors(int colorScheme) {
    for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
          if (ColorIndex(i,j) != ColorPairGrayBlack) {
-            int bg = (colorScheme != COLORSCHEME_BLACKNIGHT)
-                     ? (j==0 ? -1 : j)
-                     : j;
+            int bg = (colorScheme != BLACKNIGHT_COLOR_SCHEME && j == 0) ? -1 : j;
             init_pair(ColorIndex(i,j), i, bg);
          }
       }
    }
 
    int grayBlackFg = COLORS > 8 ? 8 : 0;
-   int grayBlackBg = (colorScheme != COLORSCHEME_BLACKNIGHT)
-                     ? -1
-                     : 0;
+   int grayBlackBg = (colorScheme != BLACKNIGHT_COLOR_SCHEME) ? -1 : 0;
    init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
 
    CRT_colors = CRT_colorSchemes[colorScheme];
