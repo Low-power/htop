@@ -51,7 +51,7 @@ static void TasksMeter_display(Object* cast, RichString* out) {
       threadValueColor = CRT_colors[METER_VALUE];
       threadCaptionColor = CRT_colors[METER_TEXT];
    }
-   if (!settings->hide_thread_processes && this->values[1] > 0) {
+   if (this->values[1] > 0) {
       RichString_append(out, CRT_colors[METER_TEXT], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[1]);
       RichString_append(out, threadValueColor, buffer);
