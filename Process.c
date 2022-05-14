@@ -589,7 +589,7 @@ void Process_init(Process* this, struct Settings_* settings) {
 }
 
 void Process_toggleTag(Process* this) {
-   this->tag = this->tag == true ? false : true;
+   this->tag = !this->tag;
 }
 
 bool Process_setPriority(Process* this, int priority) {
