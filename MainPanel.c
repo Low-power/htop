@@ -102,19 +102,24 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          reaction |= HTOP_KEEP_FOLLOWING;
       }
       result = HANDLED;
-   } else if (ch == 27) {
-      return HANDLED;
-   } else if (ch != ERR && ch > 0 && ch < KEY_MAX && this->keys[ch]) {
-      reaction |= (this->keys[ch])(this->state);
-      result = HANDLED;
-   } else if (isdigit(ch)) {
+   } else if (ch < 256 && isdigit(ch)) {
       MainPanel_pidSearch(this, ch);
-   } else {
-      if (ch != ERR) {
-         this->pidSearch = 0;
-      } else {
+   } else switch(ch) {
+      case ERR:
+      case KEY_LEFT:
+      case KEY_RIGHT:
          reaction |= HTOP_KEEP_FOLLOWING;
-      }
+         break;
+      case 0x1b:
+         return HANDLED;
+      default:
+         if(ch > 0 && ch < KEY_MAX && this->keys[ch]) {
+            reaction |= this->keys[ch](this->state);
+            result = HANDLED;
+         } else {
+            this->pidSearch = 0;
+         }
+         break;
    }
 
    if (reaction & HTOP_REDRAW_BAR) {
