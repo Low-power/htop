@@ -66,10 +66,8 @@ typedef struct State_ {
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
    Header* header = st->header;
-   Settings* settings = st->settings;
-   
    int y = panel->y;
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, false);
+   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, st->settings, false);
    scr->allowFocusChange = false;
    ScreenManager_add(scr, list, x - 1);
    ScreenManager_add(scr, panel, -1);
@@ -258,12 +256,12 @@ static Htop_Reaction actionIncSearch(State* st) {
 
 static Htop_Reaction actionIncNext(State* st) {
    IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
 }
 
 static Htop_Reaction actionIncPrev(State* st) {
    IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING;
+   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {
@@ -311,7 +309,6 @@ static Htop_Reaction actionSetAffinity(State* st) {
       return HTOP_OK;
 #if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
    Panel* panel = st->panel;
-   
    Process* p = (Process*) Panel_getSelected(panel);
    if (!p) return HTOP_OK;
    Affinity* affinity = Affinity_get(p, st->pl);
