@@ -297,7 +297,7 @@ bool Settings_write(Settings* this) {
    writeFields(f, this->fields, "fields");
    // This "-1" is for compatibility with the older enum format.
    fprintf(f, "sort_key=%d\n", (int) this->sortKey-1);
-   fprintf(f, "sort_direction=%d\n", (int) this->direction);
+   fprintf(f, "sort_direction=%d\n", this->direction);
    fprintf(f, "hide_kernel_processes=%d\n", (int) this->hide_kernel_processes);
    fprintf(f, "hide_thread_processes=%d\n", (int) this->hide_thread_processes);
 #if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
@@ -316,8 +316,8 @@ bool Settings_write(Settings* this) {
    fprintf(f, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
    fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
-   fprintf(f, "color_scheme=%d\n", (int) this->colorScheme);
-   fprintf(f, "delay=%d\n", (int) this->delay);
+   fprintf(f, "color_scheme=%d\n", this->colorScheme);
+   fprintf(f, "delay=%d\n", this->delay);
    fprintf(f, "left_meters="); writeMeters(this, f, 0);
    fprintf(f, "left_meter_modes="); writeMeterModes(this, f, 0);
    fprintf(f, "right_meters="); writeMeters(this, f, 1);

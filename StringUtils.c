@@ -61,21 +61,19 @@ in the source distribution for its full text.
  */
 
 char* strcasestr(const char* s, const char* find) {
-   char c, sc;
-   size_t len;
-
-   if ((c = *find++) != 0) {
-       c = (char)tolower((unsigned char)c);
-       len = strlen(find);
-       do {
-          do {
-             if ((sc = *s++) == 0)
-                return (NULL);
-             } while ((char)tolower((unsigned char)sc) != c);
-          } while (strncasecmp(s, find, len) != 0);
-       s--;
-    }
-    return ((char *)s);
+	char c = *find++;
+	if (c) {
+		c = tolower((unsigned char)c);
+		size_t len = strlen(find);
+		do {
+			char sc;
+			do {
+				if (!(sc = *s++)) return NULL;
+			} while (tolower((unsigned char)sc) != c);
+		} while (strncasecmp(s, find, len) != 0);
+		s--;
+	}
+	return (char *)s;
 }
 #endif
 
@@ -104,17 +102,14 @@ char* String_trim(const char* in) {
 
 inline int String_eq(const char* s1, const char* s2) {
    if (s1 == NULL || s2 == NULL) {
-      if (s1 == NULL && s2 == NULL)
-         return 1;
-      else
-         return 0;
+      return s1 == NULL && s2 == NULL;
    }
    return (strcmp(s1, s2) == 0);
 }
 
 char** String_split(const char* s, char sep, int* n) {
+#define rate 10
    *n = 0;
-   const int rate = 10;
    char** out = xCalloc(rate, sizeof(char*));
    int ctr = 0;
    int blocks = rate;
@@ -128,7 +123,7 @@ char** String_split(const char* s, char sep, int* n) {
       ctr++;
       if (ctr == blocks) {
          blocks += rate;
-         out = (char**) xRealloc(out, sizeof(char*) * blocks);
+         out = xRealloc(out, sizeof(char*) * blocks);
       }
       s += size + 1;
    }
@@ -143,6 +138,7 @@ char** String_split(const char* s, char sep, int* n) {
    out[ctr] = NULL;
    *n = ctr;
    return out;
+#undef rate
 }
 
 void String_freeArray(char** s) {
@@ -179,7 +175,7 @@ char* String_getToken(const char* line, const unsigned int numMatch) {
    }
 
    match[foundCount] = '\0';
-   return((char*)xStrdup(match));
+   return xStrdup(match);
 }
 
 char* String_readLine(FILE *f) {

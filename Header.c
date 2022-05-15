@@ -165,12 +165,11 @@ MeterModeId Header_readMeterMode(Header* this, int i, int column) {
    return meter->mode;
 }
 
-void Header_reinit(Header* this) {
+void Header_reinit(const Header *this) {
    Header_forEachColumn(this, col) {
       for (int i = 0; i < Vector_size(this->columns[col]); i++) {
          Meter* meter = (Meter*) Vector_get(this->columns[col], i);
-         if (Meter_initFn(meter))
-            Meter_init(meter);
+         if (Meter_initFn(meter)) Meter_init(meter);
       }
    }
 }

@@ -51,7 +51,7 @@ char* Header_readMeterName(Header* this, int i, int column);
 
 MeterModeId Header_readMeterMode(Header* this, int i, int column);
 
-void Header_reinit(Header* this);
+void Header_reinit(const Header *this);
 
 void Header_draw(const Header* this);
 

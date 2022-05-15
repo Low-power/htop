@@ -103,7 +103,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
-static void Action_runSetup(Settings* settings, const Header* header, ProcessList* pl) {
+static void Action_runSetup(Settings* settings, Header *header, ProcessList* pl) {
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    CategoriesPanel* panelCategories = CategoriesPanel_new(scr, settings, (Header*) header, pl);
    ScreenManager_add(scr, (Panel*) panelCategories, 16);
