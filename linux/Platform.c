@@ -88,8 +88,12 @@ const SignalItem Platform_signals[] = {
    SIG(PROF),
    SIG(WINCH),
    SIG(IO),
+#ifdef SIGPOLL
    SIG(POLL),
+#endif
+#ifdef SIGPWR
    SIG(PWR),
+#endif
 #ifdef SIGINFO
    SIG(INFO),
 #endif
@@ -172,13 +176,17 @@ int Platform_getMaxPid() {
     * would be UINT32_MAX - 1, which is too big to use here. */
    return 4194304;
 #else
+#ifdef PID_MAX
+   int max_pid = PID_MAX;
+#else
+   int max_pid = -1;
+#endif
    FILE* file = fopen(PROCDIR "/sys/kernel/pid_max", "r");
-   if (!file) return -1;
-   int maxPid = 4194303;
-   int match = fscanf(file, "%32d", &maxPid);
-   (void) match;
-   fclose(file);
-   return maxPid;
+   if(file) {
+      fscanf(file, "%32d", &max_pid);
+      fclose(file);
+   }
+   return max_pid;
 #endif
 }
 
