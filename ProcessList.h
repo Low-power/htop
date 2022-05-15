@@ -36,12 +36,12 @@ typedef struct ProcessList_ {
    Vector* processes2;
    Hashtable* processTable;
    UsersTable* usersTable;
+   const Hashtable *pidWhiteList;
 
    Panel* panel;
    int following;
    uid_t userId;
    const char* incFilter;
-   Hashtable* pidWhiteList;
 
    #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
@@ -70,12 +70,12 @@ typedef struct ProcessList_ {
 
 } ProcessList;
 
-ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* ut, const Hashtable *pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList* pl);
 
 
-ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 
 void ProcessList_done(ProcessList* this);
 

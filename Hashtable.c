@@ -34,10 +34,10 @@ struct Hashtable_ {
 
 #ifndef NDEBUG
 
-static bool Hashtable_isConsistent(Hashtable* this) {
+static bool Hashtable_isConsistent(const Hashtable *this) {
    int items = 0;
    for (int i = 0; i < this->size; i++) {
-      HashtableItem* bucket = this->buckets[i];
+      const HashtableItem *bucket = this->buckets[i];
       while (bucket) {
          items++;
          bucket = bucket->next;
@@ -46,10 +46,10 @@ static bool Hashtable_isConsistent(Hashtable* this) {
    return items == this->items;
 }
 
-int Hashtable_count(Hashtable* this) {
+int Hashtable_count(const Hashtable *this) {
    int items = 0;
    for (int i = 0; i < this->size; i++) {
-      HashtableItem* bucket = this->buckets[i];
+      const HashtableItem *bucket = this->buckets[i];
       while (bucket) {
          items++;
          bucket = bucket->next;
@@ -62,9 +62,7 @@ int Hashtable_count(Hashtable* this) {
 #endif
 
 static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
-   HashtableItem* this;
-   
-   this = xMalloc(sizeof(HashtableItem));
+   HashtableItem *this = xMalloc(sizeof(HashtableItem));
    this->key = key;
    this->value = value;
    this->next = NULL;
@@ -72,9 +70,7 @@ static HashtableItem* HashtableItem_new(unsigned int key, void* value) {
 }
 
 Hashtable* Hashtable_new(int size, bool owner) {
-   Hashtable* this;
-   
-   this = xMalloc(sizeof(Hashtable));
+   Hashtable *this = xMalloc(sizeof(Hashtable));
    this->items = 0;
    this->size = size;
    this->buckets = (HashtableItem**) xCalloc(size, sizeof(HashtableItem*));
@@ -119,11 +115,10 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value) {
 
 void* Hashtable_remove(Hashtable* this, unsigned int key) {
    unsigned int index = key % this->size;
-   
    assert(Hashtable_isConsistent(this));
 
-   HashtableItem** bucket; 
-   for (bucket = &(this->buckets[index]); *bucket; bucket = &((*bucket)->next) ) {
+   HashtableItem **bucket = this->buckets + index;
+   while(*bucket) {
       if ((*bucket)->key == key) {
          void* value = (*bucket)->value;
          HashtableItem* next = (*bucket)->next;
@@ -139,14 +134,15 @@ void* Hashtable_remove(Hashtable* this, unsigned int key) {
             return value;
          }
       }
+      bucket = &(*bucket)->next;
    }
    assert(Hashtable_isConsistent(this));
    return NULL;
 }
 
-inline void* Hashtable_get(Hashtable* this, unsigned int key) {
+inline void* Hashtable_get(const Hashtable *this, unsigned int key) {
    unsigned int index = key % this->size;
-   HashtableItem* bucketPtr = this->buckets[index];
+   const HashtableItem *bucketPtr = this->buckets[index];
    while (true) {
       if (bucketPtr == NULL) {
          assert(Hashtable_isConsistent(this));
@@ -154,15 +150,14 @@ inline void* Hashtable_get(Hashtable* this, unsigned int key) {
       } else if (bucketPtr->key == key) {
          assert(Hashtable_isConsistent(this));
          return bucketPtr->value;
-      } else
-         bucketPtr = bucketPtr->next;
+      } else bucketPtr = bucketPtr->next;
    }
 }
 
-void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData) {
+void Hashtable_foreach(const Hashtable *this, Hashtable_PairFunction f, void* userData) {
    assert(Hashtable_isConsistent(this));
    for (int i = 0; i < this->size; i++) {
-      HashtableItem* walk = this->buckets[i];
+      const HashtableItem *walk = this->buckets[i];
       while (walk != NULL) {
          f(walk->key, walk->value, userData);
          walk = walk->next;

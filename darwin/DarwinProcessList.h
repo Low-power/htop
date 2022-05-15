@@ -32,7 +32,7 @@ typedef struct DarwinProcessList_ {
 } DarwinProcessList;
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* this);
 

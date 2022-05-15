@@ -78,7 +78,7 @@ static char *SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sp
 	return xStrdup(ks ? ks->ks_name : "unknown");
 }
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
    ProcessList_init(pl, Class(SolarisProcess), usersTable, pidWhiteList, userId);
@@ -160,7 +160,6 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
          idlebuf               += cpuData->idlePercent;
       }
    }
-   
    if (cpus > 1) {
       CPUData* cpuData          = &(spl->cpus[0]);
       cpuData->userPercent      = userbuf / cpus;
@@ -190,7 +189,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalMem   = totalmem_pgs->value.ui64 * CRT_page_size_kib;
       pl->usedMem    = lockedmem_pgs->value.ui64 * CRT_page_size_kib;
       // Not sure how to implement this on Solaris - suggestions welcome!
-      pl->cachedMem  = 0;     
+      pl->cachedMem  = 0;
       // Not really "buffers" but the best Solaris analogue that I can find to
       // "memory in use but not by programs or the kernel itself"
       pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_page_size_kib;
@@ -201,7 +200,6 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->cachedMem  = 0;
       pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * CRT_page_size);
    }
-   
    // Part 2 - swap
    struct swaptable    *sl = NULL;
    struct swapent      *swapdev = NULL;
@@ -213,7 +211,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       sl = xMalloc((nswap * sizeof(swapent_t)) + sizeof(int));
       if(sl) spathbase = xMalloc(nswap * MAXPATHLEN);
    }
-   if (spathbase != NULL) { 
+   if (spathbase != NULL) {
       char *spath = spathbase;
       swapdev = sl->swt_ent;
       for (int i = 0; i < nswap; i++, swapdev++) {
@@ -222,7 +220,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       }
       sl->swt_n = nswap;
       nswap = swapctl(SC_LIST, sl);
-      if (nswap > 0) { 
+      if (nswap > 0) {
          swapdev = sl->swt_ent;
          for (int i = 0; i < nswap; i++, swapdev++) {
             totalswap += swapdev->ste_pages;
@@ -233,7 +231,7 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    free(spathbase);
    free(sl);
    pl->totalSwap = totalswap * CRT_page_size_kib;
-   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_page_size_kib); 
+   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_page_size_kib);
 }
 
 void ProcessList_delete(ProcessList* pl) {
@@ -283,8 +281,7 @@ static void fill_last_pass(Process *proc, time_t now) {
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
  *       system for more info.
- */ 
-
+ */
 static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo, void *listptr) {
    bool preExisting;
    pid_t getpid;
@@ -301,7 +298,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       getpid = _psinfo->pr_pid * 1024;
    } else {
       getpid = lwpid;
-   } 
+   }
    Process *proc             = ProcessList_getProcess(pl, getpid, &preExisting, (Process_New) SolarisProcess_new);
    SolarisProcess *sproc     = (SolarisProcess*) proc;
 
@@ -322,7 +319,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
       sproc->zoneid         = _psinfo->pr_zoneid;
-      sproc->zname          = SolarisProcessList_readZoneName(spl->kd,sproc); 
+      sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
       proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
@@ -361,7 +358,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       proc->percent_cpu        = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768)*(double)100.0;
       proc->time               = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW LWPs
-         sproc->is_lwp         = true; 
+         sproc->is_lwp         = true;
          proc->basenameOffset  = -1;
          proc->ppid            = _psinfo->pr_pid * 1024;
          proc->tgid            = _psinfo->pr_pid * 1024;
@@ -448,7 +445,7 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 			sol_proc->is_lwp = false;
 			sol_proc->lwpid = -1;
 			sol_proc->zoneid = info.pr_zoneid;
-			sol_proc->zname = SolarisProcessList_readZoneName(this->kd, sol_proc); 
+			sol_proc->zname = SolarisProcessList_readZoneName(this->kd, sol_proc);
 			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
 			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 			proc->name = xStrdup(info.pr_fname);

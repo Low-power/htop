@@ -75,7 +75,7 @@ typedef struct OpenBSDProcessList_ {
 
 static int fscale;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    int i;
 
    OpenBSDProcessList *opl = xCalloc(1, sizeof(OpenBSDProcessList));
@@ -336,7 +336,6 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
             this->kernel_process_count++;
             this->kernel_thread_count++;
          }
- 
          // SRUN ('R') means runnable, not running
          if (proc->state == 'P') {
             this->running_process_count++;

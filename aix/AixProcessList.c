@@ -52,7 +52,7 @@ typedef struct AixProcessList_ {
 
 }*/
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    AixProcessList* apl = xCalloc(1, sizeof(AixProcessList));
    ProcessList* this = (ProcessList*) apl;
    ProcessList_init(this, Class(AixProcess), usersTable, pidWhiteList, userId);
@@ -80,13 +80,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
 
 void ProcessList_delete(ProcessList* this) {
    AixProcessList* apl = (AixProcessList*)this;
-
    free (apl->cpus);
 #ifndef __PASE__
    free (apl->ps_cpus);
 #endif
    ProcessList_done(this);
-   
    free(this);
 }
 

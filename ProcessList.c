@@ -42,12 +42,12 @@ typedef struct ProcessList_ {
    Vector* processes2;
    Hashtable* processTable;
    UsersTable* usersTable;
+   const Hashtable *pidWhiteList;
 
    Panel* panel;
    int following;
    uid_t userId;
    const char* incFilter;
-   Hashtable* pidWhiteList;
 
    #ifdef HAVE_LIBHWLOC
    hwloc_topology_t topology;
@@ -76,22 +76,20 @@ typedef struct ProcessList_ {
 
 } ProcessList;
 
-ProcessList* ProcessList_new(UsersTable* ut, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* ut, const Hashtable *pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList* pl);
 
 }*/
 
-ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    this->processes = Vector_new(klass, true, DEFAULT_SIZE);
    this->processTable = Hashtable_new(140, false);
    this->usersTable = usersTable;
    this->pidWhiteList = pidWhiteList;
    this->userId = userId;
-   
    // tree-view auxiliary buffer
    this->processes2 = Vector_new(klass, true, DEFAULT_SIZE);
-   
    // set later by platform-specific code
    this->cpuCount = 0;
 
@@ -142,10 +140,8 @@ void ProcessList_printHeader(ProcessList* this, RichString* header) {
 void ProcessList_add(ProcessList* this, Process* p) {
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) == -1);
    assert(Hashtable_get(this->processTable, p->pid) == NULL);
-   
    Vector_add(this->processes, p);
    Hashtable_put(this->processTable, p->pid, p);
-   
    assert(Vector_indexOf(this->processes, p, Process_pidCompare) != -1);
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    assert(Hashtable_count(this->processTable) == Vector_count(this->processes));

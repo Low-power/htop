@@ -50,7 +50,7 @@ typedef struct SolarisProcessList_ {
 } SolarisProcessList;
 
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId);
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* pl);
 
@@ -60,8 +60,7 @@ void ProcessList_delete(ProcessList* pl);
  *       and MUST conform to the appropriate definition in order
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
  *       system for more info.
- */ 
-
+ */
 void ProcessList_goThroughEntries(ProcessList* this);
 
 #else

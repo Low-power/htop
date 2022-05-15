@@ -30,7 +30,7 @@ struct Hashtable_ {
 
 #ifndef NDEBUG
 
-int Hashtable_count(Hashtable* this);
+int Hashtable_count(const Hashtable *this);
 
 #endif
 
@@ -42,8 +42,8 @@ void Hashtable_put(Hashtable* this, unsigned int key, void* value);
 
 void* Hashtable_remove(Hashtable* this, unsigned int key);
 
-void* Hashtable_get(Hashtable* this, unsigned int key);
+void* Hashtable_get(const Hashtable *this, unsigned int key);
 
-void Hashtable_foreach(Hashtable* this, Hashtable_PairFunction f, void* userData);
+void Hashtable_foreach(const Hashtable *this, Hashtable_PairFunction f, void* userData);
 
 #endif

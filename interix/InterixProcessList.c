@@ -25,7 +25,7 @@ in the source distribution for its full text.
 static long int page_size;
 static long int page_size_ki;
 
-ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, uid_t userId) {
+ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
    ProcessList_init(this, Class(InterixProcess), usersTable, pidWhiteList, userId);
    return this;
