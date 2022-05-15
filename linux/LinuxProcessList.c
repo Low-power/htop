@@ -244,6 +244,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
          cpu_count++;
          if(cpu_i > max_cpu_i) max_cpu_i = cpu_i;
       }
+      closedir(dir);
    }
 
    FILE* file = fopen(PROCSTATFILE, "r");
@@ -254,7 +255,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, Hashtable* pidWhiteList, ui
       char buffer[PROC_LINE_LENGTH + 1];
       if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
          CRT_fatalError("No btime in " PROCSTATFILE);
-      } else if (!cpu_count && String_startsWith(buffer, "cpu") && buffer[3] != ' ') {
+      } else if (!dir && String_startsWith(buffer, "cpu") && buffer[3] != ' ') {
          char *end_p;
          unsigned int cpu_i = strtoul(buffer + 3, &end_p, 10);
          if(*end_p != ' ') continue;
