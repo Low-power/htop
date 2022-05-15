@@ -464,8 +464,8 @@ static Htop_Reaction actionHelp(State* st) {
    for (int i = 0; i < LINES-1; i++)
       mvhline(i, 0, ' ', COLS);
 
-   mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT);
-   mvaddstr(1, 0, "Released under the GNU GPL. See 'man' page for more info.");
+   mvaddstr(0, 0, "htop " VERSION " - " COPYRIGHT_ONE_LINE);
+   mvaddstr(1, 0, "Released under the GNU GPL any version. See man page htop(1) for more info.");
 
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    mvaddstr(3, 0, "CPU usage bar: ");

@@ -553,7 +553,8 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, "(C) 2004-2019 Hisham Muhammad", [Copyright message.])
+AC_DEFINE_UNQUOTED(COPYRIGHT, ["Copyright 2004-2019 Hisham Muhammad\nCopyright 2015-2022 Rivoreo"], [Copyright notices.])
+AC_DEFINE_UNQUOTED(COPYRIGHT_ONE_LINE, ["Copyright 2004-2019 Hisham Muhammad.  Copyright 2022 Rivoreo."], [Copyright notices in a signal line.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------

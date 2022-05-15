@@ -31,27 +31,28 @@ in the source distribution for its full text.
 //#link m
 
 static void printVersionFlag() {
-   fputs("htop " VERSION " - " COPYRIGHT "\n"
-         "Released under the GNU GPL.\n\n",
+   fputs("htop " VERSION "\n" COPYRIGHT "\n"
+         "Released under the GNU GPL any version.\n",
          stdout);
 }
 
-static void printHelpFlag() {
-   fputs("htop " VERSION " - " COPYRIGHT "\n"
-         "Released under the GNU GPL.\n\n"
-         "-C --no-color               Use a monochrome color scheme\n"
-         "-d --delay=DELAY            Set the delay between updates, in tenths of seconds\n"
-         "-h --help                   Print this help screen\n"
-         "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
-         "-t --tree                   Show the tree view by default\n"
-         "-u --user=USERNAME          Show only processes of a given user\n"
-         "-p --pid=PID[,PID,PID...]   Show only the given PIDs\n"
-         "-v --version                Print version info\n"
+static void print_usage(FILE *f, const char *name) {
+   fprintf(f,
+         "Usage: %s [OPTION]...\n\n"
+         "Options:\n"
+         "   -C, --no-color              Use a monochrome color scheme\n"
+         "   -d, --delay=DELAY           Set the delay between updates, in tenths of seconds\n"
+         "   -h, --help                  Print this help screen\n"
+         "   -s, --sort-key=COLUMN       Sort by COLUMN (try --sort-key=help for a list)\n"
+         "   -t, --tree                  Show the tree view by default\n"
+         "   -u, --user=USERNAME         Show only processes of a given user\n"
+         "   -p, --pid=PID[,PID,PID...]  Show only the given PIDs\n"
+         "   -v, --version               Print version info\n"
          "\n"
          "Arguments to long options are required for short options too.\n\n"
          "Press F1 inside htop for online help.\n"
          "See 'man htop' for more information.\n",
-         stdout);
+         name);
 }
 
 // ----------------------------------------
@@ -102,7 +103,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       switch (opt) {
             char *p;
          case 'h':
-            printHelpFlag();
+            print_usage(stdout, argv[0]);
             exit(0);
          case 'v':
             printVersionFlag();
