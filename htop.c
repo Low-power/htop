@@ -34,9 +34,8 @@ static void printVersionFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
          "Released under the GNU GPL.\n\n",
          stdout);
-   exit(0);
 }
- 
+
 static void printHelpFlag() {
    fputs("htop " VERSION " - " COPYRIGHT "\n"
          "Released under the GNU GPL.\n\n"
@@ -46,14 +45,13 @@ static void printHelpFlag() {
          "-s --sort-key=COLUMN        Sort by COLUMN (try --sort-key=help for a list)\n"
          "-t --tree                   Show the tree view by default\n"
          "-u --user=USERNAME          Show only processes of a given user\n"
-         "-p --pid=PID,[,PID,PID...]  Show only the given PIDs\n"
+         "-p --pid=PID[,PID,PID...]   Show only the given PIDs\n"
          "-v --version                Print version info\n"
          "\n"
-         "Long options may be passed with a single dash.\n\n"
+         "Arguments to long options are required for short options too.\n\n"
          "Press F1 inside htop for online help.\n"
          "See 'man htop' for more information.\n",
          stdout);
-   exit(0);
 }
 
 // ----------------------------------------
@@ -93,7 +91,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       {0,0,0,0}
    };
 #endif
-   /* Parse arguments */
+   /* Parse options */
    while(true) {
 #ifdef HAVE_GETOPT_LONG
       int opt = getopt_long(argc, argv, "hvCs:td:u:p:", long_opts, NULL);
@@ -102,23 +100,25 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
 #endif
       if (opt == -1) break;
       switch (opt) {
+            char *p;
          case 'h':
             printHelpFlag();
-            break;
+            exit(0);
          case 'v':
             printVersionFlag();
-            break;
+            exit(0);
          case 's':
             if (strcmp(optarg, "help") == 0) {
                for (int j = 1; j < Platform_numberOfFields; j++) {
                   const char* name = Process_fields[j].name;
-                  if (name) printf ("%s\n", name);
+                  if (name) puts(name);
                }
                exit(0);
             }
             flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
             if (flags.sortKey == -1) {
                fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
+               exit(-1);
             }
             break;
          case 'd':
@@ -127,11 +127,13 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
                if (flags.delay > 100) flags.delay = 100;
             } else {
                fprintf(stderr, "Error: invalid delay value \"%s\".\n", optarg);
+               exit(-1);
             }
             break;
          case 'u':
             if (!Action_setUserOnly(optarg, &(flags.userId))) {
                fprintf(stderr, "Error: invalid user \"%s\".\n", optarg);
+               exit(-1);
             }
             break;
          case 'C':
@@ -140,24 +142,24 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
          case 't':
             flags.treeView = true;
             break;
-         case 'p': {
-            char* argCopy = xStrdup(optarg);
-            char* saveptr;
-            char* pid = strtok_r(argCopy, ",", &saveptr);
-
+         case 'p':
             if(!flags.pidWhiteList) {
                flags.pidWhiteList = Hashtable_new(8, false);
             }
-
-            while(pid) {
-                unsigned int num_pid = atoi(pid);
-                Hashtable_put(flags.pidWhiteList, num_pid, (void *) 1);
-                pid = strtok_r(NULL, ",", &saveptr);
-            }
-            free(argCopy);
-
+            p = optarg;
+            do {
+               long int pid = strtol(p, &p, 0);
+               if(*p && *p != ',') {
+                  fprintf(stderr, "Error: invalid PID list \"%s\".\n", optarg);
+                  exit(-1);
+               }
+               if(pid < 0) {
+                  fprintf(stderr, "Error: invalid PID %ld.\n", pid);
+                  exit(-1);
+               }
+               Hashtable_put(flags.pidWhiteList, pid, (void *) 1);
+            } while(*p++);
             break;
-         }
          default:
 #ifdef __ANDROID__
             fputc('\n', stderr);
@@ -186,29 +188,24 @@ static void millisleep(unsigned long millisec) {
 }
 
 int main(int argc, char** argv) {
+   const char *lc_ctype = getenv("LC_CTYPE");
+   if(!lc_ctype) {
+      lc_ctype = getenv("LC_ALL");
+      if(!lc_ctype) lc_ctype = "";
+   }
+   setlocale(LC_CTYPE, lc_ctype);
 
-   char *lc_ctype = getenv("LC_CTYPE");
-   if(lc_ctype != NULL)
-      setlocale(LC_CTYPE, lc_ctype);
-   else if ((lc_ctype = getenv("LC_ALL")))
-      setlocale(LC_CTYPE, lc_ctype);
-   else
-      setlocale(LC_CTYPE, "");
-
-   CommandLineSettings flags = parseArguments(argc, argv); // may exit()
+   CommandLineSettings flags = parseArguments(argc, argv); // may exit(3)
 
 #ifdef HAVE_PROC
-   if (access(PROCDIR, R_OK) != 0) {
+   if (access(PROCDIR, R_OK) < 0) {
       fprintf(stderr, "Error: could not read procfs (compiled to look in %s).\n", PROCDIR);
-      exit(1);
+      return 1;
    }
 #endif
-   
    Process_setupColumnWidths();
-   
    UsersTable* ut = UsersTable_new();
    ProcessList* pl = ProcessList_new(ut, flags.pidWhiteList, flags.userId);
-   
    Settings* settings = Settings_new(pl->cpuCount);
    pl->settings = settings;
 
@@ -216,20 +213,15 @@ int main(int argc, char** argv) {
 
    Header_populateFromSettings(header);
 
-   if (flags.delay != -1)
-      settings->delay = flags.delay;
-   if (!flags.useColors) 
-      settings->colorScheme = MONOCHROME_COLOR_SCHEME;
-   if (flags.treeView)
-      settings->treeView = true;
+   if (flags.delay != -1) settings->delay = flags.delay;
+   if (!flags.useColors) settings->colorScheme = MONOCHROME_COLOR_SCHEME;
+   if (flags.treeView) settings->treeView = true;
 
    CRT_init(settings->delay, settings->colorScheme);
-   
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 
    MainPanel_updateTreeFunctions(panel, settings->treeView);
-      
    if (flags.sortKey > 0) {
       settings->sortKey = flags.sortKey;
       settings->treeView = false;
@@ -245,7 +237,6 @@ int main(int argc, char** argv) {
       .header = header,
    };
    MainPanel_setState(panel, &state);
-   
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
    ScreenManager_add(scr, (Panel*) panel, -1);
 
@@ -253,24 +244,19 @@ int main(int argc, char** argv) {
    millisleep(75);
    ProcessList_scan(pl);
 
-   ScreenManager_run(scr, NULL, NULL);   
-   
+   ScreenManager_run(scr, NULL, NULL);
    attron(CRT_colors[HTOP_DEFAULT_COLOR]);
    mvhline(LINES-1, 0, ' ', COLS);
    attroff(CRT_colors[HTOP_DEFAULT_COLOR]);
    refresh();
-   
    CRT_done();
-   if (settings->changed)
-      Settings_write(settings);
+   if (settings->changed) Settings_write(settings);
    Header_delete(header);
    ProcessList_delete(pl);
 
    ScreenManager_delete(scr);
-   
    UsersTable_delete(ut);
    Settings_delete(settings);
-   
    if(flags.pidWhiteList) {
       Hashtable_delete(flags.pidWhiteList);
    }
