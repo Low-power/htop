@@ -20,11 +20,12 @@ in the source distribution for its full text.
 #include "SolarisProcess.h"
 #include "SolarisProcessList.h"
 #include "IOUtils.h"
+#include "KStat.h"
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/loadavg.h>
 #include <string.h>
-#include <kstat.h>
+#include <limits.h>
 #include <math.h>
 #include <sys/var.h>
 #ifdef HAVE_LIBPROC
@@ -50,8 +51,6 @@ in the source distribution for its full text.
 #endif
 
 extern ProcessFieldData Process_fields[];
-typedef struct var kvar_t;
-
 }*/
 
 const SignalItem Platform_signals[] = {
@@ -153,19 +152,13 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
-   kstat_ctl_t *kc = NULL;
-   kstat_t *kshandle = NULL;
-   kvar_t *ksvar = NULL;
-   int vproc = 32778; // Reasonable Solaris default
-   kc = kstat_open();
-   if (kc != NULL) { kshandle = kstat_lookup(kc,"unix",0,"var"); }
-   if (kshandle != NULL) { kstat_read(kc,kshandle,NULL); }
-   ksvar = kshandle->ks_data;
-   if (ksvar->v_proc > 0 ) {
-      vproc = ksvar->v_proc;
-   }
-   if (kc != NULL) { kstat_close(kc); }
-   return vproc; 
+	struct var *kvar = read_unnamed_kstat(KSTAT_UNIX_VAR);
+	if(kvar && kvar->v_proc > 0) return kvar->v_proc - 1;
+#ifdef PID_MAX
+	return PID_MAX;
+#else
+	return = 32778; // Reasonable Solaris default
+#endif
 }
 
 double Platform_setCPUValues(Meter *meter, int cpu) {

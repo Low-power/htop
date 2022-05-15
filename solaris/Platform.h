@@ -29,8 +29,6 @@ in the source distribution for its full text.
 #endif
 
 extern ProcessFieldData Process_fields[];
-typedef struct var kvar_t;
-
 
 extern const SignalItem Platform_signals[];
 

@@ -12,8 +12,9 @@ in the source distribution for its full text.
 #include <assert.h>
 
 #define KSTAT_UNIX_SYSTEM_PAGES 0
-#define KSTAT_ZFS_ARCSTATS 1
-#define KSTAT_COUNT 2
+#define KSTAT_UNIX_VAR 1
+#define KSTAT_ZFS_ARCSTATS 2
+#define KSTAT_COUNT 3
 #define KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM 0
 #define KSTAT_ZFS_ARCSTATS_SIZE 1
 #define KSTAT_DATA_COUNT 2
@@ -56,6 +57,7 @@ static const struct kstat_name {
 	char *name;
 } kstat_name_map[KSTAT_COUNT] = {
 	[KSTAT_UNIX_SYSTEM_PAGES] = { "unix", "pages", "system_pages" },
+	[KSTAT_UNIX_VAR] = { "unix", "misc", "var" },
 	[KSTAT_ZFS_ARCSTATS] = { "zfs", "misc", "arcstats" }
 };
 static char *kstat_data_map[KSTAT_COUNT] = {
@@ -64,6 +66,27 @@ static char *kstat_data_map[KSTAT_COUNT] = {
 };
 static kstat_ctl_t *ksc;
 static kstat_t *kstat_table[KSTAT_COUNT];
+
+static kstat_t *get_kstat(unsigned int kstat_key) {
+	assert(kstat_key < KSTAT_COUNT);
+	if(!ksc) ksc = kstat_open();
+	kstat_t *ksp = kstat_table[kstat_key];
+	if(!ksp) {
+		const struct kstat_name *name = kstat_name_map + kstat_key;
+		if(!name->module) return NULL;
+		ksp = kstat_lookup(ksc, name->module, -1, name->name);
+		if(!ksp) return NULL;
+		if(strcmp(ksp->ks_class, name->class)) return NULL;
+		kstat_table[kstat_key] = ksp;
+	}
+	if(kstat_read(ksc, ksp, NULL) < 0) return NULL;
+	return ksp;
+}
+
+void *read_unnamed_kstat(unsigned int kstat_key) {
+	kstat_t *ksp = get_kstat(kstat_key);
+	return ksp ? ksp->ks_data : NULL;
+}
 #elif defined USE_SPL_KSTAT
 #include "StringUtils.h"
 #include <string.h>
@@ -89,20 +112,10 @@ static int *sysctl_mib_map[KSTAT_COUNT | (KSTAT_DATA_COUNT << 8)];
 #endif
 
 int read_kstat(unsigned int kstat_key, unsigned int data_key, unsigned char data_type, void *value) {
-	assert(kstat_key < KSTAT_COUNT);
 	assert(data_key < KSTAT_DATA_COUNT);
 #ifdef USE_LIBKSTAT
-	if(!ksc) ksc = kstat_open();
-	kstat_t *ksp = kstat_table[kstat_key];
-	if(!ksp) {
-		const struct kstat_name *name = kstat_name_map + kstat_key;
-		if(!name->module) return -1;
-		ksp = kstat_lookup(ksc, name->module, -1, name->name);
-		if(!ksp) return -1;
-		if(strcmp(ksp->ks_class, name->class)) return -1;
-		kstat_table[kstat_key] = ksp;
-	}
-	if(kstat_read(ksc, ksp, NULL) < 0) return -1;
+	kstat_t *ksp = get_kstat(kstat_key);
+	if(!ksp) return -1;
 	char *data_name = kstat_data_map[data_key];
 	if(!data_name) return -1;
 	kstat_named_t *ksn = kstat_data_lookup(ksp, data_name);
