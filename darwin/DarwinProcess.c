@@ -71,8 +71,8 @@ void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, tim
    struct tm date;
 
    proc->starttime_ctime = ep->p_starttime.tv_sec;
-   (void) localtime_r(&proc->starttime_ctime, &date);
-   strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
+   localtime_r(&proc->starttime_ctime, &date);
+   strftime(proc->starttime_show, sizeof proc->starttime_show, (proc->starttime_ctime > now - 86400) ? "%R " : "%b%d ", &date);
 }
 
 char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) {
@@ -214,7 +214,6 @@ ERROR_B:
 ERROR_A:
    retval = xStrdup(k->kp_proc.p_comm);
    *basenameOffset = strlen(retval);
-   
    return retval;
 }
 
@@ -303,11 +302,9 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
 void DarwinProcess_scanThreads(DarwinProcess *dp) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
-   
    if (!dp->taskAccess) {
       return;
    }
-   
    if (proc->state == 'Z') {
       return;
    }
@@ -318,7 +315,6 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       dp->taskAccess = false;
       return;
    }
-   
    task_info_data_t tinfo;
    mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
    ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
@@ -326,7 +322,6 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       dp->taskAccess = false;
       return;
    }
-   
    thread_array_t thread_list;
    mach_msg_type_number_t thread_count;
    ret = task_threads(port, &thread_list, &thread_count);
@@ -335,7 +330,6 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       mach_port_deallocate(mach_task_self(), port);
       return;
    }
-   
    integer_t run_state = 999;
    for (unsigned int i = 0; i < thread_count; i++) {
       thread_info_data_t thinfo;
@@ -352,13 +346,24 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), port);
 
-   char state = '?';
    switch (run_state) {
-      case TH_STATE_RUNNING: state = 'R'; break;
-      case TH_STATE_STOPPED: state = 'S'; break;
-      case TH_STATE_WAITING: state = 'W'; break;
-      case TH_STATE_UNINTERRUPTIBLE: state = 'U'; break;
-      case TH_STATE_HALTED: state = 'H'; break;
+      case TH_STATE_RUNNING:
+         proc->state = 'R';
+         break;
+      case TH_STATE_STOPPED:
+         proc->state = 'S';
+         break;
+      case TH_STATE_WAITING:
+         proc->state = 'W';
+         break;
+      case TH_STATE_UNINTERRUPTIBLE:
+         proc->state = 'U';
+         break;
+      case TH_STATE_HALTED:
+         proc->state = 'H';
+         break;
+      default:
+         proc->state = '?';
+         break;
    }
-   proc->state = state;
 }

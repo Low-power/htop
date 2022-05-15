@@ -261,8 +261,9 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
          openbsd_proc->is_main_thread = !(kproc->p_flag & P_THREAD);
          ProcessList_add((ProcessList*)this, proc);
          OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
-         (void) localtime_r((time_t*) &kproc->p_ustart_sec, &date);
-         strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now.tv_sec - 86400) ? "%R " : "%b%d "), &date);
+         localtime_r(&proc->starttime_ctime, &date);
+         strftime(proc->starttime_show, sizeof proc->starttime_show,
+            (proc->starttime_ctime > now.tv_sec - 86400) ? "%R " : "%b%d ", &date);
       } else {
          if(proc->ruid != kproc->p_ruid) proc->real_user = NULL;
          if(proc->euid != kproc->p_uid) proc->effective_user = NULL;

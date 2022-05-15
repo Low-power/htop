@@ -271,8 +271,8 @@ static void fill_last_pass(Process *proc, time_t now) {
 	SolarisProcess *sproc = (SolarisProcess *)proc;
 	struct tm date;
 	sproc->kernel = sproc->realppid <= 0 && sproc->realpid != 1;
-	localtime_r((time_t*) &proc->starttime_ctime, &date);
-	strftime(proc->starttime_show, 7, ((proc->starttime_ctime > now - 86400) ? "%R " : "%b%d "), &date);
+	localtime_r(&proc->starttime_ctime, &date);
+	strftime(proc->starttime_show, sizeof proc->starttime_show, (proc->starttime_ctime > now - 86400) ? "%R " : "%b%d ", &date);
 }
 
 #ifdef HAVE_LIBPROC
