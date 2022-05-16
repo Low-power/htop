@@ -6,14 +6,13 @@ in the source distribution for its full text.
 */
 
 #include "CategoriesPanel.h"
-
 #include "AvailableMetersPanel.h"
 #include "MetersPanel.h"
 #include "DisplayOptionsPanel.h"
 #include "ColumnsPanel.h"
 #include "ColorsPanel.h"
 #include "AvailableColumnsPanel.h"
-
+#include "ControlOptionsPanel.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -59,6 +58,11 @@ static void CategoriesPanel_makeDisplayOptionsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, displayOptions, -1);
 }
 
+static void CategoriesPanel_makeControlOptionsPage(CategoriesPanel *this) {
+   Panel *panel = (Panel *)ControlOptionsPanel_new(this->settings, this->scr);
+   ScreenManager_add(this->scr, panel, -1);
+}
+
 static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
    Panel* colors = (Panel*) ColorsPanel_new(this->settings, this->scr);
    ScreenManager_add(this->scr, colors, -1);
@@ -70,6 +74,14 @@ static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
+
+static void (*const make_panel_functions[])(CategoriesPanel *) = {
+	CategoriesPanel_makeMetersPage,
+	CategoriesPanel_makeDisplayOptionsPage,
+	CategoriesPanel_makeColorsPage,
+	CategoriesPanel_makeColumnsPage,
+	CategoriesPanel_makeControlOptionsPage,
+};
 
 static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch, int repeat) {
    CategoriesPanel* this = (CategoriesPanel*) super;
@@ -102,22 +114,12 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch, int repe
    }
    if (result == HANDLED) {
       int size = ScreenManager_size(this->scr);
-      for (int i = 1; i < size; i++)
+      for (int i = 1; i < size; i++) {
          ScreenManager_remove(this->scr, 1);
-      switch (selected) {
-         case 0:
-            CategoriesPanel_makeMetersPage(this);
-            break;
-         case 1:
-            CategoriesPanel_makeDisplayOptionsPage(this);
-            break;
-         case 2:
-            CategoriesPanel_makeColorsPage(this);
-            break;
-         case 3:
-            CategoriesPanel_makeColumnsPage(this);
-            break;
       }
+      assert(selected >= 0);
+      assert((unsigned int)selected < sizeof make_panel_functions / sizeof *make_panel_functions);
+      make_panel_functions[selected](this);
    }
    return result;
 }
@@ -145,5 +147,6 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    Panel_add(super, (Object*) ListItem_new("Display options", 0));
    Panel_add(super, (Object*) ListItem_new("Colors", 0));
    Panel_add(super, (Object*) ListItem_new("Columns", 0));
+   Panel_add(super, (Object*) ListItem_new("Control options", 0));
    return this;
 }
