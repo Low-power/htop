@@ -223,6 +223,9 @@ The full command line of the process (i.e. program name and arguments).
 .B PID
 The process ID.
 .TP
+.B NAME
+Process name, usually the executable file name.
+.TP
 .B STATE (S)
 The state of the process:
    \fBS\fR for sleeping (idle)
@@ -316,8 +319,17 @@ The library size of the process.
 .B M_DT (DIRTY)
 The size of the dirty pages of the process.
 .TP
-.B ST_UID (UID)
-The user ID of the process owner.
+.B EFFECTIVE_UID (EUID)
+The effective user ID of the process.
+.TP
+.B REAL_UID (RUID)
+The real user ID of the process.
+.TP
+.B EFFECTIVE_USER (EFFE_USER)
+Effective user (or numeric user ID if name cannot be determined) of the process.
+.TP
+.B REAL_USER
+Real user (or numeric user ID if name cannot be determined) of the process.
 .TP
 .B PERCENT_CPU (CPU%)
 The percentage of the CPU time that the process is currently using.
@@ -325,10 +337,6 @@ The percentage of the CPU time that the process is currently using.
 .B PERCENT_MEM (MEM%)
 The percentage of memory the process is currently using (based on the process's
 resident memory size, see M_RESIDENT above).
-.TP
-.B USER
-The username of the process owner, or the user ID if the name can't be
-determined.
 .TP
 .B TIME (TIME+)
 The time, measured in clock ticks that the process has spent in user and system
