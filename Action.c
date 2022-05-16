@@ -59,6 +59,7 @@ typedef struct State_ {
    ProcessList* pl;
    Panel* panel;
    Header* header;
+   int repeat;
 } State;
 
 }*/
@@ -255,22 +256,22 @@ static Htop_Reaction actionIncSearch(State* st) {
 }
 
 static Htop_Reaction actionIncNext(State* st) {
-   IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
+   IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
 }
 
 static Htop_Reaction actionIncPrev(State* st) {
-   IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue) MainPanel_getValue);
+   IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat);
    return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {
-   bool changed = changePriority((MainPanel*)st->panel, -1);
+   bool changed = changePriority((MainPanel*)st->panel, -st->repeat);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
 static Htop_Reaction actionLowerPriority(State* st) {
-   bool changed = changePriority((MainPanel*)st->panel, 1);
+   bool changed = changePriority((MainPanel*)st->panel, st->repeat);
    return changed ? HTOP_REFRESH : HTOP_OK;
 }
 
@@ -404,10 +405,12 @@ static Htop_Reaction actionStrace(State* st) {
 }
 
 static Htop_Reaction actionTag(State* st) {
-   Process* p = (Process*) Panel_getSelected(st->panel);
-   if (!p) return HTOP_OK;
-   Process_toggleTag(p);
-   Panel_onKey(st->panel, KEY_DOWN);
+   do {
+      Process* p = (Process*) Panel_getSelected(st->panel);
+      if (!p) break;
+      Process_toggleTag(p);
+      Panel_onKey(st->panel, KEY_DOWN, 1);
+   } while(--st->repeat > 0);
    return HTOP_OK;
 }
 
@@ -416,48 +419,58 @@ static Htop_Reaction actionRedraw() {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
-static const struct { const char* key; const char* info; } helpLeft[] = {
-   { .key = " Arrows: ", .info = "scroll process list" },
-   { .key = " Digits: ", .info = "incremental PID search" },
-   { .key = "   F3 /: ", .info = "incremental name search" },
-   { .key = "   F4 \\: ",.info = "incremental name filtering" },
-   { .key = "   F5 t: ", .info = "tree view" },
-   { .key = "      p: ", .info = "toggle program path" },
-   { .key = "      u: ", .info = "show processes of a single user" },
-   { .key = "      H: ", .info = "hide/show thread processes" },
-   { .key = "      K: ", .info = "hide/show kernel processes" },
-   { .key = "      F: ", .info = "cursor follows process" },
-   { .key = " F6 + -: ", .info = "expand/collapse tree" },
-   { .key = "  P M T: ", .info = "sort by CPU%, MEM% or TIME" },
-   { .key = "      I: ", .info = "invert sort order" },
-   { .key = " F6 > .: ", .info = "select sort column" },
-   { .key = NULL, .info = NULL }
+struct key_help_entry {
+	const char *key;
+	const char *info;
+	enum {
+		KEY_VI_MODE_COMPATIBLE, KEY_VI_MODE_INCOMPATIBLE, KEY_VI_MODE_ONLY
+	} vi_mode_compatibility;
 };
 
-static const struct { const char* key; const char* info; } helpRight[] = {
-   { .key = "  Space: ", .info = "tag process" },
-   { .key = "      c: ", .info = "tag process and its children" },
-   { .key = "      U: ", .info = "untag all processes" },
-   { .key = "   F9 k: ", .info = "kill process/tagged processes" },
-   { .key = "   F7 ]: ", .info = "higher priority (root only)" },
-   { .key = "   F8 [: ", .info = "lower priority (+ nice)" },
+static const struct key_help_entry helpLeft[] = {
+   { " Digits: ", "repeat count for next key", KEY_VI_MODE_ONLY },
+   { " Arrows: ", "scroll process list", KEY_VI_MODE_COMPATIBLE },
+   { "h j k l: ", "scroll process list", KEY_VI_MODE_ONLY },
+   { " Digits: ", "incremental PID search", KEY_VI_MODE_INCOMPATIBLE },
+   { "   F3 /: ", "incremental name search", KEY_VI_MODE_COMPATIBLE },
+   { "   F4 \\: ","incremental name filtering", KEY_VI_MODE_COMPATIBLE },
+   { "   F5 t: ", "tree view", KEY_VI_MODE_COMPATIBLE },
+   //{ "      p: ", "toggle program path", KEY_VI_MODE_COMPATIBLE },
+   { "      u: ", "show processes of a single user", KEY_VI_MODE_COMPATIBLE },
+   { "      H: ", "hide/show thread processes", KEY_VI_MODE_COMPATIBLE },
+   { "      K: ", "hide/show kernel processes", KEY_VI_MODE_COMPATIBLE },
+   { "      F: ", "cursor follows process", KEY_VI_MODE_COMPATIBLE },
+   { " F6 + -: ", "expand/collapse tree", KEY_VI_MODE_COMPATIBLE },
+   { "  P M T: ", "sort by CPU%, MEM% or TIME", KEY_VI_MODE_COMPATIBLE },
+   { "      I: ", "invert sort order", KEY_VI_MODE_COMPATIBLE },
+   { " F6 > .: ", "select sort column", KEY_VI_MODE_COMPATIBLE },
+   { NULL }
+};
+
+static const struct key_help_entry helpRight[] = {
+   { "  Space: ", "tag process", KEY_VI_MODE_COMPATIBLE },
+   { "      c: ", "tag process and its children", KEY_VI_MODE_COMPATIBLE },
+   { "      U: ", "untag all processes", KEY_VI_MODE_COMPATIBLE },
+   { "   F9 k: ", "kill process/tagged processes", KEY_VI_MODE_INCOMPATIBLE },
+   { "     F9: ", "kill process/tagged processes", KEY_VI_MODE_ONLY },
+   { "   F7 ]: ", "higher priority (root only)", KEY_VI_MODE_COMPATIBLE },
+   { "   F8 [: ", "lower priority (+ nice)", KEY_VI_MODE_COMPATIBLE },
 #if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
-   { .key = "      a: ", .info = "set CPU affinity" },
+   { "      a: ", "set CPU affinity", KEY_VI_MODE_COMPATIBLE },
 #endif
-   { .key = "      e: ", .info = "show process environment" },
-   { .key = "      i: ", .info = "set IO priority" },
-   { .key = "      l: ", .info = "list open files with lsof(8)" },
-   { .key = "      s: ", .info = "trace syscalls with truss(1) or" },
-   { .key = "         ", .info = "strace(1)" },
-   { .key = " F2 C S: ", .info = "setup" },
-   { .key = "   F1 h: ", .info = "show this help screen" },
-   { .key = "  F10 q: ", .info = "quit" },
-   { .key = NULL, .info = NULL }
+   { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },
+   { "      i: ", "set IO priority", KEY_VI_MODE_COMPATIBLE },
+   { "      l: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
+   { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
+   { "         ", "strace(1)", KEY_VI_MODE_COMPATIBLE },
+   { " F2 C S: ", "setup", KEY_VI_MODE_COMPATIBLE },
+   { "   F1 h: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
+   { "     F1: ", "show this help screen", KEY_VI_MODE_ONLY },
+   { "  F10 q: ", "quit", KEY_VI_MODE_COMPATIBLE },
+   { NULL }
 };
 
 static Htop_Reaction actionHelp(State* st) {
-   Settings* settings = st->settings;
-
    clear();
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
 
@@ -471,7 +484,7 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddstr(3, 0, "CPU usage bar: ");
 #define addattrstr(a,s) do { attrset(a); addstr(s); attrset(CRT_colors[HTOP_DEFAULT_COLOR]); } while(0)
    addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "[");
-   if (settings->detailedCPUTime) {
+   if (st->settings->detailedCPUTime) {
       addattrstr(CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], "low");
       addch('/');
       addattrstr(CRT_colors[HTOP_CPU_NORMAL_COLOR], "normal");
@@ -526,13 +539,36 @@ static Htop_Reaction actionHelp(State* st) {
    attrset(CRT_colors[HTOP_PROCESS_D_STATE_COLOR]);
    mvaddch(8, 64, 'D');
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
-   for (int i = 0; helpLeft[i].info; i++) { mvaddstr(9+i, 9,  helpLeft[i].info); }
-   for (int i = 0; helpRight[i].info; i++) { mvaddstr(9+i, 49, helpRight[i].info); }
+   int y = 9;
+   const struct key_help_entry *entry = helpLeft;
+#define FOR_EACH_ENTRY(EXPR) \
+   do { \
+      switch(entry->vi_mode_compatibility) { \
+         case KEY_VI_MODE_COMPATIBLE: \
+            EXPR \
+            break; \
+         case KEY_VI_MODE_INCOMPATIBLE: \
+            if(!st->settings->vi_mode) EXPR \
+            break; \
+         case KEY_VI_MODE_ONLY: \
+            if(st->settings->vi_mode) EXPR \
+            break; \
+      } \
+   } while((++entry)->key)
+   FOR_EACH_ENTRY(mvaddstr(y++, 9, entry->info););
+   y = 9;
+   entry = helpRight;
+   FOR_EACH_ENTRY(mvaddstr(y++, 49, entry->info););
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
-   for (int i = 0; helpLeft[i].key;  i++) { mvaddstr(9+i, 0,  helpLeft[i].key); }
-   for (int i = 0; helpRight[i].key; i++) { mvaddstr(9+i, 40, helpRight[i].key); }
+   y = 9;
+   entry = helpLeft;
+   FOR_EACH_ENTRY(mvaddstr(y++, 0, entry->key););
+   y = 9;
+   entry = helpRight;
+   FOR_EACH_ENTRY(mvaddstr(y++, 40, entry->key););
+#undef FOR_EACH_ENTRY
    attrset(CRT_colors[HTOP_PROCESS_THREAD_COLOR]);
-   mvaddstr(16, 19, "thread");
+   mvaddstr(st->settings->vi_mode ? 16 : 15, 19, "thread");
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
 
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);

@@ -168,8 +168,7 @@ static Panel* setCurrentPanel(Panel* panel) {
 void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
    bool quit = false;
    int focus = 0;
-   
-   Panel* panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+   Panel *focused_panel = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
 
    double oldTime = 0.0;
 
@@ -186,7 +185,6 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (this->header) {
          checkRecalculation(this, &oldTime, &sortTimeout, &redraw, &rescan, &timedOut);
       }
-      
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
       }
@@ -201,11 +199,10 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (ch == KEY_MOUSE) {
          ch = ERR;
          MEVENT mevent;
-         int ok = getmouse(&mevent);
-         if (ok == OK) {
+         if (getmouse(&mevent) == OK) {
             if (mevent.bstate & BUTTON1_RELEASED) {
                if (mevent.y == LINES - 1) {
-                  ch = FunctionBar_synthesizeEvent(panelFocus->currentBar, mevent.x);
+                  ch = FunctionBar_synthesizeEvent(focused_panel->currentBar, mevent.x);
                } else {
                   for (int i = 0; i < this->panelCount; i++) {
                      Panel* panel = (Panel*) Vector_get(this->panels, i);
@@ -213,11 +210,12 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                         if (mevent.y == panel->y) {
                            ch = EVENT_HEADER_CLICK(mevent.x - panel->x);
                            break;
-                        } else if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
+                        }
+                        if (mevent.y > panel->y && mevent.y <= panel->y+panel->h) {
                            ch = KEY_MOUSE;
-                           if (panel == panelFocus || this->allowFocusChange) {
+                           if (panel == focused_panel || this->allowFocusChange) {
                               focus = i;
-                              panelFocus = setCurrentPanel(panel);
+                              focused_panel = setCurrentPanel(panel);
                               Object* oldSelection = Panel_getSelected(panel);
                               Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
                               if (Panel_getSelected(panel) == oldSelection) {
@@ -250,15 +248,21 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          redraw = false;
          continue;
       }
-      switch (ch) {
-         case KEY_ALT('H'): ch = KEY_LEFT; break;
-         case KEY_ALT('J'): ch = KEY_DOWN; break;
-         case KEY_ALT('K'): ch = KEY_UP; break;
-         case KEY_ALT('L'): ch = KEY_RIGHT; break;
+      unsigned int repeat = 1;
+      if(!Panel_isInsertMode(focused_panel)) {
+         if(this->settings->vi_mode) {
+            repeat = Panel_getViModeRepeatForKey(focused_panel, &ch);
+            if(!repeat) continue;
+         } else switch (ch) {
+            case KEY_ALT('H'): ch = KEY_LEFT; break;
+            case KEY_ALT('J'): ch = KEY_DOWN; break;
+            case KEY_ALT('K'): ch = KEY_UP; break;
+            case KEY_ALT('L'): ch = KEY_RIGHT; break;
+         }
       }
       redraw = true;
-      if (Panel_eventHandlerFn(panelFocus)) {
-         result = Panel_eventHandler(panelFocus, ch);
+      if (Panel_eventHandlerFn(focused_panel)) {
+         result = Panel_eventHandler(focused_panel, ch, repeat);
       }
       if (result & SYNTH_KEY) {
          ch = result >> 16;
@@ -277,55 +281,41 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
       switch (ch) {
-      case KEY_RESIZE:
-      {
-         ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
-         continue;
-      }
-      case KEY_LEFT:
-      case KEY_CTRL('B'):
-         if (this->panelCount < 2) {
-            goto defaultHandler;
-         }
-         if (!this->allowFocusChange)
-            break;
+         case KEY_RESIZE:
+            ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
+            continue;
+         case KEY_LEFT:
+         case KEY_CTRL('B'):
+            if (this->panelCount < 2) goto defaultHandler;
+            if (!this->allowFocusChange) break;
          tryLeft:
-         if (focus > 0)
-            focus--;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
-         if (Panel_size(panelFocus) == 0 && focus > 0)
-            goto tryLeft;
-         break;
-      case KEY_RIGHT:
-      case KEY_CTRL('F'):
-      case 9:
-         if (this->panelCount < 2) {
-            goto defaultHandler;
-         }
-         if (!this->allowFocusChange)
+            if (focus > 0) focus--;
+            focused_panel = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+            if (Panel_size(focused_panel) == 0 && focus > 0) goto tryLeft;
             break;
+         case KEY_RIGHT:
+         case KEY_CTRL('F'):
+         case 9:
+            if (this->panelCount < 2) goto defaultHandler;
+            if (!this->allowFocusChange) break;
          tryRight:
-         if (focus < this->panelCount - 1)
-            focus++;
-         panelFocus = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
-         if (Panel_size(panelFocus) == 0 && focus < this->panelCount - 1)
-            goto tryRight;
-         break;
-      case KEY_F(10):
-      case 'q':
-      case 27:
-         quit = true;
-         continue;
-      default:
-         defaultHandler:
-         sortTimeout = resetSortTimeout;
-         Panel_onKey(panelFocus, ch);
-         break;
+            if (focus < this->panelCount - 1) focus++;
+            focused_panel = setCurrentPanel((Panel*) Vector_get(this->panels, focus));
+            if (Panel_size(focused_panel) == 0 && focus < this->panelCount - 1) goto tryRight;
+            break;
+         case KEY_F(10):
+         case 'q':
+         case 27:
+            quit = true;
+            continue;
+         default:
+            defaultHandler:
+            sortTimeout = resetSortTimeout;
+            Panel_onKey(focused_panel, ch, repeat);
+            break;
       }
    }
 
-   if (lastFocus)
-      *lastFocus = panelFocus;
-   if (lastKey)
-      *lastKey = ch;
+   if (lastFocus) *lastFocus = focused_panel;
+   if (lastKey) *lastKey = ch;
 }

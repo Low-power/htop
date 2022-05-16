@@ -6,6 +6,7 @@
 #include "Panel.h"
 #include "FunctionBar.h"
 #include "IncSet.h"
+#include "Settings.h"
 
 typedef struct InfoScreen_ InfoScreen;
 
@@ -35,6 +36,7 @@ struct InfoScreen_ {
    FunctionBar* bar;
    IncSet* inc;
    Vector* lines;
+   const Settings *settings;
 };
 }*/
 
@@ -71,6 +73,7 @@ InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar
    this->inc = IncSet_new(bar);
    this->lines = Vector_new(this->display->items->type, true, DEFAULT_SIZE);
    Panel_setHeader(this->display, panelHeader);
+   this->settings = process->settings;
    return this;
 }
 
@@ -128,7 +131,6 @@ void InfoScreen_run(InfoScreen* this) {
       set_escdelay(25);
 #endif
       int ch = getch();
-      
       if (ch == ERR) {
          if (As_InfoScreen(this)->onErr) {
             InfoScreen_onErr(this);
@@ -151,7 +153,13 @@ void InfoScreen_run(InfoScreen* this) {
          IncSet_handleKey(this->inc, ch, panel, IncSet_getListItemValue, this->lines);
          continue;
       }
-      
+
+      unsigned int repeat = 1;
+      if(this->settings->vi_mode) {
+         repeat = Panel_getViModeRepeatForKey(panel, &ch);
+         if(!repeat) continue;
+      }
+
       switch(ch) {
       case ERR:
          continue;
@@ -185,7 +193,8 @@ void InfoScreen_run(InfoScreen* this) {
          if (As_InfoScreen(this)->onKey && InfoScreen_onKey(this, ch)) {
             continue;
          }
-         Panel_onKey(panel, ch);
+         Panel_onKey(panel, ch, repeat);
+         break;
       }
    }
 }

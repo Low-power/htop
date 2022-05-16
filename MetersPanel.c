@@ -96,9 +96,8 @@ static inline bool moveToNeighbor(MetersPanel* this, MetersPanel* neighbor, int 
    return false;
 }
 
-static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult MetersPanel_eventHandler(Panel* super, int ch, int repeat) {
    MetersPanel* this = (MetersPanel*) super;
-   
    int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
    bool sideMove = false;
@@ -132,8 +131,10 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(7):
       case '[':
       case '-':
-         Vector_moveUp(this->meters, selected);
-         Panel_moveSelectedUp(super);
+         do {
+            Vector_moveUp(this->meters, selected);
+            Panel_moveSelectedUp(super);
+         } while(--repeat > 0);
          result = HANDLED;
          break;
       case KEY_DOWN:
@@ -145,8 +146,10 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
       case ']':
       case '+':
-         Vector_moveDown(this->meters, selected);
-         Panel_moveSelectedDown(super);
+         do {
+            Vector_moveDown(this->meters, selected);
+            Panel_moveSelectedDown(super);
+         } while(--repeat > 0);
          result = HANDLED;
          break;
       case KEY_RIGHT:
@@ -166,6 +169,7 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch) {
          break;
       case KEY_F(9):
       case KEY_DC:
+         // Don't repeat delete operation
          if (!Vector_size(this->meters)) break;
          if (selected < Vector_size(this->meters)) {
             Vector_remove(this->meters, selected);

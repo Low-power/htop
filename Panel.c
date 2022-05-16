@@ -31,16 +31,19 @@ typedef enum HandlerResult_ {
 #define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
 #define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
-typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
+typedef HandlerResult (*Panel_EventHandler)(Panel *, int, int);
+typedef bool (*Panel_BoolFunction)(const Panel *);
 
 typedef struct PanelClass_ {
    const ObjectClass super;
    const Panel_EventHandler eventHandler;
+   const Panel_BoolFunction isInsertMode;
 } PanelClass;
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), (ev_))
+#define Panel_eventHandler(this_,ev_,rep_) As_Panel(this_)->eventHandler((Panel*)(this_),(ev_),(rep_))
+#define Panel_isInsertMode(this_) (As_Panel(this_)->isInsertMode && As_Panel(this_)->isInsertMode((Panel*)(this_)))
 
 struct Panel_ {
    Object super;
@@ -58,6 +61,8 @@ struct Panel_ {
    FunctionBar* defaultBar;
    RichString header;
    int selectionColor;
+   char repeat_number_buffer[11];
+   unsigned int repeat_number_i;
 };
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
@@ -96,7 +101,7 @@ PanelClass Panel_class = {
       .extends = Class(Object),
       .delete = Panel_delete
    },
-   .eventHandler = Panel_selectByTyping,
+   .eventHandler = (Panel_EventHandler)Panel_selectByTyping,
 };
 
 Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
@@ -266,7 +271,7 @@ void Panel_setSelected(Panel* this, int selected) {
       selected = 0;
    this->selected = selected;
    if (Panel_eventHandlerFn(this)) {
-      Panel_eventHandler(this, EVENT_SET_SELECTED);
+      Panel_eventHandler(this, EVENT_SET_SELECTED, 1);
    }
 }
 
@@ -374,29 +379,24 @@ void Panel_draw(Panel* this, bool focus) {
    move(0, 0);
 }
 
-bool Panel_onKey(Panel* this, int key) {
+bool Panel_onKey(Panel* this, int key, int repeat) {
    assert (this != NULL);
-   
    int size = Vector_size(this->items);
    switch (key) {
    case KEY_DOWN:
    case KEY_CTRL('N'):
-      this->selected++;
+#ifdef KEY_C_DOWN
+   case KEY_C_DOWN:
+#endif
+      this->selected += repeat;
       break;
    case KEY_UP:
    case KEY_CTRL('P'):
-      this->selected--;
-      break;
-   #ifdef KEY_C_DOWN
-   case KEY_C_DOWN:
-      this->selected++;
-      break;
-   #endif
-   #ifdef KEY_C_UP
+#ifdef KEY_C_UP
    case KEY_C_UP:
-      this->selected--;
+#endif
+      this->selected -= repeat;
       break;
-   #endif
    case KEY_LEFT:
    case KEY_CTRL('B'):
       if (this->scrollH > 0) {
@@ -426,7 +426,6 @@ bool Panel_onKey(Panel* this, int key) {
       this->needsRedraw = true;
       break;
    case KEY_WHEELDOWN:
-   {
       this->selected += CRT_scrollWheelVAmount;
       this->scrollV += CRT_scrollWheelVAmount;
       if (this->scrollV > Vector_size(this->items) - this->h) {
@@ -434,7 +433,6 @@ bool Panel_onKey(Panel* this, int key) {
       }
       this->needsRedraw = true;
       break;
-   }
    case KEY_HOME:
       this->selected = 0;
       break;
@@ -459,13 +457,12 @@ bool Panel_onKey(Panel* this, int key) {
    if (this->selected < 0 || size == 0) {
       this->selected = 0;
       this->needsRedraw = true;
-   } else if (this->selected >= size) {   
+   } else if (this->selected >= size) {
       this->selected = size - 1;
       this->needsRedraw = true;
    }
    return true;
 }
-
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    int size = Panel_size(this);
@@ -502,4 +499,35 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
       return BREAK_LOOP;
    }
    return IGNORED;
+}
+
+unsigned int Panel_getViModeRepeatForKey(Panel *this, int *ch) {
+   if(*ch == ERR) return 0;
+   if(*ch < 256 && isdigit(*ch)) {
+      this->repeat_number_buffer[this->repeat_number_i] = *ch;
+      if(++this->repeat_number_i >= sizeof this->repeat_number_buffer) this->repeat_number_i = 0;
+      return 0;
+   }
+   unsigned int repeat = 1;
+   if(this->repeat_number_i > 0) {
+      this->repeat_number_buffer[this->repeat_number_i] = 0;
+      repeat = atoi(this->repeat_number_buffer);
+      if(repeat < 1) repeat = 1;
+      this->repeat_number_i = 0;
+   }
+   switch(*ch) {
+      case 'j':
+         *ch = KEY_DOWN;
+         break;
+      case 'k':
+         *ch = KEY_UP;
+         break;
+      case 'h':
+         *ch = KEY_LEFT;
+         break;
+      case 'l':
+         *ch = KEY_RIGHT;
+         break;
+   }
+   return repeat;
 }

@@ -7,6 +7,7 @@
 #include "Panel.h"
 #include "FunctionBar.h"
 #include "IncSet.h"
+#include "Settings.h"
 
 typedef struct InfoScreen_ InfoScreen;
 
@@ -36,6 +37,7 @@ struct InfoScreen_ {
    FunctionBar* bar;
    IncSet* inc;
    Vector* lines;
+   const Settings *settings;
 };
 
 #if defined ERR && ERR > 0

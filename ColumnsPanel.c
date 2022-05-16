@@ -38,20 +38,20 @@ static void ColumnsPanel_delete(Object* object) {
    free(this);
 }
 
-static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat) {
    ColumnsPanel* const this = (ColumnsPanel*) super;
-   
-   int selected = Panel_getSelectedIndex(super);
    HandlerResult result = IGNORED;
    int size = Panel_size(super);
 
    switch(ch) {
+         int selected;
+
       case 0x0a:
       case 0x0d:
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
-         if (selected < size - 1) {
+         if (Panel_getSelectedIndex(super) < size - 1) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, CRT_colors[this->moving ? HTOP_PANEL_SELECTION_FOLLOW_COLOR : HTOP_PANEL_SELECTION_FOCUS_COLOR]);
             ((ListItem*)Panel_getSelected(super))->moving = this->moving;
@@ -67,8 +67,9 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(7):
       case '[':
       case '-':
-         if (selected < size - 1)
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - 1) {
             Panel_moveSelectedUp(super);
+         }
          result = HANDLED;
          break;
       case KEY_DOWN:
@@ -80,15 +81,25 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch) {
       case KEY_F(8):
       case ']':
       case '+':
-         if (selected < size - 2) 
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - 2) {
             Panel_moveSelectedDown(super);
+         }
          result = HANDLED;
          break;
       case KEY_F(9):
       case KEY_DC:
-         if (selected < size - 1) {
+#if 0
+         while(repeat-- > 0 && (selected = Panel_getSelectedIndex(super)) < size - 1) {
+            Panel_remove(super, selected);
+            size--;
+         }
+#else
+         // Don't repeat delete operation
+         selected = Panel_getSelectedIndex(super);
+         if(selected < size - 1) {
             Panel_remove(super, selected);
          }
+#endif
          result = HANDLED;
          break;
       default:

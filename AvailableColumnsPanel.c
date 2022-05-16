@@ -35,7 +35,7 @@ static void AvailableColumnsPanel_delete(Object* object) {
    free(this);
 }
 
-static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch, int repeat) {
    AvailableColumnsPanel* this = (AvailableColumnsPanel*) super;
    int key = ((ListItem*) Panel_getSelected(super))->key;
    HandlerResult result = IGNORED;

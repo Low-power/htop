@@ -236,6 +236,7 @@ int main(int argc, char** argv) {
       .pl = pl,
       .panel = (Panel*) panel,
       .header = header,
+      .repeat = 1
    };
    MainPanel_setState(panel, &state);
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);

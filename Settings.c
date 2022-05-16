@@ -61,6 +61,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool vi_mode;
 
    bool changed;
 } Settings;
@@ -226,6 +227,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->countCPUsFromZero = atoi(option[1]);
       } else if (String_eq(option[0], "update_process_names")) {
          this->updateProcessNames = atoi(option[1]);
+      } else if(String_eq(option[0], "vi_mode")) {
+         this->vi_mode = atoi(option[1]);
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
          this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
@@ -315,6 +318,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(f, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
    fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
+   fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(f, "color_scheme=%d\n", this->colorScheme);
    fprintf(f, "delay=%d\n", this->delay);

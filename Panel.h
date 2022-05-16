@@ -34,16 +34,19 @@ typedef enum HandlerResult_ {
 #define EVENT_IS_HEADER_CLICK(ev_) ((ev_) >= -10000 && (ev_) <= -9000)
 #define EVENT_HEADER_CLICK_GET_X(ev_) ((ev_) + 10000)
 
-typedef HandlerResult(*Panel_EventHandler)(Panel*, int);
+typedef HandlerResult (*Panel_EventHandler)(Panel *, int, int);
+typedef bool (*Panel_BoolFunction)(const Panel *);
 
 typedef struct PanelClass_ {
    const ObjectClass super;
    const Panel_EventHandler eventHandler;
+   const Panel_BoolFunction isInsertMode;
 } PanelClass;
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
 #define Panel_eventHandlerFn(this_)    As_Panel(this_)->eventHandler
-#define Panel_eventHandler(this_, ev_) As_Panel(this_)->eventHandler((Panel*)(this_), (ev_))
+#define Panel_eventHandler(this_,ev_,rep_) As_Panel(this_)->eventHandler((Panel*)(this_),(ev_),(rep_))
+#define Panel_isInsertMode(this_) (As_Panel(this_)->isInsertMode && As_Panel(this_)->isInsertMode((Panel*)(this_)))
 
 struct Panel_ {
    Object super;
@@ -61,6 +64,8 @@ struct Panel_ {
    FunctionBar* defaultBar;
    RichString header;
    int selectionColor;
+   char repeat_number_buffer[11];
+   unsigned int repeat_number_i;
 };
 
 #define Panel_setDefaultBar(this_) do{ (this_)->currentBar = (this_)->defaultBar; }while(0)
@@ -126,8 +131,10 @@ void Panel_setSelected(Panel* this, int selected);
 
 void Panel_draw(Panel* this, bool focus);
 
-bool Panel_onKey(Panel* this, int key);
+bool Panel_onKey(Panel* this, int key, int repeat);
 
 HandlerResult Panel_selectByTyping(Panel* this, int ch);
+
+unsigned int Panel_getViModeRepeatForKey(Panel *this, int *ch);
 
 #endif

@@ -70,11 +70,10 @@ void MainPanel_pidSearch(MainPanel* this, int ch) {
    }
 }
 
-static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult MainPanel_eventHandler(Panel* super, int ch, int repeat) {
    MainPanel* this = (MainPanel*) super;
 
    HandlerResult result = IGNORED;
-   
    Htop_Reaction reaction = HTOP_OK;
 
    if (EVENT_IS_HEADER_CLICK(ch)) {
@@ -89,7 +88,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       } else {
          reaction |= Action_setSortKey(settings, field);
       }
-      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS; 
+      reaction |= HTOP_RECALCULATE | HTOP_REDRAW_BAR | HTOP_SAVE_SETTINGS;
       result = HANDLED;
    } else if (ch != ERR && this->inc->active) {
       bool filterChanged = IncSet_handleKey(this->inc, ch, super, (IncMode_GetPanelValue) MainPanel_getValue, NULL);
@@ -102,7 +101,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          reaction |= HTOP_KEEP_FOLLOWING;
       }
       result = HANDLED;
-   } else if (ch < 256 && isdigit(ch)) {
+   } else if (!this->state->settings->vi_mode && ch < 256 && isdigit(ch)) {
       MainPanel_pidSearch(this, ch);
    } else switch(ch) {
       case ERR:
@@ -114,6 +113,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
          return HANDLED;
       default:
          if(ch > 0 && ch < KEY_MAX && this->keys[ch]) {
+            this->state->repeat = repeat;
             reaction |= this->keys[ch](this->state);
             result = HANDLED;
          } else {
@@ -131,7 +131,7 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
    }
    if (reaction & HTOP_REFRESH) {
       result |= REDRAW;
-   }      
+   }
    if (reaction & HTOP_RECALCULATE) {
       result |= RESCAN;
    }
@@ -146,6 +146,11 @@ static HandlerResult MainPanel_eventHandler(Panel* super, int ch) {
       Panel_setSelectionColor(super, CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR]);
    }
    return result;
+}
+
+static bool MainPanel_isInsertMode(const Panel *super) {
+	const MainPanel *this = (const MainPanel *)super;
+	return this->inc->active != NULL;
 }
 
 int MainPanel_selectedPid(MainPanel* this) {
@@ -188,7 +193,8 @@ PanelClass MainPanel_class = {
       .extends = Class(Panel),
       .delete = MainPanel_delete
    },
-   .eventHandler = MainPanel_eventHandler
+   .eventHandler = MainPanel_eventHandler,
+   .isInsertMode = MainPanel_isInsertMode
 };
 
 MainPanel* MainPanel_new() {

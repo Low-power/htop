@@ -49,45 +49,43 @@ static inline void AvailableMetersPanel_addMeter(Header* header, Panel* panel, M
    FunctionBar_draw(panel->currentBar, NULL);
 }
 
-static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult AvailableMetersPanel_eventHandler(Panel* super, int ch, int repeat) {
    AvailableMetersPanel* this = (AvailableMetersPanel*) super;
    Header* header = this->header;
-   
    ListItem* selected = (ListItem*) Panel_getSelected(super);
    int param = selected->key & 0xff;
    int type = selected->key >> 16;
    HandlerResult result = IGNORED;
    bool update = false;
 
-   switch(ch) {
-      case KEY_F(5):
-      case 'l':
-      case 'L':
-      {
-         AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
-         result = HANDLED;
-         update = true;
-         break;
+   do {
+      switch(ch) {
+         case KEY_F(5):
+         case 'l':
+         case 'L':
+            AvailableMetersPanel_addMeter(header, this->leftPanel, Platform_meterTypes[type], param, 0);
+            result = HANDLED;
+            update = true;
+            break;
+         case 0x0a:
+         case 0x0d:
+         case KEY_ENTER:
+         case KEY_F(6):
+         case 'r':
+         case 'R':
+            AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
+            result = (KEY_LEFT << 16) | SYNTH_KEY;
+            update = true;
+            break;
       }
-      case 0x0a:
-      case 0x0d:
-      case KEY_ENTER:
-      case KEY_F(6):
-      case 'r':
-      case 'R':
-      {
-         AvailableMetersPanel_addMeter(header, this->rightPanel, Platform_meterTypes[type], param, 1);
-         result = (KEY_LEFT << 16) | SYNTH_KEY;
-         update = true;
-         break;
+      if (update) {
+         this->settings->changed = true;
+         Header_calculateHeight(header);
+         Header_draw(header);
+         ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
       }
-   }
-   if (update) {
-      this->settings->changed = true;
-      Header_calculateHeight(header);
-      Header_draw(header);
-      ScreenManager_resize(this->scr, this->scr->x1, header->height, this->scr->x2, this->scr->y2);
-   }
+   } while(--repeat > 0);
+
    return result;
 }
 
@@ -104,7 +102,6 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_newEnterEsc("Add   ", "Done   ");
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
-   
    this->settings = settings;
    this->header = header;
    this->leftPanel = leftMeters;

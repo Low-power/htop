@@ -52,6 +52,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool vi_mode;
 
    bool changed;
 } Settings;

@@ -71,13 +71,14 @@ static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    ScreenManager_add(this->scr, availableColumns, -1);
 }
 
-static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
+static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch, int repeat) {
    CategoriesPanel* this = (CategoriesPanel*) super;
 
    HandlerResult result = IGNORED;
 
    int selected = Panel_getSelectedIndex(super);
    switch (ch) {
+         int previous;
       case EVENT_SET_SELECTED:
          result = HANDLED;
          break;
@@ -88,19 +89,15 @@ static HandlerResult CategoriesPanel_eventHandler(Panel* super, int ch) {
       case KEY_NPAGE:
       case KEY_PPAGE:
       case KEY_HOME:
-      case KEY_END: {
-         int previous = selected;
-         Panel_onKey(super, ch);
+      case KEY_END:
+         previous = selected;
+         Panel_onKey(super, ch, repeat);
          selected = Panel_getSelectedIndex(super);
-         if (previous != selected)
-            result = HANDLED;
+         if (previous != selected) result = HANDLED;
          break;
-      }
       default:
-         if (ch < 255 && isalpha(ch))
-            result = Panel_selectByTyping(super, ch);
-         if (result == BREAK_LOOP)
-            result = IGNORED;
+         if (ch < 255 && isalpha(ch)) result = Panel_selectByTyping(super, ch);
+         if (result == BREAK_LOOP) result = IGNORED;
          break;
    }
    if (result == HANDLED) {

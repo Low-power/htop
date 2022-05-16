@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "ListItem.h"
 }*/
 
-static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch) {
+static HandlerResult AffinityPanel_eventHandler(Panel* this, int ch, int repeat) {
    CheckItem* selected = (CheckItem*) Panel_getSelected(this);
    switch(ch) {
    case KEY_MOUSE:
