@@ -208,6 +208,22 @@ Refresh: redraw screen and recalculate values.
 PID search: type in process ID and the selection highlight will be moved to it.
 .PD
 
+.LP
+When the \fIvi(1)-style key-bindings\fR setting is enabled, some key bindings
+are redefined as followings:
+.LP 
+.TP 5
+.B Numbers
+If issuing the next command repeatly is meaningful, set the issuing count
+for the key immediately after the numbers. The minimal count is \fI1\fR.
+.TP
+.B k, j, h, l
+Same as \fBUp\fR, \fBDown\fR, \fBLeft\fR and \fBRight\fR respectively.
+.TP
+.B Alt-k, Alt-j, Alt-h, Alt-l
+Not available under this mode.
+.PD
+
 .SH "COLUMNS"
 .LP 
 The following columns can display data about each process. A value of '\-' in
