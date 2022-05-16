@@ -68,7 +68,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([stdlib.h string.h strings.h sys/param.h sys/time.h unistd.h],[:],[
   missing_headers="$missing_headers $ac_header"
 ])
-AC_CHECK_HEADERS([execinfo.h err.h getopt.h],[:],[:])
+AC_CHECK_HEADERS([execinfo.h getopt.h],[:],[:])
 
 AC_HEADER_MAJOR
 dnl glibc 2.25 deprecates 'major' and 'minor' in <sys/types.h> and requires to
