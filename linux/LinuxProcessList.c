@@ -724,13 +724,8 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
 static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
    unsigned int maj = major(tty_nr);
    unsigned int min = minor(tty_nr);
-
    int i = -1;
-   for (;;) {
-      i++;
-      if ((!ttyDrivers[i].path) || maj < ttyDrivers[i].major) {
-         break;
-      }
+   while(ttyDrivers[++i].path && maj >= ttyDrivers[i].major) {
       if (maj > ttyDrivers[i].major) {
          continue;
       }
@@ -740,29 +735,29 @@ static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned in
       if (min > ttyDrivers[i].minorTo) {
          continue;
       }
-      unsigned int idx = min - ttyDrivers[i].minorFrom;
-      struct stat sstat;
+      unsigned int unit = min - ttyDrivers[i].minorFrom;
+      struct stat st;
       char* fullPath;
-      while(true) {
-         if(asprintf(&fullPath, "%s/%d", ttyDrivers[i].path, idx) < 0) return NULL;
-         if(stat(fullPath, &sstat) == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+      do {
+         if(asprintf(&fullPath, "%s/%u", ttyDrivers[i].path, unit) < 0) return NULL;
+         if(stat(fullPath, &st) == 0 &&
+           (unsigned int)major(st.st_rdev) == maj && (unsigned int)minor(st.st_rdev) == min) {
             return fullPath;
          }
          free(fullPath);
-         if(asprintf(&fullPath, "%s%d", ttyDrivers[i].path, idx) < 0) return NULL;
-         if(stat(fullPath, &sstat) == 0 && major(sstat.st_rdev) == maj && minor(sstat.st_rdev) == min) {
+         if(asprintf(&fullPath, "%s%u", ttyDrivers[i].path, unit) < 0) return NULL;
+         if(stat(fullPath, &st) == 0 &&
+           (unsigned int)major(st.st_rdev) == maj && (unsigned int)minor(st.st_rdev) == min) {
             return fullPath;
          }
          free(fullPath);
-         if (idx == min) break;
-         idx = min;
-      }
-      if(stat(ttyDrivers[i].path, &sstat) == 0 && tty_nr == sstat.st_rdev) {
+      } while(unit != min && (int)(unit = min) >= 0);
+      if(stat(ttyDrivers[i].path, &st) == 0 && tty_nr == st.st_rdev) {
          return strdup(ttyDrivers[i].path);
       }
    }
    char* out;
-   if(asprintf(&out, "/dev/%u:%u", maj, min) < 0) return NULL;
+   if(asprintf(&out, "%u:%u", maj, min) < 0) return NULL;
    return out;
 }
 
