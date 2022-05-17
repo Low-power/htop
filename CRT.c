@@ -561,6 +561,17 @@ char* CRT_termType;
 
 int CRT_colorScheme = 0;
 
+void CRT_setMouse(bool enabled) {
+	mmask_t mask = enabled ?
+#if NCURSES_MOUSE_VERSION > 1
+		BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED
+#else
+		BUTTON1_RELEASED
+#endif
+		: 0;
+	mousemask(mask, NULL);
+}
+
 static void CRT_handleAbnormalSignal(int sgn) {
    CRT_done();
    fprintf(stderr, "\n\nhtop " VERSION " aborting due to signal %d.\n", sgn);
@@ -706,12 +717,6 @@ void CRT_init(int delay, int colorScheme) {
       CRT_utf8 ? CRT_treeStrUtf8 :
 #endif
       CRT_treeStrAscii;
-
-#if NCURSES_MOUSE_VERSION > 1
-   mousemask(BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED, NULL);
-#else
-   mousemask(BUTTON1_RELEASED, NULL);
-#endif
 
    CRT_page_size = sysconf(_SC_PAGESIZE);
    CRT_page_size_kib = CRT_page_size / ONE_BINARY_K;

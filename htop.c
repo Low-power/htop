@@ -219,6 +219,7 @@ int main(int argc, char** argv) {
    if (flags.treeView) settings->treeView = true;
 
    CRT_init(settings->delay, settings->colorScheme);
+   CRT_setMouse(settings->use_mouse);
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 

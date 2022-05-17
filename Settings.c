@@ -62,6 +62,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool vi_mode;
+   bool use_mouse;
 
    bool changed;
 } Settings;
@@ -229,6 +230,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->updateProcessNames = atoi(option[1]);
       } else if(String_eq(option[0], "vi_mode")) {
          this->vi_mode = atoi(option[1]);
+      } else if(String_eq(option[0], "use_mouse")) {
+         this->use_mouse = atoi(option[1]);
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
          this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
@@ -319,6 +322,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
    fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
+   fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(f, "color_scheme=%d\n", this->colorScheme);
    fprintf(f, "delay=%d\n", this->delay);
@@ -424,6 +428,7 @@ Settings* Settings_new(int cpuCount) {
       this->highlightMegabytes = true;
       this->highlightThreads = true;
       this->headerMargin = true;
+      this->use_mouse = true;
    }
    return this;
 }

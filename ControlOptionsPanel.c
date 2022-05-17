@@ -84,5 +84,6 @@ ControlOptionsPanel* ControlOptionsPanel_new(Settings* settings, ScreenManager* 
 
    Panel_setHeader(super, "Control options");
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Use vi(1)-style key-bindings"), &settings->vi_mode));
+   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Use mouse control"), &settings->use_mouse));
    return this;
 }

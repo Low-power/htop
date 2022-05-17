@@ -112,6 +112,7 @@ static void Action_runSetup(Settings* settings, Header *header, ProcessList* pl)
    ScreenManager_run(scr, &panelFocus, &ch);
    ScreenManager_delete(scr);
    if (settings->changed) {
+      CRT_setMouse(settings->use_mouse);
       Header_writeBackToSettings(header);
    }
 }
