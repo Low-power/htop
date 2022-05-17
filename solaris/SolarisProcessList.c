@@ -269,10 +269,7 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
 
 static void fill_last_pass(Process *proc, time_t now) {
 	SolarisProcess *sproc = (SolarisProcess *)proc;
-	struct tm date;
 	sproc->kernel = sproc->realppid <= 0 && sproc->realpid != 1;
-	localtime_r(&proc->starttime_ctime, &date);
-	strftime(proc->starttime_show, sizeof proc->starttime_show, (proc->starttime_ctime > now - 86400) ? "%R " : "%b%d ", &date);
 }
 
 #ifdef HAVE_LIBPROC

@@ -68,11 +68,7 @@ bool Process_isExtraThreadProcess(const Process* this) {
 }
 
 void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, time_t now) {
-   struct tm date;
-
    proc->starttime_ctime = ep->p_starttime.tv_sec;
-   localtime_r(&proc->starttime_ctime, &date);
-   strftime(proc->starttime_show, sizeof proc->starttime_show, (proc->starttime_ctime > now - 86400) ? "%R " : "%b%d ", &date);
 }
 
 char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) {

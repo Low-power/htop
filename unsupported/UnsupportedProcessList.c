@@ -61,7 +61,6 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 	proc->priority = 0;
 	proc->nice = 0;
 	proc->nlwp = 1;
-	strcpy(proc->starttime_show, "Jun 01 ");
 	proc->starttime_ctime = 1433116800; // Jun 01, 2015
 
 	proc->m_size = 100;

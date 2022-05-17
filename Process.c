@@ -120,7 +120,6 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
-   char starttime_show[8];
    time_t starttime_ctime;
 
    long m_size;
@@ -380,6 +379,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
+      struct tm tm;
    case PERCENT_CPU:
       if (this->percent_cpu > 999.9) {
          xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
@@ -488,7 +488,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       xSnprintf(buffer, n, Process_pidFormat, this->session);
       break;
    case STARTTIME:
-      xSnprintf(buffer, n, "%s", this->starttime_show);
+      localtime_r(&this->starttime_ctime, &tm);
+      n = strftime(buffer, n, (this->starttime_ctime > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
+      if(n != 6) {
+         if(n < 6) memset(buffer + n, ' ', 6 - n);
+         buffer[6] = 0;
+      }
       break;
    case STATE:
       xSnprintf(buffer, n, "%c ", this->state);

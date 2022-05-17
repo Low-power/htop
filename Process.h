@@ -99,7 +99,6 @@ typedef struct Process_ {
    long int priority;
    long int nice;
    long int nlwp;
-   char starttime_show[8];
    time_t starttime_ctime;
 
    long m_size;

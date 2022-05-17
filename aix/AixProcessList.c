@@ -218,10 +218,6 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			proc->tgid = pe->pi_pid;
 			proc->starttime_ctime = pe->pi_start;
 			AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
-			struct tm date;
-			localtime_r(&proc->starttime_ctime, &date);
-			strftime(proc->starttime_show, sizeof proc->starttime_show,
-				(proc->starttime_ctime > t - 86400) ? "%R " : "%b%d ", &date);
 			ProcessList_add(super, proc);
 		} else {
 			if(proc->ruid != pe->pi_uid) proc->real_user = NULL;
