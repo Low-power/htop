@@ -379,29 +379,14 @@ Settings* Settings_new(int cpuCount) {
    if (rcfile) {
       this->filename = xStrdup(rcfile);
    } else {
-      const char* home = getenv("HOME");
-      if (!home) home = "";
-      const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
-      char* configDir = NULL;
-      char* htopDir = NULL;
-      if (xdgConfigHome) {
-         this->filename = String_cat(xdgConfigHome, "/htop/htoprc");
-         configDir = xStrdup(xdgConfigHome);
-         htopDir = String_cat(xdgConfigHome, "/htop");
-      } else {
-         this->filename = String_cat(home, "/.config/htop/htoprc");
-         configDir = String_cat(home, "/.config");
-         htopDir = String_cat(home, "/.config/htop");
-      }
+      const char *home;
+      char* htopDir = CRT_getConfigDirPath(&home);
+      this->filename = String_cat(htopDir, "htoprc");
       legacyDotfile = String_cat(home, "/.htoprc");
-      CRT_dropPrivileges();
-      (void) mkdir(configDir, 0700);
-      (void) mkdir(htopDir, 0700);
       free(htopDir);
-      free(configDir);
       struct stat st;
-      int err = lstat(legacyDotfile, &st);
-      if (err || S_ISLNK(st.st_mode)) {
+      CRT_dropPrivileges();
+      if (lstat(legacyDotfile, &st) < 0 || S_ISLNK(st.st_mode)) {
          free(legacyDotfile);
          legacyDotfile = NULL;
       }

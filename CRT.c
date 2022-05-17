@@ -104,6 +104,7 @@ typedef enum {
 #include "XAlloc.h"
 #include "local-curses.h"
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
@@ -117,6 +118,7 @@ typedef enum {
 #ifdef HAVE_BACKTRACE
 #include <execinfo.h>
 #endif
+#include <pwd.h>
 
 #if defined ERR && ERR > 0
 #undef ERR
@@ -652,6 +654,37 @@ void CRT_restorePrivileges() {
 
 unsigned int CRT_page_size;
 unsigned int CRT_page_size_kib;
+
+static const char *CRT_getHomePath() {
+	const char *home = getenv("HOME");
+	if(!home) {
+		const struct passwd *pw = getpwuid(getuid());
+		home = pw ? pw->pw_dir : "";
+	}
+	return home;
+}
+
+char *CRT_getConfigDirPath(const char **home_path_p) {
+   CRT_dropPrivileges();
+   if(home_path_p) *home_path_p = CRT_getHomePath();
+   char *config_dir_path;
+   const char* xdgConfigHome = getenv("XDG_CONFIG_HOME");
+   if (xdgConfigHome) {
+      if(access(xdgConfigHome, F_OK) < 0) mkdir(xdgConfigHome, 0700);
+      config_dir_path = String_cat(xdgConfigHome, "/htop/");
+   } else {
+      const char *home = home_path_p ? *home_path_p : CRT_getHomePath();
+      size_t home_len = strlen(home);
+      config_dir_path = xMalloc(home_len + 15);
+      memcpy(config_dir_path, home, home_len);
+      strcpy(config_dir_path + home_len, "/.config/");
+      if(access(config_dir_path, F_OK) < 0) mkdir(config_dir_path, 0700);
+      strcpy(config_dir_path + home_len + 9, "htop/");
+   }
+   if(access(config_dir_path, F_OK) < 0) mkdir(config_dir_path, 0700);
+   CRT_restorePrivileges();
+   return config_dir_path;
+}
 
 void CRT_initColorSchemes() {
    initscr();

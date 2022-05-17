@@ -199,6 +199,8 @@ void CRT_restorePrivileges();
 extern unsigned int CRT_page_size;
 extern unsigned int CRT_page_size_kib;
 
+char *CRT_getConfigDirPath(const char **home_path_p);
+
 void CRT_initColorSchemes();
 
 int CRT_getDefaultColorScheme();
