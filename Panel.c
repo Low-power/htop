@@ -134,6 +134,7 @@ void Panel_init(Panel* this, int x, int y, int w, int h, ObjectClass* type, bool
    this->defaultBar = fuBar;
    this->currentBar = fuBar;
    this->selectionColor = CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR];
+   this->repeat_number_i = 0;
 }
 
 void Panel_done(Panel* this) {
