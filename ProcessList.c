@@ -211,14 +211,13 @@ void ProcessList_sort(ProcessList* this) {
       // Find all processes whose parent is not visible
       int size;
       while ((size = Vector_size(this->processes))) {
-         int i;
-         for (i = 0; i < size; i++) {
+         int i = 0;
+         while(i < size) {
             Process* process = (Process *)Vector_get(this->processes, i);
             pid_t ppid = Process_getParentPid(process);
             // Bisect the process vector to find parent
-            // If PID corresponds with PPID (e.g. "kernel_task" (PID:0, PPID:0)
-            // on Mac OS X 10.11.6) cancel bisecting and regard this process as
-            // root.
+            // If PID corresponds with PPID (e.g. "kernel_task" (PID=0, PPID=0)
+            // on Mac OS X) cancel bisecting and regard this process as root.
             int l = 0, r = process->pid == ppid ? 0 : size;
             while (l < r) {
                int c = (l + r) / 2;
@@ -240,6 +239,9 @@ void ProcessList_sort(ProcessList* this) {
                int level = (!process->show && root) ? -1 : 0;
                ProcessList_buildTree(this, process->pid, level, 0, direction, root && process->showChildren);
                if(root) break;
+               size--;
+            } else {
+               i++;
             }
          }
          // There should be no loop in the process tree
