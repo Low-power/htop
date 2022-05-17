@@ -460,7 +460,8 @@ static const struct key_help_entry helpRight[] = {
 #endif
    { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },
    { "      i: ", "set IO priority", KEY_VI_MODE_COMPATIBLE },
-   { "      l: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
+   { "    l o: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
+   { "      o: ", "list open files with lsof(8)", KEY_VI_MODE_ONLY },
    { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
    { "         ", "strace(1)", KEY_VI_MODE_COMPATIBLE },
    { " F2 C S: ", "setup", KEY_VI_MODE_COMPATIBLE },
@@ -662,6 +663,7 @@ void Action_setBindings(Htop_Action* keys) {
    keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;
+   keys['o'] = actionLsof;
    keys['l'] = actionLsof;
    keys['s'] = actionStrace;
    keys[' '] = actionTag;
