@@ -244,11 +244,24 @@ void ProcessList_sort(ProcessList* this) {
                i++;
             }
          }
-         // There should be no loop in the process tree
-         assert(i < size);
+         /* Under some ptrace(2) implementations, a process
+          * ptrace(2)-attaching a parent process in its
+          * process tree will causing the traced process to be
+          * re-parented to the tracing process; this will
+          * creating a loop in the process tree. In this case
+          * build separated tree(s) for loop(s) left here.
+          */
+         if(i >= size) {
+            do {
+               Process *proc = (Process *)Vector_take(this->processes, size - 1);
+               proc->indent = 0;
+               Vector_add(this->processes2, proc);
+               ProcessList_buildTree(this, proc->pid, 0, 0, direction, proc->show);
+            } while((size = Vector_size(this->processes)) > 0);
+            break;
+         }
       }
       assert(Vector_size(this->processes2) == vsize); (void)vsize;
-      assert(Vector_size(this->processes) == 0);
       // Swap listings around
       Vector* t = this->processes;
       this->processes = this->processes2;
