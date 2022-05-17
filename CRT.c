@@ -6,6 +6,7 @@ in the source distribution for its full text.
 */
 
 /*{
+#include "Settings.h"
 #include <stdbool.h>
 
 typedef enum TreeStr_ {
@@ -100,6 +101,7 @@ typedef enum {
 #include "CRT.h"
 #include "StringUtils.h"
 #include "RichString.h"
+#include "XAlloc.h"
 #include "local-curses.h"
 #include <sys/types.h>
 #include <unistd.h>
@@ -184,6 +186,10 @@ static bool CRT_hasColors;
 int CRT_delay = 0;
 
 int* CRT_colors;
+
+int CRT_color_scheme_count = LAST_COLORSCHEME;
+
+const char **CRT_color_scheme_names;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [DEFAULT_COLOR_SCHEME] = {
@@ -549,6 +555,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [BROKENGRAY_COLOR_SCHEME] = { 0 } // dynamically generated.
 };
 
+int (*CRT_user_defined_color_schemes)[LAST_COLORELEMENT];
+
 int CRT_cursorX = 0;
 
 int CRT_scrollHAmount = 5;
@@ -559,7 +567,7 @@ char* CRT_termType;
 
 // TODO move color scheme to Settings, perhaps?
 
-int CRT_colorScheme = 0;
+int CRT_color_scheme_index;
 
 void CRT_setMouse(bool enabled) {
 	mmask_t mask = enabled ?
@@ -645,24 +653,49 @@ void CRT_restorePrivileges() {
 unsigned int CRT_page_size;
 unsigned int CRT_page_size_kib;
 
-// TODO: pass an instance of Settings instead.
-
-void CRT_init(int delay, int colorScheme) {
+void CRT_initColorSchemes() {
    initscr();
-   noecho();
-   CRT_delay = delay;
-   if (CRT_delay == 0) {
-      CRT_delay = 1;
-   }
-   CRT_colors = CRT_colorSchemes[colorScheme];
-   CRT_colorScheme = colorScheme;
-   
+
+   assert(CRT_color_scheme_names == NULL);
+
+   CRT_color_scheme_names = xMalloc(8 * sizeof(const char *));
+   CRT_color_scheme_names[0] = "Default",
+   CRT_color_scheme_names[1] = "Monochromatic",
+   CRT_color_scheme_names[2] = "Black on White",
+   CRT_color_scheme_names[3] = "Light Terminal",
+   CRT_color_scheme_names[4] = "MC",
+   CRT_color_scheme_names[5] = "Black Night",
+   CRT_color_scheme_names[6] = "Broken Gray",
+   CRT_color_scheme_names[7] = NULL;
+
+   assert(CRT_user_defined_color_schemes == NULL);
+   // TODO: Read custom color schemes
+
    for (int i = 0; i < LAST_COLORELEMENT; i++) {
       unsigned int color = CRT_colorSchemes[DEFAULT_COLOR_SCHEME][i];
       CRT_colorSchemes[BROKENGRAY_COLOR_SCHEME][i] =
          color == (A_BOLD | ColorPairGrayBlack) ? ColorPair(White,Black) : color;
    }
-   
+}
+
+int CRT_getDefaultColorScheme() {
+	return has_colors() ? DEFAULT_COLOR_SCHEME : MONOCHROME_COLOR_SCHEME;
+}
+
+int CRT_getColorSchemeIndexForName(const char *name) {
+   for(int i = 0; i < CRT_color_scheme_count; i++) {
+      if(strcmp(name, CRT_color_scheme_names[i]) == 0) return i;
+   }
+   return -1;
+}
+
+void CRT_init(const Settings *settings) {
+   noecho();
+   CRT_delay = settings->delay;
+   if (CRT_delay == 0) {
+      CRT_delay = 1;
+   }
+
    halfdelay(CRT_delay);
    nonl();
    intrflush(stdscr, false);
@@ -701,9 +734,7 @@ void CRT_init(int delay, int colorScheme) {
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
    use_default_colors();
-   if (!has_colors())
-      CRT_colorScheme = 1;
-   CRT_setColors(CRT_colorScheme);
+   CRT_setColors(settings->colorScheme);
 
    /* initialize locale */
    setlocale(LC_CTYPE, "");
@@ -753,21 +784,23 @@ void CRT_enableDelay() {
    halfdelay(CRT_delay);
 }
 
-void CRT_setColors(int colorScheme) {
-   CRT_colorScheme = colorScheme;
+void CRT_setColors(int color_scheme_i) {
+   CRT_color_scheme_index = color_scheme_i;
 
    for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
          if (ColorIndex(i,j) != ColorPairGrayBlack) {
-            int bg = (colorScheme != BLACKNIGHT_COLOR_SCHEME && j == 0) ? -1 : j;
-            init_pair(ColorIndex(i,j), i, bg);
+            int bg = (color_scheme_i != BLACKNIGHT_COLOR_SCHEME && j == 0) ? -1 : j;
+            init_pair(ColorIndex(i, j), i, bg);
          }
       }
    }
 
    int grayBlackFg = COLORS > 8 ? 8 : 0;
-   int grayBlackBg = (colorScheme != BLACKNIGHT_COLOR_SCHEME) ? -1 : 0;
+   int grayBlackBg = (color_scheme_i != BLACKNIGHT_COLOR_SCHEME) ? -1 : 0;
    init_pair(ColorIndexGrayBlack, grayBlackFg, grayBlackBg);
 
-   CRT_colors = CRT_colorSchemes[colorScheme];
+   CRT_colors = color_scheme_i < LAST_COLORSCHEME ?
+      CRT_colorSchemes[color_scheme_i] :
+         CRT_user_defined_color_schemes[color_scheme_i - LAST_COLORSCHEME];
 }

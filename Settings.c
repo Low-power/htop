@@ -237,8 +237,14 @@ static bool Settings_read(Settings* this, const char* fileName) {
       } else if (String_eq(option[0], "delay")) {
          this->delay = atoi(option[1]);
       } else if (String_eq(option[0], "color_scheme")) {
-         this->colorScheme = atoi(option[1]);
-         if (this->colorScheme < 0 || this->colorScheme >= LAST_COLORSCHEME) this->colorScheme = 0;
+         this->colorScheme = CRT_getColorSchemeIndexForName(option[1]);
+         if(this->colorScheme < 0) {
+            this->colorScheme = atoi(option[1]);
+            if (this->colorScheme < 0 || this->colorScheme >= CRT_color_scheme_count) {
+               //this->colorScheme = DEFAULT_COLOR_SCHEME;
+               this->colorScheme = CRT_getDefaultColorScheme();
+            }
+         }
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
          didReadMeters = true;
@@ -324,7 +330,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
-   fprintf(f, "color_scheme=%d\n", this->colorScheme);
+   fprintf(f, "color_scheme=%s\n", CRT_color_scheme_names[this->colorScheme]);
    fprintf(f, "delay=%d\n", this->delay);
    fprintf(f, "left_meters="); writeMeters(this, f, 0);
    fprintf(f, "left_meter_modes="); writeMeterModes(this, f, 0);
@@ -399,7 +405,7 @@ Settings* Settings_new(int cpuCount) {
       }
       CRT_restorePrivileges();
    }
-   this->colorScheme = 0;
+   this->colorScheme = CRT_getDefaultColorScheme();
    this->changed = false;
    this->delay = DEFAULT_DELAY;
    bool ok = false;

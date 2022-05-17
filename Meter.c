@@ -78,7 +78,6 @@ typedef struct MeterClass_ {
 struct Meter_ {
    Object super;
    Meter_Draw draw;
-   
    char* caption;
    int mode;
    int param;
@@ -312,14 +311,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       int nextOffset = offset + blockSizes[i];
       // (Control against invalid values)
       nextOffset = CLAMP(nextOffset, 0, w);
-      for (int j = offset; j < nextOffset; j++)
+      for (int j = offset; j < nextOffset; j++) {
          if (bar[j] == ' ') {
-            if (CRT_colorScheme == MONOCHROME_COLOR_SCHEME) {
-               bar[j] = BarMeterMode_characters[i];
-            } else {
-               bar[j] = '|';
-            }
+            bar[j] =
+               CRT_color_scheme_index == MONOCHROME_COLOR_SCHEME ?
+                  BarMeterMode_characters[i] : '|';
          }
+      }
       offset = nextOffset;
    }
 
@@ -387,7 +385,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
    mvaddnstr(y, x, this->caption, captionLen);
    x += captionLen;
    w -= captionLen;
-   
    struct timeval now;
    gettimeofday(&now, NULL);
    if (!timercmp(&now, &(data->time), <)) {
@@ -403,12 +400,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       timeradd(&now, &delay, &(data->time));
 #endif
 
-      for (int i = 0; i < nValues - 1; i++)
-         data->values[i] = data->values[i+1];
-   
+      for (int i = 0; i < nValues - 1; i++) data->values[i] = data->values[i+1];
       char buffer[nValues];
       Meter_updateValues(this, buffer, nValues);
-   
       double value = 0.0;
       int items = Meter_getItems(this);
       for (int i = 0; i < items; i++)
@@ -416,7 +410,6 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       value /= this->total;
       data->values[nValues - 1] = value;
    }
-   
    int i = nValues - (w*2) + 2, k = 0;
    if (i < 0) {
       k = -i/2;
@@ -477,7 +470,6 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
 
    char buffer[METER_BUFFER_LEN];
    Meter_updateValues(this, buffer, METER_BUFFER_LEN);
-   
    RichString_begin(out);
    Meter_displayBuffer(this, buffer, &out);
 

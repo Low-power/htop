@@ -65,7 +65,6 @@ typedef struct MeterClass_ {
 struct Meter_ {
    Object super;
    Meter_Draw draw;
-   
    char* caption;
    int mode;
    int param;

@@ -14,12 +14,6 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 
-// TO ADD A NEW SCHEME:
-// * Increment the size of bool check in ColorsPanel.h
-// * Add the entry in the ColorSchemeNames array below in the file
-// * Add a define in CRT.h that matches the order of the array
-// * Add the colors in CRT_setColors
-
 /*{
 #include "Panel.h"
 #include "Settings.h"
@@ -35,17 +29,6 @@ typedef struct ColorsPanel_ {
 }*/
 
 static const char* const ColorsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
-
-static const char* const ColorSchemeNames[] = {
-   "Default",
-   "Monochromatic",
-   "Black on White",
-   "Light Terminal",
-   "MC",
-   "Black Night",
-   "Broken Gray",
-   NULL
-};
 
 static void ColorsPanel_delete(Object* object) {
    Panel* super = (Panel*) object;
@@ -66,8 +49,9 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch, int repeat) 
    case KEY_MOUSE:
    case KEY_RECLICK:
    case ' ':
-      for (int i = 0; ColorSchemeNames[i] != NULL; i++)
+      for (int i = 0; i < CRT_color_scheme_count; i++) {
          CheckItem_set((CheckItem*)Panel_get(super, i), false);
+      }
       CheckItem_set((CheckItem*)Panel_get(super, mark), true);
       this->settings->colorScheme = mark;
       result = HANDLED;
@@ -105,8 +89,8 @@ ColorsPanel* ColorsPanel_new(Settings* settings, ScreenManager* scr) {
    this->scr = scr;
 
    Panel_setHeader(super, "Colors");
-   for (int i = 0; ColorSchemeNames[i] != NULL; i++) {
-      Panel_add(super, (Object*) CheckItem_newByVal(xStrdup(ColorSchemeNames[i]), false));
+   for (int i = 0; i < CRT_color_scheme_count; i++) {
+      Panel_add(super, (Object *)CheckItem_newByVal(xStrdup(CRT_color_scheme_names[i]), false));
    }
    CheckItem_set((CheckItem*)Panel_get(super, settings->colorScheme), true);
    return this;

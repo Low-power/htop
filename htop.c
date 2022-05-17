@@ -204,6 +204,7 @@ int main(int argc, char** argv) {
       return 1;
    }
 #endif
+   CRT_initColorSchemes();
    Process_setupColumnWidths();
    UsersTable* ut = UsersTable_new();
    ProcessList* pl = ProcessList_new(ut, flags.pidWhiteList, flags.userId);
@@ -218,7 +219,7 @@ int main(int argc, char** argv) {
    if (!flags.useColors) settings->colorScheme = MONOCHROME_COLOR_SCHEME;
    if (flags.treeView) settings->treeView = true;
 
-   CRT_init(settings->delay, settings->colorScheme);
+   CRT_init(settings);
    CRT_setMouse(settings->use_mouse);
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);

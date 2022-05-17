@@ -9,6 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Settings.h"
 #include <stdbool.h>
 
 typedef enum TreeStr_ {
@@ -154,7 +155,13 @@ extern int CRT_delay;
 
 extern int* CRT_colors;
 
+extern int CRT_color_scheme_count;
+
+extern const char **CRT_color_scheme_names;
+
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
+
+extern int (*CRT_user_defined_color_schemes)[LAST_COLORELEMENT];
 
 extern int CRT_cursorX;
 
@@ -166,7 +173,7 @@ extern char* CRT_termType;
 
 // TODO move color scheme to Settings, perhaps?
 
-extern int CRT_colorScheme;
+extern int CRT_color_scheme_index;
 
 void CRT_setMouse(bool enabled);
 
@@ -192,9 +199,13 @@ void CRT_restorePrivileges();
 extern unsigned int CRT_page_size;
 extern unsigned int CRT_page_size_kib;
 
-// TODO: pass an instance of Settings instead.
+void CRT_initColorSchemes();
 
-void CRT_init(int delay, int colorScheme);
+int CRT_getDefaultColorScheme();
+
+int CRT_getColorSchemeIndexForName(const char *name);
+
+void CRT_init(const Settings *settings);
 
 void CRT_done();
 
@@ -206,6 +217,6 @@ void CRT_disableDelay();
 
 void CRT_enableDelay();
 
-void CRT_setColors(int colorScheme);
+void CRT_setColors(int color_scheme_i);
 
 #endif
