@@ -371,6 +371,8 @@ Settings* Settings_new(int cpuCount) {
       this->fields[i] = defaults[i];
       this->flags |= Process_fields[defaults[i]].flags;
    }
+   this->vi_mode = false;
+   this->use_mouse = true;
 
    char* legacyDotfile = NULL;
    char* rcfile = getenv("HTOPRC");
@@ -434,7 +436,6 @@ Settings* Settings_new(int cpuCount) {
       this->highlightMegabytes = true;
       this->highlightThreads = true;
       this->headerMargin = true;
-      this->use_mouse = true;
    }
    return this;
 }
