@@ -1,9 +1,9 @@
-.TH "HTOP" "1" "2015" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2022" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
 .LP 
-.B htop [\fI\-dChustv\fR]
+.B htop [\fIOPTIONS\fR]
 .SH "DESCRIPTION"
 .LP 
 Htop is a free (GPL) ncurses-based process viewer for Linux.
@@ -21,30 +21,30 @@ entering their PIDs.
 Mandatory arguments to long options are mandatory for short options too.
 .LP 
 .TP
-\fB\-d \-\-delay=DELAY\fR
+\fB\-d, \-\-delay \fIDELAY\fR
 Delay between updates, in tenths of seconds. If the delay value is
 less than 1 it is increased to 1, i.e. 1/10 second. If the delay value
 is greater than 100, it is decreased to 100, i.e. 10 seconds.
 .TP
-\fB\-C \-\-no-color \-\-no-colour\fR
+\fB\-C, \-\-no-color, \-\-no-colour\fR
 Start htop in monochrome mode
 .TP
-\fB\-h \-\-help
+\fB\-h, \-\-help
 Display a help message and exit
 .TP
-\fB\-p \-\-pid=PID,PID...\fR
+\fB\-p, \-\-pid \fIPID\fR[\fB,\fIPID...\fR]
 Show only the given PIDs
 .TP
-\fB\-s \-\-sort\-key COLUMN\fR
+\fB\-s, \-\-sort\-key \fICOLUMN\fR
 Sort by this column (use \-\-sort\-key help for a column list)
 .TP
-\fB\-u \-\-user=USERNAME\fR
+\fB\-u, \-\-user \fIUSERNAME\fR
 Show only the processes of a given user
 .TP
-\fB\-v \-\-version
+\fB\-v, \-\-version
 Output version information and exit
 .TP
-\fB\-t \-\-tree
+\fB\-t, \-\-tree
 Show processes in tree view
 .PP
 .br 
