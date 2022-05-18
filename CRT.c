@@ -833,30 +833,35 @@ static void load_user_defined_color_scheme(const char *path) {
 	int colors[LAST_COLORELEMENT];
 	for(i = 0; i < LAST_COLORELEMENT; i++) colors[i] = A_NORMAL;
 	char buffer[128];
-	unsigned int nlines = 1;
+	unsigned int nlines = 0;
 	while(fgets(buffer, sizeof buffer, f)) {
-		if(strncmp(buffer, "NAME=", 5) == 0) {
-			if(!buffer[5]) {
+		nlines++;
+		char *p = buffer;
+		while(isspace(*p)) p++;
+		if(!*p) continue;
+		if(*p == '#') continue;
+		if(strncmp(p, "NAME=", 5) == 0) {
+			if(!p[5]) {
 				//free(colors);
 				fprintf(stderr, "%s:%u: NAME is empty\r\n", path, nlines);
 				return;
 			}
-			//name = xStrdup(buffer + 5);
-			size_t len = strlen(buffer + 5);
-			if(buffer[5 + len - 1] == '\n') len--;
+			//name = xStrdup(p + 5);
+			size_t len = strlen(p + 5);
+			if(p[5 + len - 1] == '\n') len--;
 			name = xMalloc(len + 1);
-			memcpy(name, buffer + 5, len);
+			memcpy(name, p + 5, len);
 			name[len] = 0;
 		} else {
 			int attr = -1;
 			for(i = 0; i < LAST_COLORELEMENT; i++) {
 				const struct key_name *key = color_element_name_map + i;
-				if(strncmp(buffer, key->key_prefix, key->key_length)) continue;
-				attr = parse_attribute(buffer + key->key_length);
+				if(strncmp(p, key->key_prefix, key->key_length)) continue;
+				attr = parse_attribute(p + key->key_length);
 				if(attr < 0) {
-					buffer[key->key_length - 1] = 0;
+					p[key->key_length - 1] = 0;
 					fprintf(stderr, "%s:%u: Warning: failed to parse attribute for %s\r\n",
-						path, nlines, buffer);
+						path, nlines, p);
 					attr = 0;
 				} else {
 					colors[i] = attr;
@@ -867,7 +872,6 @@ static void load_user_defined_color_scheme(const char *path) {
 				fprintf(stderr, "%s:%u: Warning: unrecognized key\r\n", path, nlines);
 			}
 		}
-		nlines++;
 	}
 	fclose(f);
 	if(!name) {
