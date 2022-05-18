@@ -13,6 +13,7 @@
 
 #include "CRT.h"
 #include "local-curses.h"
+#include <unistd.h>
 #include <stdio.h>
 
 //#define ColorIndex(i,j) ( ( 7 - (i) ) * 8  +  (j) )
@@ -56,8 +57,15 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Usage: %s <scheme-name>|<scheme-index>\n", argv[0]);
 		return -1;
 	}
+	int fd = dup(STDOUT_FILENO);
+	if(fd == -1) {
+		perror("dup");
+		return 1;
+	}
+	close(STDOUT_FILENO);
 	CRT_initColorSchemes();
 	endwin();	// CRT_initColorSchemes calls initscr(3X)
+	dup2(fd, STDOUT_FILENO);
 	int i = CRT_getColorSchemeIndexForName(argv[1]);
 	if(i < 0) {
 		char *end_p;
