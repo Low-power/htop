@@ -66,35 +66,37 @@ typedef struct Process_ {
 
    struct Settings_* settings;
 
-   unsigned long long int time;
+   bool updated;
+
+   bool tag;
+   bool showChildren;
+   bool show;
+   int indent;
+
+   char state;
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
    char *name;
    char* comm;
    int commLen;
-   int indent;
-
    int basenameOffset;
-   bool updated;
 
-   char state;
-   bool tag;
-   bool showChildren;
-   bool show;
    unsigned int pgrp;
    unsigned int session;
    unsigned int tty_nr;
    int tpgid;
    uid_t ruid;
    uid_t euid;
+
+   char *real_user;
+   char *effective_user;
+
+   unsigned long long int time;
    int processor;
 
    float percent_cpu;
    float percent_mem;
-
-   char *real_user;
-   char *effective_user;
 
    long int priority;
    long int nice;
@@ -108,25 +110,6 @@ typedef struct Process_ {
 
    unsigned long int minflt;
    unsigned long int majflt;
-   #ifdef DEBUG
-   long int itrealvalue;
-   unsigned long int vsize;
-   long int rss;
-   unsigned long int rlim;
-   unsigned long int startcode;
-   unsigned long int endcode;
-   unsigned long int startstack;
-   unsigned long int kstkesp;
-   unsigned long int kstkeip;
-   unsigned long int signal;
-   unsigned long int blocked;
-   unsigned long int sigignore;
-   unsigned long int sigcatch;
-   unsigned long int wchan;
-   unsigned long int nswap;
-   unsigned long int cnswap;
-   #endif
-
 } Process;
 
 typedef struct ProcessFieldData_ {
