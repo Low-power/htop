@@ -71,6 +71,7 @@ typedef struct Process_ {
    bool tag;
    bool showChildren;
    bool show;
+   bool seen_in_tree_loop;
    int indent;
 
    char state;

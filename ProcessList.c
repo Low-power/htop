@@ -181,6 +181,7 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
    int size = Vector_size(children);
    for (int i = 0; i < size; i++) {
       Process* process = (Process *)Vector_get(children, i);
+      process->seen_in_tree_loop = false;
       if (!show) process->show = false;
       int s = this->processes2->items;
       if (direction == 1) Vector_add(this->processes2, process);
@@ -191,6 +192,26 @@ static void ProcessList_buildTree(ProcessList* this, pid_t pid, int level, int i
       process->indent = (i < size - 1) ? nextIndent : -nextIndent;
    }
    Vector_delete(children);
+}
+
+static Process *ProcessList_findParent(const ProcessList *this, const Process *proc, int *index) {
+   // Bisect the process vector to find parent
+   // If PID corresponds with PPID (e.g. "kernel_task" (PID=0, PPID=0)
+   // on Mac OS X) cancel bisecting and regard this process as root.
+   pid_t ppid = Process_getParentPid(proc);
+   if(ppid == proc->pid) return NULL;
+   int l = 0, r = Vector_size(this->processes);
+   while (l < r) {
+      int c = (l + r) / 2;
+      Process *p = (Process *)Vector_get(this->processes, c);
+      if (ppid == p->pid) {
+         if(index) *index = c;
+         return p;
+      }
+      if (ppid < p->pid) r = c;
+      else l = c + 1;
+   }
+   return NULL;
 }
 
 void ProcessList_sort(ProcessList* this) {
@@ -214,23 +235,8 @@ void ProcessList_sort(ProcessList* this) {
          int i = 0;
          while(i < size) {
             Process* process = (Process *)Vector_get(this->processes, i);
-            pid_t ppid = Process_getParentPid(process);
-            // Bisect the process vector to find parent
-            // If PID corresponds with PPID (e.g. "kernel_task" (PID=0, PPID=0)
-            // on Mac OS X) cancel bisecting and regard this process as root.
-            int l = 0, r = process->pid == ppid ? 0 : size;
-            while (l < r) {
-               int c = (l + r) / 2;
-               pid_t pid = ((Process*)(Vector_get(this->processes, c)))->pid;
-               if (ppid == pid) {
-                  break;
-               } else if (ppid < pid) {
-                  r = c;
-               } else {
-                  l = c + 1;
-               }
-            }
-            bool root = l >= r;
+            process->seen_in_tree_loop = false;
+            bool root = !ProcessList_findParent(this, process, NULL);
             // If parent not found, then construct the tree with this root
             if (!process->show || root) {
                process = (Process *)Vector_take(this->processes, i);
@@ -253,7 +259,31 @@ void ProcessList_sort(ProcessList* this) {
           */
          if(i >= size) {
             do {
-               Process *proc = (Process *)Vector_take(this->processes, size - 1);
+               Process *proc = (Process *)Vector_get(this->processes, size - 1);
+               /* This remaining process could
+                * either be a node at the loop it
+                * self, or a descendant node
+                * indirectly attached to the loop.
+                */
+#ifdef NDEBUG
+               i = size - 1;
+#endif
+               do {
+                  /* Make sure we break at the
+                   * loop itself, not a
+                   * descendant of it. */
+                  proc->seen_in_tree_loop = true;
+                  Process *parent = ProcessList_findParent(this, proc, &i);
+                  assert(parent != NULL);
+                  if(!parent) break;
+                  proc = parent;
+               } while(!proc->seen_in_tree_loop);
+#ifdef NDEBUG
+               Vector_take(this->processes, i);
+#else
+               Process *taken = (Process *)Vector_take(this->processes, i);
+               assert(taken == proc);
+#endif
                proc->indent = 0;
                Vector_add(this->processes2, proc);
                ProcessList_buildTree(this, proc->pid, 0, 0, direction, proc->show);
