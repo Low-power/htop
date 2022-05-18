@@ -478,7 +478,7 @@ static void LEDMeterMode_draw(Meter* this, int x, int y, int w) {
       CRT_utf8 ? y+1 :
 #endif
       y+2;
-   attrset(CRT_colors[HTOP_LED_COLOR_COLOR]);
+   attrset(CRT_colors[HTOP_LED_COLOR]);
    mvaddstr(yText, x, this->caption);
    int xx = x + strlen(this->caption);
    int len = RichString_sizeVal(out);
