@@ -12,7 +12,44 @@
 */
 
 #include "CRT.h"
+#include "local-curses.h"
 #include <stdio.h>
+
+//#define ColorIndex(i,j) ( ( 7 - (i) ) * 8  +  (j) )
+
+//#if COLOR_PAIR(1) == NCURSES_BITS(1, 0)
+#if 1
+static const char *color_names[] = {
+	[COLOR_BLACK] = "BLACK",
+	[COLOR_RED] = "RED",
+	[COLOR_GREEN] = "GREEN",
+	[COLOR_YELLOW] = "YELLOW",
+	[COLOR_BLUE] = "BLUE",
+	[COLOR_MAGENTA] = "MAGENTA",
+	[COLOR_CYAN] = "CYAN",
+	[COLOR_WHITE] = "WHITE"
+};
+
+static void print_font_attribute(int attr) {
+	attr &= ~A_COLOR;
+	if(attr & A_STANDOUT) fputs(",STANDOUT", stdout);
+	if(attr & A_UNDERLINE) fputs(",UNDERLINE", stdout);
+	if(attr & A_REVERSE) fputs(",REVERSE", stdout);
+	if(attr & A_BLINK) fputs(",BLINK", stdout);
+	if(attr & A_DIM) fputs(",DIM", stdout);
+	if(attr & A_BOLD) fputs(",BOLD", stdout);
+	if(attr & A_ALTCHARSET) fputs(",ALTCHARSET", stdout);
+	if(attr & A_INVIS) fputs(",INVIS", stdout);
+	if(attr & A_PROTECT) fputs(",PROTECT", stdout);
+	if(attr & A_HORIZONTAL) fputs(",HORIZONTAL", stdout);
+	if(attr & A_LEFT) fputs(",LEFT", stdout);
+	if(attr & A_LOW) fputs(",LOW", stdout);
+	if(attr & A_RIGHT) fputs(",RIGHT", stdout);
+	if(attr & A_TOP) fputs(",TOP", stdout);
+	if(attr & A_VERTICAL) fputs(",VERTICAL", stdout);
+	putchar('\n');
+}
+#endif
 
 int main(int argc, char **argv) {
 	if(argc != 2) {
@@ -31,13 +68,23 @@ int main(int argc, char **argv) {
 		}
 		if(i < 0 || i >= (int)LAST_COLORSCHEME) {
 			fprintf(stderr, "%s: Index value %d out of range (0~%u)\n",
-				argv[0], i, (unsigned int)LAST_COLORSCHEME);
+				argv[0], i, (unsigned int)(LAST_COLORSCHEME - 1));
 			return 1;
 		}
 	}
 	printf("NAME=%s\n", CRT_color_scheme_names[i]);
 	const int *colors = CRT_colorSchemes[i];
-#define PRINT_COLOR_ATTRIBUTE(KEY) printf(#KEY "=%d\n", colors[HTOP_##KEY##_COLOR])
+#if 1
+#define PRINT_COLOR_ATTRIBUTE(KEY) \
+	do { \
+		printf(#KEY "=%s,%s", \
+			color_names[7 - (int)((colors[HTOP_##KEY##_COLOR]&A_COLOR)>>NCURSES_ATTR_SHIFT) / 8 % 8], \
+			color_names[(int)((colors[HTOP_##KEY##_COLOR]&A_COLOR)>>NCURSES_ATTR_SHIFT) % 8]); \
+		print_font_attribute(colors[HTOP_##KEY##_COLOR]); \
+	} while(0);
+#else
+#define PRINT_COLOR_ATTRIBUTE(KEY) printf(#KEY "=0x%x\n", colors[HTOP_##KEY##_COLOR])
+#endif
 	PRINT_COLOR_ATTRIBUTE(DEFAULT);
 	PRINT_COLOR_ATTRIBUTE(FUNCTION_BAR);
 	PRINT_COLOR_ATTRIBUTE(FUNCTION_KEY);
