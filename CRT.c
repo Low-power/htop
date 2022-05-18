@@ -838,7 +838,7 @@ static void load_user_defined_color_scheme(const char *path) {
 		if(strncmp(buffer, "NAME=", 5) == 0) {
 			if(!buffer[5]) {
 				//free(colors);
-				fprintf(stderr, "%s:%u: NAME is empty\n", path, nlines);
+				fprintf(stderr, "%s:%u: NAME is empty\r\n", path, nlines);
 				return;
 			}
 			//name = xStrdup(buffer + 5);
@@ -855,7 +855,7 @@ static void load_user_defined_color_scheme(const char *path) {
 				attr = parse_attribute(buffer + key->key_length);
 				if(attr < 0) {
 					buffer[key->key_length - 1] = 0;
-					fprintf(stderr, "%s:%u: Warning: failed to parse attribute for %s\n",
+					fprintf(stderr, "%s:%u: Warning: failed to parse attribute for %s\r\n",
 						path, nlines, buffer);
 					attr = 0;
 				} else {
@@ -864,14 +864,14 @@ static void load_user_defined_color_scheme(const char *path) {
 				break;
 			}
 			if(attr < 0) {
-				fprintf(stderr, "%s:%u: Warning: unrecognized key\n", path, nlines);
+				fprintf(stderr, "%s:%u: Warning: unrecognized key\r\n", path, nlines);
 			}
 		}
 		nlines++;
 	}
 	fclose(f);
 	if(!name) {
-		fprintf(stderr, "%s: NAME is not defined\n", path);
+		fprintf(stderr, "%s: NAME is not defined\r\n", path);
 		return;
 	}
 	CRT_color_scheme_names =
