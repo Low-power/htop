@@ -314,14 +314,28 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
       proc->priority = kproc->p_priority - PZERO;
 
       switch (kproc->p_stat) {
-         case SIDL:    proc->state = 'I'; break;
-         case SRUN:    proc->state = 'R'; break;
-         case SSLEEP:  proc->state = 'S'; break;
-         case SSTOP:   proc->state = 'T'; break;
-         case SZOMB:   proc->state = 'Z'; break;
-         case SDEAD:   proc->state = 'D'; break;
-         case SONPROC: proc->state = 'P'; break;
-         default:      proc->state = '?';
+         case SIDL:
+            proc->state = 'I';
+            break;
+         case SRUN:
+            proc->state = 'R';
+            break;
+         case SSLEEP:
+            proc->state = 'S';
+            break;
+         case SSTOP:
+            proc->state = 'T';
+            break;
+         case SZOMB:
+         case SDEAD:
+            proc->state = 'Z';
+            break;
+         case SONPROC:
+            proc->state = 'O';
+            break;
+         default:
+            proc->state = '?';
+            break;
       }
 
 #ifdef HAVE_STRUCT_KINFO_PROC_P_TID
@@ -334,7 +348,7 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
             this->kernel_thread_count++;
          }
          // SRUN ('R') means runnable, not running
-         if (proc->state == 'P') {
+         if (proc->state == 'O') {
             this->running_process_count++;
             this->running_thread_count++;
          }
