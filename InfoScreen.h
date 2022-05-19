@@ -2,11 +2,19 @@
 
 #ifndef HEADER_InfoScreen
 #define HEADER_InfoScreen
+/*
+htop - InfoScreen.h
+(C) 2004-2018 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "Process.h"
 #include "Panel.h"
 #include "FunctionBar.h"
 #include "IncSet.h"
+#include "Vector.h"
 #include "Settings.h"
 
 typedef struct InfoScreen_ InfoScreen;
