@@ -477,7 +477,10 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 			super->kernel_process_count++;
 			super->kernel_thread_count += proc->nlwp;
 		}
-		if(proc->state == 'O') super->running_process_count++;
+		if(proc->state == 'O') {
+			super->running_process_count++;
+			super->running_thread_count++;
+		}
 
 		proc->show = !(super->settings->hide_kernel_processes && sol_proc->kernel);
 
