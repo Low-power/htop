@@ -11,7 +11,7 @@ in the source distribution for its full text.
 
 #include "Panel.h"
 #include "Action.h"
-#include "Settings.h"
+#include "IncSet.h"
 
 typedef struct MainPanel_ {
    Panel super;

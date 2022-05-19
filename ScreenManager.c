@@ -187,6 +187,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       }
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
+         Panel_placeCursor(focused_panel);
       }
 
       int prevCh = ch;

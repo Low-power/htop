@@ -8,7 +8,7 @@ in the source distribution for its full text.
 /*{
 #include "Panel.h"
 #include "Action.h"
-#include "Settings.h"
+#include "IncSet.h"
 
 typedef struct MainPanel_ {
    Panel super;
@@ -33,6 +33,7 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 #include "Process.h"
 #include "Platform.h"
 #include "CRT.h"
+#include "Settings.h"
 #include "local-curses.h"
 #include <stdlib.h>
 
@@ -153,6 +154,11 @@ static bool MainPanel_isInsertMode(const Panel *super) {
 	return this->inc->active != NULL;
 }
 
+static void MainPanel_placeCursor(const Panel *super) {
+	const MainPanel *this = (const MainPanel *)super;
+	if(this->inc->active) move(LINES - 1, CRT_cursorX);
+}
+
 int MainPanel_selectedPid(MainPanel* this) {
    Process* p = (Process*) Panel_getSelected((Panel*)this);
    if (p) {
@@ -194,7 +200,8 @@ PanelClass MainPanel_class = {
       .delete = MainPanel_delete
    },
    .eventHandler = MainPanel_eventHandler,
-   .isInsertMode = MainPanel_isInsertMode
+   .isInsertMode = MainPanel_isInsertMode,
+   .placeCursor = MainPanel_placeCursor
 };
 
 MainPanel* MainPanel_new() {
