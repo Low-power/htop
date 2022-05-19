@@ -363,9 +363,9 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
          proc->starttime_ctime = _lwpsinfo->pr_start.tv_sec;
       }
 
-      // Top-level process only gets this for the representative LWP
-      if (sproc->kernel  && !pl->settings->hide_kernel_processes)   proc->show = true;
-      if (!sproc->kernel && !pl->settings->hide_thread_processes) proc->show = true;
+      if(!pl->settings->hide_thread_processes) {
+         proc->show = !(pl->settings->hide_kernel_processes && sproc->kernel);
+      }
 
       if (proc->state == 'O') pl->running_thread_count++;
    } // Top-level LWP or subordinate LWP
