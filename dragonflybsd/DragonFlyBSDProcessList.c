@@ -511,48 +511,53 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       // would be nice if we could store multiple states in proc->state (as enum) and have writeField render them
       switch (kproc->kp_stat) {
-      case SIDL:   proc->state = 'I'; break;
-      case SACTIVE:
-         switch (kproc->kp_lwp.kl_stat) {
-            case LSSLEEP:
-               if (kproc->kp_lwp.kl_flags & LWP_SINTR)					// interruptable wait short/long
-                  if (kproc->kp_lwp.kl_slptime >= MAXSLP) {
-                     proc->state = 'I';
-                  } else {
+         case SIDL:
+            proc->state = 'I';
+            break;
+         case SACTIVE:
+            switch (kproc->kp_lwp.kl_stat) {
+               case LSSLEEP:
+                  if (kproc->kp_lwp.kl_flags & LWP_SINTR) {
+                     // interruptable wait short/long
+                     proc->state = kproc->kp_lwp.kl_slptime < MAXSLP ? 'S' : 'I';
+                  } else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR) {
+                     // interruptable lwkt wait
                      proc->state = 'S';
+                  } else if (kproc->kp_paddr) {
+                     // uninterruptable wait
+                     proc->state = 'D';
+                  } else {
+                     // uninterruptable lwkt wait
+                     proc->state = 'B';
                   }
-               else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR)				// interruptable lwkt wait
-                  proc->state = 'S';
-               else if (kproc->kp_paddr)						// uninterruptable wait
-                  proc->state = 'D';
-               else									// uninterruptable lwkt wait
-                  proc->state = 'B';
-               break;
-            case LSRUN:
-               if (kproc->kp_lwp.kl_stat == LSRUN) {
-                  if (!(kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ)))
-                     proc->state = 'Q';
-                  else
-                     proc->state = 'R';
-               }
-               break;
-            case LSSTOP:
-               proc->state = 'T';
-               break;
-            default:
-               proc->state = 'A';
-               break;
-         }
-         break;
-      case SSTOP:  proc->state = 'T'; break;
-      case SZOMB:  proc->state = 'Z'; break;
-      case SCORE:  proc->state = 'C'; break;
-      default:     proc->state = '?';
+                  break;
+               case LSRUN:
+                  // running or runnable
+                  //proc->state = (kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ)) ? 'R' : 'Q';
+                  proc->state = 'R';
+                  break;
+               case LSSTOP:
+                  proc->state = 'T';
+                  break;
+               default:
+                  proc->state = 'A';
+                  break;
+            }
+            break;
+         case SSTOP:
+            proc->state = 'T';
+            break;
+         case SZOMB:
+            proc->state = 'Z';
+            break;
+         case SCORE:
+            proc->state = 'C';
+            break;
+         default:
+            proc->state = '?';
+            break;
       }
 
-      if (kproc->kp_flags & P_SWAPPEDOUT) {
-         proc->state = 'W';
-      }
       this->totalTasks++;
       this->thread_count += proc->nlwp;
       if (Process_isKernelProcess(proc)) {
