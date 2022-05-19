@@ -98,7 +98,7 @@ static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {
       if(fd == -1) _exit(1);
       dup2(fd, STDERR_FILENO);
       if(fd != STDERR_FILENO) close(fd);
-      execlp("lsof", "lsof", "-P", "-p", buffer, "-F", NULL);
+      execlp("lsof", "lsof", "-P", "-p", buffer, "-F", (char *)NULL);
       _exit(127);
    }
    close(fdpair[1]);
