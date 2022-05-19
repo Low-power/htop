@@ -347,13 +347,13 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
          proc->state = 'R';
          break;
       case TH_STATE_STOPPED:
-         proc->state = 'S';
+         proc->state = 'T';
          break;
       case TH_STATE_WAITING:
-         proc->state = 'W';
+         proc->state = 'S';
          break;
       case TH_STATE_UNINTERRUPTIBLE:
-         proc->state = 'U';
+         proc->state = 'D';
          break;
       case TH_STATE_HALTED:
          proc->state = 'H';
