@@ -542,14 +542,30 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       }
 
       switch (kproc->ki_stat) {
-      case SIDL:   proc->state = 'I'; break;
-      case SRUN:   proc->state = 'R'; break;
-      case SSLEEP: proc->state = 'S'; break;
-      case SSTOP:  proc->state = 'T'; break;
-      case SZOMB:  proc->state = 'Z'; break;
-      case SWAIT:  proc->state = 'D'; break;
-      case SLOCK:  proc->state = 'L'; break;
-      default:     proc->state = '?';
+         case SIDL:
+            proc->state = 'I';
+            break;
+         case SRUN:
+            proc->state = 'R';
+            break;
+         case SSLEEP:
+            proc->state = (kproc->ki_tdflags & TDF_SINTR) ? 'S' : 'D';
+            break;
+         case SSTOP:
+            proc->state = 'T';
+            break;
+         case SZOMB:
+            proc->state = 'Z';
+            break;
+         case SWAIT:
+            proc->state = 'W';
+            break;
+         case SLOCK:
+            proc->state = 'L';
+            break;
+         default:
+            proc->state = '?';
+            break;
       }
 
       this->totalTasks++;
