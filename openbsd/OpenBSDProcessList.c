@@ -74,6 +74,7 @@ typedef struct OpenBSDProcessList_ {
 #endif
 
 static int fscale;
+static int maxslp;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    int i;
@@ -95,6 +96,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    if (sysctl(mib, 2, &fscale, &size, NULL, 0) < 0) {
       err(1, "fscale sysctl call failed");
    }
+
+   mib[0] = CTL_VM;
+   mib[1] = VM_MAXSLP;
+   size = sizeof maxslp;
+   if(sysctl(mib, 2, &maxslp, &size, NULL, 0) < 0) maxslp = 20;
 
    for (i = 0; i <= pl->cpuCount; i++) {
       CPUData *d = opl->cpus + i;
@@ -321,7 +327,7 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
             proc->state = 'R';
             break;
          case SSLEEP:
-            proc->state = 'S';
+            proc->state = (kproc->p_flag & P_SINTR) ? (kproc->p_slptime > maxslp ? 'I' : 'S') : 'D';
             break;
          case SSTOP:
             proc->state = 'T';

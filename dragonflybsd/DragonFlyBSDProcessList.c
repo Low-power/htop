@@ -518,8 +518,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             switch (kproc->kp_lwp.kl_stat) {
                case LSSLEEP:
                   if (kproc->kp_lwp.kl_flags & LWP_SINTR) {
-                     // interruptable wait short/long
-                     proc->state = kproc->kp_lwp.kl_slptime < MAXSLP ? 'S' : 'I';
+                     // interruptable wait long/short
+                     proc->state = kproc->kp_lwp.kl_slptime > MAXSLP ? 'I' : 'S';
                   } else if (kproc->kp_lwp.kl_tdflags & TDF_SINTR) {
                      // interruptable lwkt wait
                      proc->state = 'S';
@@ -533,7 +533,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
                   break;
                case LSRUN:
                   // running or runnable
-                  //proc->state = (kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ)) ? 'R' : 'Q';
+                  //proc->state = (kproc->kp_lwp.kl_tdflags & (TDF_RUNNING | TDF_RUNQ)) ? 'O' : 'R';
                   proc->state = 'R';
                   break;
                case LSSTOP:

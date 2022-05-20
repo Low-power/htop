@@ -326,7 +326,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
       mach_port_deallocate(mach_task_self(), port);
       return;
    }
-   integer_t run_state = 999;
+   integer_t run_state = 999, sleep_time = 999;
    for (unsigned int i = 0; i < thread_count; i++) {
       thread_info_data_t thinfo;
       mach_msg_type_number_t thread_info_count = THREAD_BASIC_INFO_COUNT;
@@ -336,6 +336,9 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
          if (basic_info_th->run_state < run_state) {
             run_state = basic_info_th->run_state;
          }
+         if(run_state == TH_STATE_WAITING && basic_info_th->sleep_time < sleep_time) {
+            sleep_time = basic_info_th->sleep_time;
+         }         
          mach_port_deallocate(mach_task_self(), thread_list[i]);
       }
    }
@@ -350,7 +353,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
          proc->state = 'T';
          break;
       case TH_STATE_WAITING:
-         proc->state = 'S';
+         proc->state = sleep_time > 20 ? 'I' : 'S';
          break;
       case TH_STATE_UNINTERRUPTIBLE:
          proc->state = 'D';

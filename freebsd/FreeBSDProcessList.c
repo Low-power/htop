@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
+#include <sys/vmmeter.h>
 #include <err.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -549,7 +550,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             proc->state = 'R';
             break;
          case SSLEEP:
-            proc->state = (kproc->ki_tdflags & TDF_SINTR) ? 'S' : 'D';
+            proc->state = (kproc->ki_tdflags & TDF_SINTR) ?
+               (kproc->ki_slptime > MAXSLP ? 'I' : 'S') : 'D';
             break;
          case SSTOP:
             proc->state = 'T';
