@@ -246,12 +246,17 @@ Process name, usually the executable file name.
 .TP
 .B STATE (S)
 The state of the process:
-   \fBS\fR for sleeping (idle)
-   \fBR\fR for running
-   \fBD\fR for disk sleep (uninterruptible)
+   \fBS\fR for sleeping
+   \fBI\fR for sleeping longer than an implementation-defined time
+   \fBR\fR for running or runnable
+   \fBO\fR for running on a processor
+   \fBD\fR for uninterruptible waiting, usually for disk I/O
    \fBZ\fR for zombie (waiting for parent to read its exit status)
-   \fBT\fR for traced or suspended (e.g by SIGTSTP)
-   \fBW\fR for paging
+   \fBT\fR for stopped due to signal or being traced
+   \fBL\fR for waiting on a lock
+   \fBW\fR for an implementation-defined state (e.g. paging for Linux)
+
+Not all states are supported on every platform.
 .TP
 .B PPID
 The parent process ID.
