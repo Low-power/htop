@@ -1,61 +1,46 @@
-[![Build Status](https://travis-ci.org/hishamhm/htop.svg?branch=master)](https://travis-ci.org/hishamhm/htop)
-[![PayPal donate](https://img.shields.io/badge/paypal-donate-green.svg)](http://hisham.hm/htop/index.php?page=donate)
-
-[htop](http://hisham.hm/htop/)
+htop
 ====
 
-by Hisham Muhammad <hisham@gobolinux.org> (2004 - 2016)
+The Rivoreo customized version, forked from commit
+402e46bb82964366746b86d77eb5afa69c279539.
 
-Introduction
-------------
+The original version made by Hisham Muhammad <hisham@gobolinux.org> is
+available at [an archived git repository](https://github.com/hishamhm/htop).
 
-This is `htop`, an interactive process viewer.
-It requires `ncurses`. It is developed primarily on Linux,
-but we also have code for running under FreeBSD and Mac OS X
-(help and testing are wanted for these platforms!)
+Changes from original version
+-----------------------------
 
-This software has evolved considerably over the years,
-and is reasonably complete, but there is always room for improvement.
+* System call tracing support via **truss(1)**, which is available in many
+  Unix-like systems
+* Support showing process name in addition to process command line
+* AIX support, by Calvin Buckley <calvin@cmpct.info>
+* Many Solaris-specific bug fixes
+* Support showing ZFS ARC size on Solaris-kernel-based, Linux-based,
+  kFreeBSD-based and macOS (Mac OS X) platforms
+* Android/Linux support
+* Linux CPU hot-plugging aware
+* Distinguishable effective user and real user of processes
+* Basic Interix support
+* Cygwin support
+* Many OpenBSD-specific bug fixes
+* Thread processes support for OpenBSD
+* Solaris support without **libproc(3LIB)** (which is a private library of
+  the operating system)
+* Many byte-order related bug fixes
+* Support kFreeBSD-based systems without **kvm(3)** (which isn't a standard
+  library on GNU/kFreeBSD)
+* FreeBSD 5 support
+* Enhanced kernel process detection logic for Linux-based platforms
+* Build-time detection of available signals
+* Process command line arguments screen (key `A`) just like the process
+  environment screen (key `e`)
+* Processor times meter improvements, by Antoine Motet
+  <antoine.motet@gmail.com>
+* (hopefully bug-free) **vi(1)**-style key bindings support
+* Support showing process start time for all platforms
+* Mouse support can now be disabled in setup
+* Handle circularized process tree(s) that may happening with some kernels
+* User-defined color schemes
+* Consistent process state names
 
-Comparison between `htop` and classic `top`
--------------------------------------------
-
-* In `htop` you can scroll the list vertically and horizontally
-  to see all processes and full command lines.
-* In `top` you are subject to a delay for each unassigned
-  key you press (especially annoying when multi-key escape
-  sequences are triggered by accident).
-* `htop` starts faster (`top` seems to collect data for a while
-  before displaying anything).
-* In `htop` you don't need to type the process number to
-  kill a process, in `top` you do.
-* In `htop` you don't need to type the process number or
-  the priority value to renice a process, in `top` you do.
-* In `htop` you can kill multiple processes at once.
-* `top` is older, hence, more tested.
-
-Compilation instructions
-------------------------
-
-This program is distributed as a standard autotools-based package.
-See the [INSTALL](/INSTALL) file for detailed instructions.
-
-When compiling from a [release tarball](https://hisham.hm/htop/releases/), run:
-
-    ./configure && make
-
-For compiling sources downloaded from the Git repository, run:
-
-    ./autogen.sh && ./configure && make
-
-By default `make install` will install into `/usr/local`, for changing
-the path use `./configure --prefix=/some/path`.
-
-See the manual page (`man htop`) or the on-line help ('F1' or 'h'
-inside `htop`) for a list of supported key commands.
-
-If not all keys work check your curses configuration.
-
-## License
-
-GNU General Public License, version 2 (GPL-2.0)
+See the commit log for more.
