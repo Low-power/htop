@@ -5,11 +5,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "StringUtils.h"
 #include "XAlloc.h"
-
-#include "config.h"
-
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
@@ -58,6 +56,8 @@ in the source distribution for its full text.
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
+
+#include <ctype.h>
 
 char* strcasestr(const char* s, const char* find) {
 	char c = *find++;

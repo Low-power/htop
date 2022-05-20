@@ -122,6 +122,7 @@ typedef enum {
 #endif
 #include <pwd.h>
 #include <dirent.h>
+#include <ctype.h>
 
 #if defined ERR && ERR > 0
 #undef ERR
@@ -892,7 +893,7 @@ static void load_user_defined_color_scheme(const char *path) {
 	while(fgets(buffer, sizeof buffer, f)) {
 		nlines++;
 		char *p = buffer;
-		while(isspace(*p)) p++;
+		while(isspace((unsigned char)*p)) p++;
 		if(!*p) continue;
 		if(*p == '#') continue;
 		if(strncmp(p, "NAME=", 5) == 0) {
