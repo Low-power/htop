@@ -542,6 +542,8 @@ static Htop_Reaction actionHelp(State* st) {
 #endif
    attrset(CRT_colors[HTOP_PROCESS_D_STATE_COLOR]);
    mvaddch(8, 46, 'D');
+   attrset(CRT_colors[HTOP_PROCESS_Z_STATE_COLOR]);
+   mvaddch(8, 66, 'Z');
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    int y = 9;
    const struct key_help_entry *entry = helpLeft;
