@@ -16,8 +16,6 @@ in the source distribution for its full text.
 #include <assert.h>
 #include <signal.h>
 
-#include <ctype.h>
-
 /*{
 
 typedef struct SignalItem_ {

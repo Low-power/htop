@@ -13,7 +13,6 @@ in the source distribution for its full text.
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 /*{
 #include <stdio.h>

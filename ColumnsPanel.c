@@ -103,10 +103,8 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
          result = HANDLED;
          break;
       default:
-         if (ch < 255 && isalpha(ch))
-            result = Panel_selectByTyping(super, ch);
-         if (result == BREAK_LOOP)
-            result = IGNORED;
+         if (ch < 255 && ch > 0 && isalpha(ch)) result = Panel_selectByTyping(super, ch);
+         if (result == BREAK_LOOP) result = IGNORED;
          break;
    }
    if (result == HANDLED)

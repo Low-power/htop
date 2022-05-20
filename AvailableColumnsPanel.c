@@ -41,23 +41,19 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch, in
    HandlerResult result = IGNORED;
 
    switch(ch) {
+         int at;
       case 13:
       case KEY_ENTER:
       case KEY_F(5):
-      {
-         int at = Panel_getSelectedIndex(this->columns);
+         at = Panel_getSelectedIndex(this->columns);
          Panel_insert(this->columns, at, (Object*) ListItem_new(Process_fields[key].name, key));
          Panel_setSelected(this->columns, at+1);
          ColumnsPanel_update(this->columns);
          result = HANDLED;
          break;
-      }
       default:
-      {
-         if (ch < 255 && isalpha(ch))
-            result = Panel_selectByTyping(super, ch);
+         if (ch < 255 && ch > 0 && isalpha(ch)) result = Panel_selectByTyping(super, ch);
          break;
-      }
    }
    return result;
 }

@@ -507,7 +507,7 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
 
 unsigned int Panel_getViModeRepeatForKey(Panel *this, int *ch) {
    if(*ch == ERR) return 0;
-   if(*ch < 256 && isdigit(*ch)) {
+   if(*ch < 256 && *ch > 0 && isdigit(*ch)) {
       this->repeat_number_buffer[this->repeat_number_i] = *ch;
       if(++this->repeat_number_i >= sizeof this->repeat_number_buffer) this->repeat_number_i = 0;
       return 0;

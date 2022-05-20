@@ -22,8 +22,6 @@ in the source distribution for its full text.
 #include "StringUtils.h"
 #include "TraceScreen.h"
 #include "Platform.h"
-
-#include <ctype.h>
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
