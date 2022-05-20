@@ -22,6 +22,8 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
 
+#define PLATFORM_SUPPORT_PROCESS_O_STATE
+
 extern ProcessFieldData Process_fields[];
 
 
