@@ -5,6 +5,7 @@
 /*
 htop - CRT.h
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -158,6 +159,8 @@ extern int* CRT_colors;
 extern int CRT_color_scheme_count;
 
 extern const char **CRT_color_scheme_names;
+
+extern bool *CRT_color_scheme_is_monochrome;
 
 extern int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT];
 

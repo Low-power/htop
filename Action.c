@@ -532,7 +532,7 @@ static Htop_Reaction actionHelp(State* st) {
    addattrstr(CRT_colors[HTOP_BAR_BORDER_COLOR], "]");
 #undef addattrstr
    mvaddstr(6,0, "Type and layout of header meters are configurable in the setup screen.");
-   if (CRT_color_scheme_index == MONOCHROME_COLOR_SCHEME) {
+   if (CRT_color_scheme_is_monochrome[CRT_color_scheme_index]) {
       mvaddstr(7, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
    mvaddstr(8, 0, "  State: R: running; S: sleeping; T: traced/stopped; Z: zombie; D: disk sleep");

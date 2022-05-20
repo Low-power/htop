@@ -216,6 +216,7 @@ int main(int argc, char** argv) {
    Header_populateFromSettings(header);
 
    if (flags.delay != -1) settings->delay = flags.delay;
+   // Use built-in MONOCHROME_COLOR_SCHEME for '--no-color'
    if (!flags.useColors) settings->colorScheme = MONOCHROME_COLOR_SCHEME;
    if (flags.treeView) settings->treeView = true;
 

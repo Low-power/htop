@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	printf("NAME=%s\n", CRT_color_scheme_names[i]);
+	printf("MONOCHROME=%s\n", CRT_color_scheme_is_monochrome[i] ? "YES" : "NO");
 	const int *colors = CRT_colorSchemes[i];
 #if 1
 #define PRINT_COLOR_ATTRIBUTE(KEY) \

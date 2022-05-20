@@ -1,6 +1,7 @@
 /*
 htop - CRT.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -184,8 +185,6 @@ bool CRT_utf8 = false;
 
 const char **CRT_treeStr = CRT_treeStrAscii;
 
-static bool CRT_hasColors;
-
 int CRT_delay = 0;
 
 int* CRT_colors;
@@ -193,6 +192,8 @@ int* CRT_colors;
 int CRT_color_scheme_count = LAST_COLORSCHEME;
 
 const char **CRT_color_scheme_names;
+
+bool *CRT_color_scheme_is_monochrome;
 
 int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
    [DEFAULT_COLOR_SCHEME] = {
@@ -687,6 +688,51 @@ char *CRT_getConfigDirPath(const char **home_path_p) {
    return config_dir_path;
 }
 
+static bool parse_boolean_value(const char *s, bool *v) {
+	switch(*s) {
+		case 0:
+		case '\n':
+			*v = false;
+			return true;
+		case '0':
+		case '1':
+			if(s[1] && s[1] != '\n') return false;
+			*v = *s == '1';
+			return true;
+		case 'y':
+		case 'Y':
+			*v = true;
+			return true;
+		case 'n':
+		case 'N':
+			*v = false;
+			return true;
+		case 't':
+		case 'T':
+			if(strncasecmp(s, "true", 4)) return false;
+			*v = true;
+			return true;
+		case 'f':
+		case 'F':
+			if(strncasecmp(s, "false", 5)) return false;
+			*v = false;
+			return true;
+		case 'o':
+		case 'O':
+			if((s[1] == 'f' || s[1] == 'F') && (s[2] == 'f' || s[2] == 'F') && (!s[3] || s[3] == '\n')) {
+				*v = false;
+				return true;
+			}
+			if((s[1] == 'n' || s[1] == 'N') && (!s[2] || s[2] == '\n')) {
+				*v = true;
+				return true;
+			}
+			// Fallthrough
+		default:
+			return false;
+	}
+}
+
 static const struct key_name {
 	const char *key_prefix;
 	unsigned int key_length;
@@ -829,6 +875,7 @@ static void load_user_defined_color_scheme(const char *path) {
 		return;
 	}
 	char *name = NULL;
+	bool monochrome = false;
 	//int *colors = xCalloc(LAST_COLORELEMENT, sizeof(int));
 	int colors[LAST_COLORELEMENT];
 	for(i = 0; i < LAST_COLORELEMENT; i++) colors[i] = A_NORMAL;
@@ -852,6 +899,11 @@ static void load_user_defined_color_scheme(const char *path) {
 			name = xMalloc(len + 1);
 			memcpy(name, p + 5, len);
 			name[len] = 0;
+		} else if(strncmp(p, "MONOCHROME=", 11) == 0) {
+			if(!parse_boolean_value(p + 11, &monochrome)) {
+				fprintf(stderr, "%s:%u: Warning: incorrect value for MONOCHROME",
+					path, nlines);
+			}
 		} else {
 			int attr = -1;
 			for(i = 0; i < LAST_COLORELEMENT; i++) {
@@ -881,6 +933,9 @@ static void load_user_defined_color_scheme(const char *path) {
 	CRT_color_scheme_names =
 		xRealloc(CRT_color_scheme_names, (CRT_color_scheme_count + 1) * sizeof(const char *));
 	CRT_color_scheme_names[CRT_color_scheme_count] = name;
+	CRT_color_scheme_is_monochrome =
+		xRealloc(CRT_color_scheme_is_monochrome, (CRT_color_scheme_count + 1) * sizeof(bool));
+	CRT_color_scheme_is_monochrome[CRT_color_scheme_count] = monochrome;
 	i = CRT_color_scheme_count++ - LAST_COLORSCHEME;
 	CRT_user_defined_color_schemes =
 		xRealloc(CRT_user_defined_color_schemes, (i + 1) * sizeof colors);
@@ -900,6 +955,15 @@ void CRT_initColorSchemes() {
    CRT_color_scheme_names[MIDNIGHT_COLOR_SCHEME] = "MC",
    CRT_color_scheme_names[BLACKNIGHT_COLOR_SCHEME] = "Black Night",
    CRT_color_scheme_names[BROKENGRAY_COLOR_SCHEME] = "Broken Gray",
+
+   CRT_color_scheme_is_monochrome = xMalloc(LAST_COLORSCHEME * sizeof(bool));
+   CRT_color_scheme_is_monochrome[DEFAULT_COLOR_SCHEME] = false;
+   CRT_color_scheme_is_monochrome[MONOCHROME_COLOR_SCHEME] = true;
+   CRT_color_scheme_is_monochrome[BLACKONWHITE_COLOR_SCHEME] = false;
+   CRT_color_scheme_is_monochrome[LIGHTTERMINAL_COLOR_SCHEME] = false;
+   CRT_color_scheme_is_monochrome[MIDNIGHT_COLOR_SCHEME] = false;
+   CRT_color_scheme_is_monochrome[BLACKNIGHT_COLOR_SCHEME] = false;
+   CRT_color_scheme_is_monochrome[BROKENGRAY_COLOR_SCHEME] = false;
 
    assert(CRT_user_defined_color_schemes == NULL);
    char *config_dir_path = CRT_getConfigDirPath(NULL);
@@ -953,8 +1017,7 @@ void CRT_init(const Settings *settings) {
    keypad(stdscr, true);
    mouseinterval(0);
    curs_set(0);
-   CRT_hasColors = has_colors();
-   if(CRT_hasColors) start_color();
+   if(has_colors()) start_color();
    CRT_termType = getenv("TERM");
    CRT_scrollHAmount = String_eq(CRT_termType, "linux") ? 20 : 5;
    if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
