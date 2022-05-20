@@ -64,6 +64,7 @@ typedef struct LinuxProcessList_ {
    struct nl_sock *netlink_socket;
    int netlink_family;
    #endif
+   bool support_kthread_flag;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -107,6 +108,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 
 void ProcessList_delete(ProcessList* pl);
 
+// Only used for Linux without PF_KTHREAD flag support (version < 2.6.27).
 #ifdef HAVE_TASKSTATS
 
 #endif

@@ -12,6 +12,7 @@ in the source distribution for its full text.
 #include "IOUtils.h"
 #include <errno.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -91,6 +92,7 @@ typedef struct LinuxProcessList_ {
    struct nl_sock *netlink_socket;
    int netlink_family;
    #endif
+   bool support_kthread_flag;
 } LinuxProcessList;
 
 #ifndef PROCDIR
@@ -275,6 +277,22 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       this->cpus[i].totalTime = 1;
       this->cpus[i].totalPeriod = 1;
    }
+
+   this->support_kthread_flag = true;
+   struct utsname utsname;
+   if(uname(&utsname) == 0 && strcmp(utsname.sysname, "Linux") == 0) {
+      char *end_p;
+      long int n = strtol(utsname.release, &end_p, 10);
+      if(*end_p == '.') {
+         if(n == 2) {
+            n = strtol(end_p + 1, &end_p, 10);
+            if(*end_p == '.' && n < 27) this->support_kthread_flag = false;
+         } else if(n < 2) {
+            this->support_kthread_flag = false;
+         }
+      }
+   }
+
    return pl;
 }
 
@@ -387,6 +405,49 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    return true;
 }
 
+// Only used for Linux without PF_KTHREAD flag support (version < 2.6.27).
+static void check_legacy_kernel_process(LinuxProcess *proc) {
+	if(proc->super.m_size > 0) return;
+	if(proc->super.state == 'Z') return;
+
+	/* Not checking 'cwd' symbolic link because Linux versions before
+	 * 2.1.96 didn't pass CLONE_FS when creating kernel processes. */
+	char path[MAX_NAME];
+	int len = snprintf(path, sizeof path, PROCDIR "/%d/environ", proc->super.pid);
+	assert(len < (int)sizeof path);
+	char *name_p = path + (len - 7);
+	char buffer;
+	unsigned int deny_count = 0;
+	while(true) {
+		int fd = open(path, O_RDONLY);
+		if(fd == -1) {
+			if(errno != EACCES) return;
+			deny_count++;
+		} else {
+			int s;
+			do {
+				s = read(fd, &buffer, 1);
+			} while(s < 0 && errno == EINTR);
+			close(fd);
+			if(s) return;
+		}
+		switch(*name_p) {
+			case 'e':
+				memcpy(name_p, "cmdline", 7);
+				break;
+			case 'c':
+				strcpy(name_p, "maps");
+				break;
+			default:
+				goto check_exe;
+		}
+	}
+check_exe:
+	strcpy(name_p, "exe");
+	if(readlink(path, &buffer, 1) >= 0) return;
+	if(errno != ENOENT && (errno != EACCES || deny_count > 2)) return;
+	proc->is_kernel_process = true;
+}
 
 static bool LinuxProcessList_getOwner(Process* process, int pid) {
 	char path[MAX_NAME];
@@ -820,6 +881,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
          goto errorReadingProcess;
       free(proc->name);
       proc->name = xStrdup(command);
+      if(!this->support_kthread_flag && !lp->is_kernel_process) check_legacy_kernel_process(lp);
       if (tty_nr != proc->tty_nr && this->ttyDrivers) {
          free(lp->ttyDevice);
          lp->ttyDevice = LinuxProcessList_updateTtyDevice(this->ttyDrivers, proc->tty_nr);
