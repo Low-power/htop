@@ -47,6 +47,7 @@ static void print_usage(FILE *f, const char *name) {
          "   -t, --tree                  Show the tree view by default\n"
          "   -u, --user=USERNAME         Show only processes of a given user\n"
          "   -p, --pid=PID[,PID,PID...]  Show only the given PIDs\n"
+         "       --explicit-delay        Explicitly delay between updates\n"
          "   -v, --version               Print version info\n"
          "\n"
          "Arguments to long options are required for short options too.\n\n"
@@ -64,6 +65,7 @@ typedef struct CommandLineSettings_ {
    int delay;
    bool useColors;
    bool treeView;
+   bool explicit_delay;
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
@@ -75,21 +77,23 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .delay = -1,
       .useColors = true,
       .treeView = false,
+      .explicit_delay = false,
    };
 
 #ifdef HAVE_GETOPT_LONG
-   static struct option long_opts[] =
-   {
-      {"help",     no_argument,         0, 'h'},
-      {"version",  no_argument,         0, 'v'},
-      {"delay",    required_argument,   0, 'd'},
-      {"sort-key", required_argument,   0, 's'},
-      {"user",     required_argument,   0, 'u'},
-      {"no-color", no_argument,         0, 'C'},
-      {"no-colour",no_argument,         0, 'C'},
-      {"tree",     no_argument,         0, 't'},
-      {"pid",      required_argument,   0, 'p'},
-      {0,0,0,0}
+#define HTOP_LONG_OPTION_EXPLICIT_DELAY (1 << 8)
+   static struct option long_opts[] = {
+      { "help",           no_argument,       NULL, 'h' },
+      { "version",        no_argument,       NULL, 'v' },
+      { "delay",          required_argument, NULL, 'd' },
+      { "sort-key",       required_argument, NULL, 's' },
+      { "user",           required_argument, NULL, 'u' },
+      { "no-color",       no_argument,       NULL, 'C' },
+      { "no-colour",      no_argument,       NULL, 'C' },
+      { "tree",           no_argument,       NULL, 't' },
+      { "pid",            required_argument, NULL, 'p' },
+      { "explicit-delay", no_argument,       NULL, HTOP_LONG_OPTION_EXPLICIT_DELAY },
+      { NULL, 0, NULL, 0 }
    };
 #endif
    /* Parse options */
@@ -102,6 +106,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       if (opt == -1) break;
       switch (opt) {
             char *p;
+         case HTOP_LONG_OPTION_EXPLICIT_DELAY:
+            flags.explicit_delay = true;
+            break;
          case 'h':
             print_usage(stdout, argv[0]);
             exit(0);
@@ -219,9 +226,11 @@ int main(int argc, char** argv) {
    // Use built-in MONOCHROME_COLOR_SCHEME for '--no-color'
    if (!flags.useColors) settings->colorScheme = MONOCHROME_COLOR_SCHEME;
    if (flags.treeView) settings->treeView = true;
+   if(flags.explicit_delay) settings->explicit_delay = true;
 
    CRT_init(settings);
    CRT_setMouse(settings->use_mouse);
+   CRT_setExplicitDelay(settings->explicit_delay);
    MainPanel* panel = MainPanel_new();
    ProcessList_setPanel(pl, (Panel*) panel);
 

@@ -131,8 +131,10 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    gettimeofday(&tv, NULL);
    double newTime = ((double)tv.tv_sec * 10) + ((double)tv.tv_usec / 100000);
    *timedOut = (newTime - *oldTime > this->settings->delay);
-   *rescan = *rescan || *timedOut;
-   if (newTime < *oldTime) *rescan = true; // clock was adjusted?
+   if (*timedOut || newTime < *oldTime || newTime - *oldTime > 255) {
+      // timed out or clock was obviously adjusted
+      *rescan = true;
+   }
    if (*rescan) {
       *oldTime = newTime;
       ProcessList_scan(pl);
@@ -188,12 +190,11 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       if (redraw) {
          ScreenManager_drawPanels(this, focus);
          Panel_placeCursor(focused_panel);
+         refresh();
       }
 
       int prevCh = ch;
-#ifdef HAVE_SET_ESCDELAY
-      set_escdelay(25);
-#endif
+      CRT_explicitDelay();
       ch = getch();
 
       HandlerResult result = IGNORED;
@@ -310,7 +311,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             quit = true;
             continue;
          default:
-            defaultHandler:
+         defaultHandler:
             sortTimeout = resetSortTimeout;
             Panel_onKey(focused_panel, ch, repeat);
             break;

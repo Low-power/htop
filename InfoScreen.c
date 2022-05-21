@@ -129,13 +129,12 @@ void InfoScreen_run(InfoScreen* this) {
    while (looping) {
 
       Panel_draw(panel, true);
+      refresh();
 
       if (this->inc->active) {
          (void) move(LINES-1, CRT_cursorX);
       }
-#ifdef HAVE_SET_ESCDELAY
-      set_escdelay(25);
-#endif
+      CRT_explicitDelay();
       int ch = getch();
       if (ch == ERR) {
          if (As_InfoScreen(this)->onErr) {

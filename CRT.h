@@ -217,11 +217,16 @@ void CRT_done();
 
 void __attribute__((__noreturn__)) CRT_fatalError(const char* note);
 
+void CRT_setExplicitDelay(bool enabled);
+
+// Wait a key forever
 int CRT_readKey();
 
 void CRT_disableDelay();
 
 void CRT_enableDelay();
+
+void CRT_explicitDelay();
 
 void CRT_setColors(int color_scheme_i);
 

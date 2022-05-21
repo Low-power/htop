@@ -52,6 +52,7 @@ typedef struct Settings_ {
    bool updateProcessNames;
    bool accountGuestInCPUMeter;
    bool headerMargin;
+   bool explicit_delay;
    bool vi_mode;
    bool use_mouse;
    int (*sort_strcmp)(const char *, const char *);

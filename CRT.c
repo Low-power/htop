@@ -107,6 +107,7 @@ typedef enum {
 #include "local-curses.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
@@ -1053,6 +1054,10 @@ void CRT_init(const Settings *settings) {
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
    }
+#ifdef HAVE_SET_ESCDELAY
+   set_escdelay(25);
+#endif
+
 #ifndef DEBUG
    signal(SIGILL, CRT_handleAbnormalSignal);
    signal(SIGBUS, CRT_handleAbnormalSignal);
@@ -1092,23 +1097,47 @@ void __attribute__((__noreturn__)) CRT_fatalError(const char* note) {
    exit(2);
 }
 
+static bool explicit_delay_mode = false;
+
+void CRT_setExplicitDelay(bool enabled) {
+	explicit_delay_mode = enabled;
+	if(enabled) {
+		nocbreak();
+		cbreak();
+		nodelay(stdscr, true);
+	} // else call CRT_enableDelay afterward
+}
+
+// Wait a key forever
 int CRT_readKey() {
    nocbreak();
    cbreak();
    nodelay(stdscr, FALSE);
-   int ret = getch();
-   halfdelay(CRT_delay);
-   return ret;
+   int k = getch();
+   if(explicit_delay_mode) nodelay(stdscr, true);
+   else halfdelay(CRT_delay);
+   return k;
 }
 
 void CRT_disableDelay() {
+   if(explicit_delay_mode) return;
    nocbreak();
    cbreak();
    nodelay(stdscr, TRUE);
 }
 
 void CRT_enableDelay() {
+   if(explicit_delay_mode) return;
    halfdelay(CRT_delay);
+}
+
+void CRT_explicitDelay() {
+	if(!explicit_delay_mode) return;
+	fd_set rfdset;
+	FD_ZERO(&rfdset);
+	FD_SET(STDIN_FILENO, &rfdset);
+	struct timeval timeout = { .tv_sec = CRT_delay / 10, .tv_usec = CRT_delay % 10 * 100000 };
+	select(STDIN_FILENO + 1, &rfdset, NULL, NULL, &timeout);
 }
 
 void CRT_setColors(int color_scheme_i) {
