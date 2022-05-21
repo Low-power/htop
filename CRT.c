@@ -897,8 +897,12 @@ static void load_user_defined_color_scheme(const char *path) {
 		if(!*p) continue;
 		if(*p == '#') continue;
 		if(strncmp(p, "NAME=", 5) == 0) {
+			if(name) {
+				free(name);
+				fprintf(stderr, "%s:%u: duplicated NAME\r\n", path, nlines);
+				return;
+			}
 			if(!p[5]) {
-				//free(colors);
 				fprintf(stderr, "%s:%u: NAME is empty\r\n", path, nlines);
 				return;
 			}
