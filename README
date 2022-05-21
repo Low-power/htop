@@ -42,5 +42,6 @@ Changes from original version
 * Handle circularized process tree(s) that may happening with some kernels
 * User-defined color schemes
 * Consistent process state names
+* Optional case-insensitive sorting
 
 See the commit log for more.
