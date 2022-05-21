@@ -247,7 +247,7 @@ void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
 }
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring) {
-   char buffer[22];
+   char buffer[13];
 
    int largeNumberColor = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
    int processMegabytesColor = CRT_colors[HTOP_PROCESS_MEGABYTES_COLOR];
@@ -263,10 +263,16 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
       int len = snprintf(buffer, sizeof buffer, "    no perm ");
       RichString_appendn(str, CRT_colors[HTOP_PROCESS_SHADOW_COLOR], buffer, len);
    } else if (number > 10000000000) {
-      xSnprintf(buffer, sizeof buffer, "%11llu ", number / 1000);
-      RichString_appendn(str, largeNumberColor, buffer, 5);
-      RichString_appendn(str, processMegabytesColor, buffer+5, 3);
-      RichString_appendn(str, processColor, buffer+8, 4);
+      // Allow the trailing space be truncated by snprintf(3)
+      int len = snprintf(buffer, sizeof buffer, "%10lluk ", number / 1000);
+      if(len > 13) {
+         RichString_appendn(str, largeNumberColor, ">9999999999k", 12);
+      } else {
+         int large_part_len = len > 12 ? 5 : 4;
+         RichString_appendn(str, largeNumberColor, buffer, large_part_len);
+         RichString_appendn(str, processMegabytesColor, buffer + large_part_len, 3);
+         RichString_appendn(str, processColor, buffer + large_part_len + 3, len > 12 ? 4 : 5);
+      }
    } else {
       xSnprintf(buffer, sizeof buffer, "%11llu ", number);
       RichString_appendn(str, largeNumberColor, buffer, 2);
