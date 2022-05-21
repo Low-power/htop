@@ -74,7 +74,7 @@ typedef struct OpenBSDProcessList_ {
 #endif
 
 static int fscale;
-static int maxslp;
+static unsigned int maxslp;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    int i;
