@@ -10,18 +10,20 @@ in the source distribution for its full text.
 */
 
 #include "Object.h"
+#include "Settings.h"
 
 typedef struct ListItem_ {
    Object super;
    char* value;
    int key;
    bool moving;
+   const Settings *settings;
 } ListItem;
 
 
 extern ObjectClass ListItem_class;
 
-ListItem* ListItem_new(const char* value, int key);
+ListItem* ListItem_new(const char* value, int key, const Settings *settings);
 
 void ListItem_append(ListItem* this, const char* text);
 

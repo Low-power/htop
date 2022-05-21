@@ -12,12 +12,14 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
+#include "CheckItem.h"
 
 typedef struct DisplayOptionsPanel_ {
    Panel super;
 
    Settings* settings;
    ScreenManager* scr;
+   CheckItem *case_insensitive_sort_check_item;
 } DisplayOptionsPanel;
 
 

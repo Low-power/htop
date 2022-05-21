@@ -17,12 +17,14 @@ in the source distribution for its full text.
 
 /*{
 #include "Object.h"
+#include "Settings.h"
 
 typedef struct ListItem_ {
    Object super;
    char* value;
    int key;
    bool moving;
+   const Settings *settings;
 } ListItem;
 
 }*/
@@ -59,11 +61,12 @@ ObjectClass ListItem_class = {
    .compare = ListItem_compare
 };
 
-ListItem* ListItem_new(const char* value, int key) {
+ListItem* ListItem_new(const char* value, int key, const Settings *settings) {
    ListItem* this = AllocThis(ListItem);
    this->value = xStrdup(value);
    this->key = key;
    this->moving = false;
+   this->settings = settings;
    return this;
 }
 
@@ -81,8 +84,9 @@ const char* ListItem_getRef(ListItem* this) {
 }
 
 long ListItem_compare(const void* cast1, const void* cast2) {
-   ListItem* obj1 = (ListItem*) cast1;
-   ListItem* obj2 = (ListItem*) cast2;
-   return strcmp(obj1->value, obj2->value);
+   const ListItem *obj1 = (const ListItem *)cast1;
+   const ListItem *obj2 = (const ListItem *)cast2;
+   const Settings *settings = obj1->settings;
+   return settings->sort_strcmp(obj1->value, obj2->value);
 }
 

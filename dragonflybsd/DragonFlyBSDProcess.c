@@ -145,7 +145,8 @@ long DragonFlyBSDProcess_compare(const void* v1, const void* v2) {
    case JID:
       return (p1->jid - p2->jid);
    case JAIL:
-      return strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+      if(!p1->jname && !p2->jname) return p1->jid - p2->jid;
+      return settings->sort_strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
    default:
       return Process_compare(v1, v2);
    }

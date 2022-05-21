@@ -63,6 +63,7 @@ typedef struct Settings_ {
    bool headerMargin;
    bool vi_mode;
    bool use_mouse;
+   int (*sort_strcmp)(const char *, const char *);
 
    bool changed;
 } Settings;
@@ -228,6 +229,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->countCPUsFromZero = atoi(option[1]);
       } else if (String_eq(option[0], "update_process_names")) {
          this->updateProcessNames = atoi(option[1]);
+      } else if(String_eq(option[0], "case_insensitive_sort")) {
+         this->sort_strcmp = atoi(option[1]) ? strcasecmp : strcmp;
       } else if(String_eq(option[0], "vi_mode")) {
          this->vi_mode = atoi(option[1]);
       } else if(String_eq(option[0], "use_mouse")) {
@@ -327,6 +330,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "detailed_cpu_time=%d\n", (int) this->detailedCPUTime);
    fprintf(f, "cpu_count_from_zero=%d\n", (int) this->countCPUsFromZero);
    fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
+   fprintf(f, "case_insensitive_sort=%d\n", (int)(this->sort_strcmp == strcasecmp));
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
@@ -371,6 +375,7 @@ Settings* Settings_new(int cpuCount) {
       this->fields[i] = defaults[i];
       this->flags |= Process_fields[defaults[i]].flags;
    }
+   this->sort_strcmp = strcmp;
    this->vi_mode = false;
    this->use_mouse = true;
 

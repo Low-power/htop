@@ -46,7 +46,7 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch, in
       case KEY_ENTER:
       case KEY_F(5):
          at = Panel_getSelectedIndex(this->columns);
-         Panel_insert(this->columns, at, (Object*) ListItem_new(Process_fields[key].name, key));
+         Panel_insert(this->columns, at, (Object *)ListItem_new(Process_fields[key].name, key, NULL));
          Panel_setSelected(this->columns, at+1);
          ColumnsPanel_update(this->columns);
          result = HANDLED;
@@ -78,7 +78,7 @@ AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns) {
       if (i != COMM && Process_fields[i].description) {
          char description[256];
          xSnprintf(description, sizeof(description), "%s - %s", Process_fields[i].name, Process_fields[i].description);
-         Panel_add(super, (Object*) ListItem_new(description, i));
+         Panel_add(super, (Object *)ListItem_new(description, i, NULL));
       }
    }
    this->columns = columns;

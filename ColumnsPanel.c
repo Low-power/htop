@@ -131,10 +131,11 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    Panel_setHeader(super, "Active Columns");
 
    ProcessField* fields = this->settings->fields;
-   for (; *fields; fields++) {
+   while(*fields) {
       if (Process_fields[*fields].name) {
-         Panel_add(super, (Object*) ListItem_new(Process_fields[*fields].name, *fields));
+         Panel_add(super, (Object *)ListItem_new(Process_fields[*fields].name, *fields, settings));
       }
+      fields++;
    }
    return this;
 }

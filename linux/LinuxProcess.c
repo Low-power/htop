@@ -549,7 +549,7 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
    #ifdef HAVE_CGROUP
    case CGROUP:
-      return strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
+      return settings->sort_strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
    case OOM:
       return (p2->oom - p1->oom);

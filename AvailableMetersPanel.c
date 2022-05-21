@@ -115,20 +115,20 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       const char* label = type->description ? type->description : type->uiName;
-      Panel_add(super, (Object*) ListItem_new(label, i << 16));
+      Panel_add(super, (Object *)ListItem_new(label, i << 16, settings));
    }
    // Handle (&CPUMeter_class)
    MeterClass* type = &CPUMeter_class;
    int cpus = pl->cpuCount;
    if (cpus > 1) {
-      Panel_add(super, (Object*) ListItem_new("CPU average", 0));
+      Panel_add(super, (Object* )ListItem_new("CPU average", 0, settings));
       for (int i = 1; i <= cpus; i++) {
          char buffer[50];
          xSnprintf(buffer, 50, "%s %d", type->uiName, Settings_cpuId(this->settings, i - 1));
-         Panel_add(super, (Object*) ListItem_new(buffer, i));
+         Panel_add(super, (Object *)ListItem_new(buffer, i, settings));
       }
    } else {
-      Panel_add(super, (Object*) ListItem_new("CPU", 1));
+      Panel_add(super, (Object *)ListItem_new("CPU", 1, settings));
    }
    return this;
 }

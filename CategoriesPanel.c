@@ -143,10 +143,10 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->header = header;
    this->pl = pl;
    Panel_setHeader(super, "Setup");
-   Panel_add(super, (Object*) ListItem_new("Meters", 0));
-   Panel_add(super, (Object*) ListItem_new("Display options", 0));
-   Panel_add(super, (Object*) ListItem_new("Colors", 0));
-   Panel_add(super, (Object*) ListItem_new("Columns", 0));
-   Panel_add(super, (Object*) ListItem_new("Control options", 0));
+   Panel_add(super, (Object *)ListItem_new("Meters", 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Display options", 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Colors", 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Columns", 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Control options", 0, settings));
    return this;
 }

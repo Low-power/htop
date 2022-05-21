@@ -620,7 +620,7 @@ long Process_pidCompare(const void* v1, const void* v2) {
 
 long Process_compare(const void* v1, const void* v2) {
    const Process *p1, *p2;
-   Settings *settings = ((const Process *)v1)->settings;
+   const Settings *settings = ((const Process *)v1)->settings;
    if (settings->direction == 1) {
       p1 = v1;
       p2 = v2;
@@ -634,9 +634,9 @@ long Process_compare(const void* v1, const void* v2) {
    case PERCENT_MEM:
       return (p2->m_resident - p1->m_resident);
    case NAME:
-      return strcmp(p1->name, p2->name);
+      return settings->sort_strcmp(p1->name, p2->name);
    case COMM:
-      return strcmp(p1->comm, p2->comm);
+      return settings->sort_strcmp(p1->comm, p2->comm);
    case MAJFLT:
       return (p2->majflt - p1->majflt);
    case MINFLT:
@@ -680,10 +680,10 @@ long Process_compare(const void* v1, const void* v2) {
       return (p1->tty_nr - p2->tty_nr);
    case REAL_USER:
       if(!p1->real_user && !p2->real_user) return p1->ruid - p2->ruid;
-      return strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
+      return settings->sort_strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
    case EFFECTIVE_USER:
       if(!p1->effective_user && !p2->effective_user) return p1->euid - p2->euid;
-      return strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
+      return settings->sort_strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
    default:
       return (p1->pid - p2->pid);
    }

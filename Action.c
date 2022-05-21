@@ -126,7 +126,7 @@ static bool changePriority(MainPanel* panel, int delta) {
 static void addUserToVector(int key, void* userCast, void* panelCast) {
    char* user = (char*) userCast;
    Panel* panel = (Panel*) panelCast;
-   Panel_add(panel, (Object*) ListItem_new(user, key));
+   Panel_add(panel, (Object *)ListItem_new(user, key, NULL));
 }
 
 bool Action_setUserOnly(const char* userName, uid_t* userId) {
@@ -186,7 +186,7 @@ static Htop_Reaction sortBy(State* st) {
    ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
-      Panel_add(sortPanel, (Object*) ListItem_new(name, fields[i]));
+      Panel_add(sortPanel, (Object *)ListItem_new(name, fields[i], st->settings));
       if (fields[i] == st->settings->sortKey)
          Panel_setSelected(sortPanel, i);
       free(name);
@@ -349,7 +349,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, usersPanel);
    Vector_insertionSort(usersPanel->items);
-   ListItem* allUsers = ListItem_new("All users", -1);
+   ListItem* allUsers = ListItem_new("All users", -1, NULL);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
    ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
    if (picked) {

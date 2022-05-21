@@ -35,7 +35,7 @@ Panel* SignalsPanel_new() {
    for (i = 0; i < Platform_numberOfSignals; i++) {
       const SignalItem *sig = Platform_signals + i;
       xSnprintf(buf, sizeof buf, "%3d %s", sig->number, sig->name);
-      Panel_set(this, i, (Object*) ListItem_new(buf, sig->number));
+      Panel_set(this, i, (Object *)ListItem_new(buf, sig->number, NULL));
       // signal 15 is not always the 15th signal in the table
       if (sig->number == DEFAULT_SIGNAL) {
          defaultPosition = i;
@@ -49,7 +49,7 @@ Panel* SignalsPanel_new() {
          if (n == 0) {
             buf[11] = '\0';
          }
-         Panel_set(this, i, (Object*) ListItem_new(buf, sig));
+         Panel_set(this, i, (Object *)ListItem_new(buf, sig, NULL));
       }
    }
    #endif

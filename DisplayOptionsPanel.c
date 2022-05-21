@@ -5,29 +5,28 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "DisplayOptionsPanel.h"
-
-#include "CheckItem.h"
-#include "CRT.h"
-
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*{
 #include "Panel.h"
 #include "Settings.h"
 #include "ScreenManager.h"
+#include "CheckItem.h"
 
 typedef struct DisplayOptionsPanel_ {
    Panel super;
 
    Settings* settings;
    ScreenManager* scr;
+   CheckItem *case_insensitive_sort_check_item;
 } DisplayOptionsPanel;
 
 }*/
+
+#include "config.h"
+#include "DisplayOptionsPanel.h"
+#include "CRT.h"
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 
 static const char* const DisplayOptionsFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
 
@@ -44,14 +43,20 @@ static HandlerResult DisplayOptionsPanel_eventHandler(Panel* super, int ch, int 
    CheckItem* selected = (CheckItem*) Panel_getSelected(super);
 
    switch(ch) {
-   case 0x0a:
-   case 0x0d:
-   case KEY_ENTER:
-   case KEY_MOUSE:
-   case KEY_RECLICK:
-   case ' ':
-      CheckItem_set(selected, ! (CheckItem_get(selected)) );
-      result = HANDLED;
+         bool new_value;
+      case 0x0a:
+      case 0x0d:
+      case KEY_ENTER:
+      case KEY_MOUSE:
+      case KEY_RECLICK:
+      case ' ':
+         new_value = !CheckItem_get(selected);
+         CheckItem_set(selected, new_value);
+         result = HANDLED;
+         if(selected == this->case_insensitive_sort_check_item) {
+            this->settings->sort_strcmp = new_value ? strcasecmp : strcmp;
+         }
+         break;
    }
 
    if (result == HANDLED) {
@@ -101,5 +106,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
+   this->case_insensitive_sort_check_item = CheckItem_newByVal(xStrdup("Case-insensitive sort"), settings->sort_strcmp == strcasecmp);
+   Panel_add(super, (Object *)this->case_insensitive_sort_check_item);
    return this;
 }
