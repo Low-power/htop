@@ -533,17 +533,17 @@ static Htop_Reaction actionHelp(State* st) {
    if (CRT_color_scheme_is_monochrome[CRT_color_scheme_index]) {
       mvaddstr(7, 0, "In monochrome, meters display as different chars, in order: |#*@$%&.");
    }
-   mvaddstr(8, 0, "  State: R: running; S: sleeping; T: stopped; D: uninterruptible; Z: zombie");
+   mvaddstr(8, 0, "Process state: R=running, S=sleeping, T=stopped, D=uninterruptible, Z=zombie");
    attrset(CRT_colors[HTOP_PROCESS_R_STATE_COLOR]);
 #ifdef PLATFORM_SUPPORT_PROCESS_O_STATE
-   mvaddch(8, 9, 'O');
+   mvaddch(8, 15, 'O');
 #else
-   mvaddch(8, 9, 'R');
+   mvaddch(8, 15, 'R');
 #endif
    attrset(CRT_colors[HTOP_PROCESS_D_STATE_COLOR]);
-   mvaddch(8, 46, 'D');
+   mvaddch(8, 49, 'D');
    attrset(CRT_colors[HTOP_PROCESS_Z_STATE_COLOR]);
-   mvaddch(8, 66, 'Z');
+   mvaddch(8, 68, 'Z');
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    int y = 9;
    const struct key_help_entry *entry = helpLeft;
