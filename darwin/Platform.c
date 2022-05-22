@@ -224,13 +224,16 @@ void Platform_setMemoryValues(Meter* mtr) {
 }
 
 void Platform_setSwapValues(Meter* mtr) {
-  int mib[2] = {CTL_VM, VM_SWAPUSAGE};
-  struct xsw_usage swapused;
-  size_t swlen = sizeof(swapused);
-  sysctl(mib, 2, &swapused, &swlen, NULL, 0);
-
-  mtr->total = swapused.xsu_total / 1024;
-  mtr->values[0] = swapused.xsu_used / 1024;
+	int mib[2] = {CTL_VM, VM_SWAPUSAGE};
+	struct xsw_usage swapused;
+	size_t swlen = sizeof(swapused);
+	if(sysctl(mib, 2, &swapused, &swlen, NULL, 0) < 0) {
+		mtr->total = 0;
+		mtr->values[0] = 0;
+	} else {
+		mtr->total = swapused.xsu_total / 1024;
+		mtr->values[0] = swapused.xsu_used / 1024;
+	}
 }
 
 static char **get_process_vector(const Process *proc, bool is_env) {

@@ -196,16 +196,18 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get averages or single CPU clicks
    sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   sysctl(MIB_kern_cp_time, 2, dfpl->cp_time_n, &sizeof_cp_time_array, NULL, 0);
+   if(sysctl(MIB_kern_cp_time, 2, dfpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) return;
 
    // get rest of CPUs
    if (cpus > 1) {
-       // on smp systems DragonFlyBSD kernel concats all CPU states into one long array in
-       // kern.cp_times sysctl OID
-       // we store averages in dfpl->cpus[0], and actual cores after that
-       maxcpu = cpus + 1;
-       sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
-       sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
+      // on smp systems DragonFlyBSD kernel concats all CPU states into one long array in
+      // kern.cp_times sysctl OID
+      // we store averages in dfpl->cpus[0], and actual cores after that
+      maxcpu = cpus + 1;
+      sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
+      if(sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+         return;
+      }
    }
 
    for (int i = 0; i < maxcpu; i++) {
@@ -280,23 +282,23 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
    //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
    len = sizeof buffer.v_ulong;
-   sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->memActive = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_long;
-   sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->buffersMem = buffer.v_long / 1024;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
    pl->usedMem = dfpl->memActive + dfpl->memWire;
@@ -320,6 +322,16 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= CRT_page_size_kib;
    pl->usedSwap *= CRT_page_size_kib;
+
+   return;
+
+fail:
+   pl->totalMem = 0;
+   pl->buffersMem = 0;
+   pl->cachedMem = 0;
+   pl->usedMem = 0;
+   pl->totalSwap = 0;
+   pl->usedSwap = 0;
 }
 
 static void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {

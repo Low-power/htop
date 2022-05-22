@@ -120,20 +120,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 
    int smp = 0;
    len = sizeof(smp);
-
    if (sysctlbyname("kern.smp.active", &smp, &len, NULL, 0) != 0 || len != sizeof(smp)) {
       smp = 0;
    }
 
-   int cpus = 1;
+   int cpus;
    len = sizeof(cpus);
-
-   if (smp) {
-      int err = sysctlbyname("kern.smp.cpus", &cpus, &len, NULL, 0);
-      if (err) cpus = 1;
-   } else {
-      cpus = 1;
-   }
+   if(!smp || sysctlbyname("kern.smp.cpus", &cpus, &len, NULL, 0) < 0) cpus = 1;
 
    size_t sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
    len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
@@ -223,16 +216,18 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get averages or single CPU clicks
    sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   sysctl(MIB_kern_cp_time, 2, fpl->cp_time_n, &sizeof_cp_time_array, NULL, 0);
+   if(sysctl(MIB_kern_cp_time, 2, fpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) return;
 
    // get rest of CPUs
    if (cpus > 1) {
-       // on smp systems FreeBSD kernel concats all CPU states into one long array in
-       // kern.cp_times sysctl OID
-       // we store averages in fpl->cpus[0], and actual cores after that
-       maxcpu = cpus + 1;
-       sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
-       sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0);
+      // on smp systems FreeBSD kernel concats all CPU states into one long array in
+      // kern.cp_times sysctl OID
+      // we store averages in fpl->cpus[0], and actual cores after that
+      maxcpu = cpus + 1;
+      sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
+      if(sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+         return;
+      }
    }
 
    for (int i = 0; i < maxcpu; i++) {
@@ -313,23 +308,23 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
    //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
    len = sizeof buffer.v_ulong;
-   sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->memActive = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
    len = sizeof buffer.v_long;
-   sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->buffersMem = buffer.v_long / 1024;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0);
+   if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
    // ZFS ARC size is now handled in ProcessList.c
@@ -360,6 +355,16 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalSwap = 0;
    pl->usedSwap = 0;
 #endif
+
+   return;
+
+fail:
+   pl->totalMem = 0;
+   pl->buffersMem = 0;
+   pl->cachedMem = 0;
+   pl->usedMem = 0;
+   pl->totalSwap = 0;
+   pl->usedSwap = 0;
 }
 
 static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
