@@ -320,8 +320,6 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    pl->totalSwap *= CRT_page_size_kib;
    pl->usedSwap *= CRT_page_size_kib;
-
-   pl->sharedMem = 0;  // currently unused
 }
 
 static void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {

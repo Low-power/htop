@@ -360,8 +360,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalSwap = 0;
    pl->usedSwap = 0;
 #endif
-
-   pl->sharedMem = 0;  // currently unused
 }
 
 static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {

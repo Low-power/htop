@@ -145,7 +145,6 @@ static void AixProcessList_scanMemoryInfo (ProcessList *pl) {
     pl->freeMem = mt.real_free * 4;
     pl->cachedMem = mt.numperm * 4;
     pl->buffersMem = 0;
-    pl->sharedMem = 0;
     pl->usedMem = mt.real_inuse * 4;
     pl->totalSwap = mt.pgsp_total * 4;
     pl->freeSwap = mt.pgsp_free * 4;

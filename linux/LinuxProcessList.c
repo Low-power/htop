@@ -993,7 +993,6 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
       case 'M':
          tryRead("MemTotal:", &this->totalMem);
          tryRead("MemFree:", &this->freeMem);
-         tryRead("MemShared:", &this->sharedMem);
          break;
       case 'B':
          tryRead("Buffers:", &this->buffersMem);
