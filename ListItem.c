@@ -84,9 +84,10 @@ const char* ListItem_getRef(ListItem* this) {
 }
 
 long ListItem_compare(const void* cast1, const void* cast2) {
-   const ListItem *obj1 = (const ListItem *)cast1;
-   const ListItem *obj2 = (const ListItem *)cast2;
+   const ListItem *obj1 = cast1;
+   const ListItem *obj2 = cast2;
    const Settings *settings = obj1->settings;
-   return settings->sort_strcmp(obj1->value, obj2->value);
+   int (*cmp)(const char *, const char *) = settings ? settings->sort_strcmp : strcmp;
+   return cmp(obj1->value, obj2->value);
 }
 
