@@ -44,6 +44,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
+
 bool Action_setUserOnly(const char* userName, uid_t* userId);
 
 Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
