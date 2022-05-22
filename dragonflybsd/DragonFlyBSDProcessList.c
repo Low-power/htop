@@ -393,7 +393,7 @@ retry:
       jailid = atoi(strtok(curpos, " "));
       str_hostname = strtok(NULL, " ");
 
-      char *jname = (char *) (Hashtable_get(dfpl->jails, jailid));
+      char *jname = Hashtable_get(dfpl->jails, jailid);
       if (jname == NULL) {
          jname = xStrdup(str_hostname);
          Hashtable_put(dfpl->jails, jailid, jname);
@@ -405,15 +405,12 @@ retry:
 }
 
 static char *DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl, int jailid) {
-   char*  hostname;
-   char*  jname;
-
-   if (jailid != 0 && dfpl->jails && (hostname = (char *)Hashtable_get(dfpl->jails, jailid))) {
-      jname = xStrdup(hostname);
+   char *hostname;
+   if (jailid != 0 && dfpl->jails && (hostname = Hashtable_get(dfpl->jails, jailid))) {
+      return xStrdup(hostname);
    } else {
-      jname = xStrdup("-");
+      return xStrdup("-");
    }
-   return jname;
 }
 
 void ProcessList_goThroughEntries(ProcessList* this) {
