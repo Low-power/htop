@@ -63,6 +63,9 @@ static HandlerResult ColorsPanel_eventHandler(Panel* super, int ch, int repeat) 
       CRT_setColors(mark);
       clear();
       Panel* menu = (Panel*) Vector_get(this->scr->panels, 0);
+      Panel_setSelectionColor(menu, CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR]);
+      Panel_setSelectionColor(super, CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR]);
+      FunctionBar_draw(super->currentBar, NULL);
       Header_draw(header);
       RichString_setAttr(&(super->header), CRT_colors[HTOP_PANEL_HEADER_FOCUS_COLOR]);
       RichString_setAttr(&(menu->header), CRT_colors[HTOP_PANEL_HEADER_UNFOCUS_COLOR]);
