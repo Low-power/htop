@@ -111,6 +111,8 @@ static void Action_runSetup(Settings* settings, Header *header, ProcessList* pl)
    ScreenManager_delete(scr);
    if (settings->changed) {
       CRT_setMouse(settings->use_mouse);
+      CRT_setExplicitDelay(settings->explicit_delay);
+      if(!settings->explicit_delay) CRT_enableDelay();
       Header_writeBackToSettings(header);
    }
 }

@@ -108,5 +108,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
    this->case_insensitive_sort_check_item = CheckItem_newByVal(xStrdup("Case-insensitive sort"), settings->sort_strcmp == strcasecmp);
    Panel_add(super, (Object *)this->case_insensitive_sort_check_item);
+   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Explicitly delay between updates to workaroud a ncurses issue"), &settings->explicit_delay));
    return this;
 }
