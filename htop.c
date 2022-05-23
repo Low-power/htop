@@ -80,8 +80,8 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       .explicit_delay = false,
    };
 
-#ifdef HAVE_GETOPT_LONG
 #define HTOP_LONG_OPTION_EXPLICIT_DELAY (1 << 8)
+#ifdef HAVE_GETOPT_LONG
    static struct option long_opts[] = {
       { "help",           no_argument,       NULL, 'h' },
       { "version",        no_argument,       NULL, 'v' },
