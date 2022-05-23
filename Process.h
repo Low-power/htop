@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #elif defined(MAJOR_IN_SYSMACROS) || \
    (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
 #endif
+#ifdef HAVE_LIBNCURSESW
+#endif
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get

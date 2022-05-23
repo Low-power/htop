@@ -33,6 +33,10 @@ in the source distribution for its full text.
    (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
 #include <sys/sysmacros.h>
 #endif
+#ifdef HAVE_LIBNCURSESW
+#include <limits.h>
+#include <wchar.h>
+#endif
 
 #ifdef __ANDROID__
 #define SYS_ioprio_get __NR_ioprio_get
@@ -361,6 +365,47 @@ void Process_outputRate(RichString* str, char* buffer, int n, double rate, int c
    }
 }
 
+static void copy_fixed_width_field(char *buffer, size_t buffer_size, const char *s, int width) {
+   assert(buffer_size > (size_t)width);
+#ifdef HAVE_LIBNCURSESW
+   wchar_t wcs[width + 1];
+   int truncate_count = 0;
+   do {
+      size_t wc_count = mbstowcs(wcs, s, width + 1 - truncate_count);
+      if(wc_count != (size_t)-1) {
+         char mb_buffer[MB_LEN_MAX];
+         size_t out_i = 0;
+         for(size_t wcs_i = 0; wcs_i < wc_count && width > 1; wcs_i++) {
+            int mb_len = wctomb(mb_buffer, wcs[wcs_i]);
+            if(mb_len < 0 || out_i + mb_len + 1 >= buffer_size) break;
+            int cw = wcwidth(wcs[wcs_i]);
+            if(cw < 0) {
+               width--;
+               buffer[out_i++] = '?';
+            } else {
+               width -= cw;
+               if(width < 1) break;
+               memcpy(buffer + out_i, mb_buffer, mb_len);
+               out_i += mb_len;
+            }
+         }
+         if(out_i > 0) {
+            if(out_i + width >= buffer_size) out_i = buffer_size - width - 1;
+            memset(buffer + out_i, ' ', width);
+            buffer[out_i + width] = 0;
+            return;
+         }
+         break;
+      }
+   } while(++truncate_count < width + 1);
+#endif
+   xSnprintf(buffer, buffer_size, "%-*s ", width, s);
+   if(buffer[width]) {
+      buffer[width - 1] = ' ';
+      buffer[width] = 0;
+   }
+}
+
 void Process_writeField(Process* this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
@@ -387,11 +432,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       }
       break;
    case NAME:
-      xSnprintf(buffer, n, "%-15s ", this->name);
-      if(buffer[16]) {
-         buffer[15] = ' ';
-         buffer[16] = 0;
-      }
+      copy_fixed_width_field(buffer, n, this->name, 16);
       break;
    case COMM:
       if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
