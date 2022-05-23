@@ -1,25 +1,10 @@
 /*
 htop - freebsd/FreeBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
-
-#include "ProcessList.h"
-#include "FreeBSDProcessList.h"
-#include "FreeBSDProcess.h"
-//#include "KStat.h"
-#include "CRT.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/user.h>
-#include <sys/vmmeter.h>
-#include <err.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <string.h>
 
 /*{
 #include "config.h"
@@ -32,14 +17,12 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {
@@ -54,7 +37,7 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   //uint64_t memZfsArc;
+   unsigned long long int laundry_size;
 
    CPUData* cpus;
 
@@ -69,13 +52,30 @@ typedef struct FreeBSDProcessList_ {
 
 }*/
 
+#include "ProcessList.h"
+#include "FreeBSDProcessList.h"
+#include "FreeBSDProcess.h"
+#include "CRT.h"
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+#include <sys/vmmeter.h>
+#include <err.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <string.h>
+#include <assert.h>
+
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
 static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
-static int MIB_vm_stats_vm_v_cache_count[4];
+static int *MIB_vm_stats_vm_v_cache_count;
 static int MIB_vm_stats_vm_v_inactive_count[4];
 static int MIB_vm_stats_vm_v_free_count[4];
+static int *v_laundry_count_mib;
 static int MIB_vfs_bufspace[2];
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
@@ -106,17 +106,33 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       CRT_page_size_kib = page_size / ONE_BINARY_K;
    }
 
+   int mib[4];
+
    // usable page count vm.stats.vm.v_page_count
    // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
    len = 4; sysctlnametomib("vm.stats.vm.v_page_count", MIB_vm_stats_vm_v_page_count, &len);
 
    len = 4; sysctlnametomib("vm.stats.vm.v_wire_count", MIB_vm_stats_vm_v_wire_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
+
+   len = 4;
+   if(sysctlnametomib("vm.stats.vm.v_cache_count", mib, &len) == 0) {
+      assert(len == 4);
+      MIB_vm_stats_vm_v_cache_count = xMalloc(sizeof mib);
+      memcpy(MIB_vm_stats_vm_v_cache_count, mib, sizeof mib);
+   }
+
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
+
+   len = 4;
+   if(sysctlnametomib("vm.stats.vm.v_laundry_count", mib, &len) == 0) {
+      assert(len == 4);
+      v_laundry_count_mib = xMalloc(sizeof mib);
+      memcpy(v_laundry_count_mib, mib, sizeof mib);
+   }
 
    int smp = 0;
    len = sizeof(smp);
@@ -173,9 +189,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    fpl->kip_buffer_size = 0;
 #endif
 
-   int mib[] = { CTL_KERN, KERN_ARGMAX };
+   int arg_max_mib[] = { CTL_KERN, KERN_ARGMAX };
    len = sizeof fpl->arg_max;
-   if(sysctl(mib, 2, &fpl->arg_max, &len, NULL, 0) < 0) fpl->arg_max = ARG_MAX;
+   if(sysctl(arg_max_mib, 2, &fpl->arg_max, &len, NULL, 0) < 0) fpl->arg_max = ARG_MAX;
 
    return pl;
 }
@@ -323,13 +339,28 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->buffersMem = buffer.v_long / 1024;
 
-   len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
+   if(MIB_vm_stats_vm_v_cache_count) {
+      len = sizeof buffer.v_uint;
+      if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) {
+         pl->cachedMem = 0;
+      } else {
+         pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
+      }
+   }
+
+   if(v_laundry_count_mib) {
+      // Exists since kFreeBSD 11.1
+      len = sizeof buffer.v_uint;
+      if(sysctl(v_laundry_count_mib, 4, &buffer, &len, NULL, 0) < 0) {
+         fpl->laundry_size = 0;
+      } else {
+         fpl->laundry_size = buffer.v_uint * CRT_page_size_kib;
+      }
+   }
 
    // ZFS ARC size is now handled in ProcessList.c
 
-   pl->usedMem = fpl->memActive + fpl->memWire;
+   pl->usedMem = fpl->memActive + fpl->memWire + fpl->laundry_size;
 
    // currently unused, same as with arc, custom meter perhaps
    //len = sizeof buffer.v_uint;

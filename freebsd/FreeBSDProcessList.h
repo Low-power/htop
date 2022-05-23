@@ -5,6 +5,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -19,14 +20,12 @@ in the source distribution for its full text.
 #include <sys/resource.h>
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct FreeBSDProcessList_ {
@@ -41,7 +40,7 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
-   //uint64_t memZfsArc;
+   unsigned long long int laundry_size;
 
    CPUData* cpus;
 
