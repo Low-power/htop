@@ -67,6 +67,7 @@ typedef struct DarwinProcessList_ {
    uint64_t kernel_threads;
    uint64_t user_threads;
    uint64_t global_diff;
+   bool is_scan_thread_supported;
 } DarwinProcessList;
 
 }*/
@@ -164,6 +165,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    this->super.kernel_thread_count = 0;
    this->super.running_thread_count = 0;
 
+   // Disabled for High Sierra due to bug in macOS High Sierra
+   this->is_scan_thread_supported = !(CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
+
    return &this->super;
 }
 
@@ -218,10 +222,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		}
 		super->running_process_count++;
 
-		// Disabled for High Sierra due to bug in macOS High Sierra
-		bool isScanThreadSupported  = ! ( CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
-
-		if (isScanThreadSupported){
+		if(dpl->is_scan_thread_supported) {
 			DarwinProcess_scanThreads(proc);
 		}
 		if(!proc->super.real_user) {

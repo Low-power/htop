@@ -29,6 +29,7 @@ typedef struct DarwinProcessList_ {
    uint64_t kernel_threads;
    uint64_t user_threads;
    uint64_t global_diff;
+   bool is_scan_thread_supported;
 } DarwinProcessList;
 
 
