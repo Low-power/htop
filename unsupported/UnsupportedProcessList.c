@@ -41,7 +41,6 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 	proc->tgid = 0;
 	proc->name = xStrdup("<unsupported>");
 	proc->comm = xStrdup("<unsupported architecture>");
-	proc->argv0_length = 0;
 
 	proc->state = 'R';
 	proc->show = true; /* Reflected in proc->settings-> "hideXXX" really */

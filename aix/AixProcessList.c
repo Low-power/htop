@@ -154,22 +154,28 @@ static void AixProcessList_scanMemoryInfo (ProcessList *pl) {
 #endif
 }
 
-static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, char **command) {
+static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, char **command, int *argv0_len) {
 	*name = xStrdup(pe->pi_pid == 0 && !*pe->pi_comm ? "swapper" : pe->pi_comm);
 
 	char argvbuf[256];
 	if (getargs(pe, sizeof (struct procentry64), argvbuf, sizeof argvbuf) == 0 && *argvbuf) {
 		// args are seperated by NUL, double NUL terminates
 		unsigned int i = 0;
+		*argv0_len = 0;
 		while(argvbuf[i] || argvbuf[i + 1]) {
-			if(!argvbuf[i]) argvbuf[i] = ' ';
+			if(!argvbuf[i]) {
+				argvbuf[i] = ' ';
+				if(!*argv0_len) *argv0_len = i;
+			}
 			if(++i >= sizeof argvbuf - 2) {
 				argvbuf[i] = 0;
 			}
 		}
 		*command = xStrdup(argvbuf);
+		if(!*argv0_len) *argv0_len = i;
 	} else {
 		*command = xStrdup(*name);
+		*argv0_len = strlen(*name);
 	}
 }
 
@@ -216,7 +222,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			ap->kernel = pe->pi_flags & SKPROC;
 			proc->tgid = pe->pi_pid;
 			proc->starttime_ctime = pe->pi_start;
-			AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
+			AixProcessList_readProcessName(pe, &proc->name, &proc->comm, &proc->argv0_length);
 			ProcessList_add(super, proc);
 		} else {
 			if(proc->ruid != pe->pi_uid) proc->real_user = NULL;
@@ -224,7 +230,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			if (super->settings->updateProcessNames) {
 				free(proc->name);
 				free(proc->comm);
-				AixProcessList_readProcessName(pe, &proc->name, &proc->comm);
+				AixProcessList_readProcessName(pe, &proc->name, &proc->comm, &proc->argv0_length);
 			}
 		}
 

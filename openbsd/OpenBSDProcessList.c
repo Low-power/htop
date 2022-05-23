@@ -155,43 +155,44 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_page_size_kib;
 }
 
-static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
-   char **arg;
-   size_t len = 0, n;
-   int i;
-
+static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int *argv0_len) {
    *name = xStrdup(kproc->p_comm);
 
    /*
     * Like OpenBSD's top(1), we try to fall back to the command name
-    * (argv[0]) if we fail to construct the full command.
+    * if we failed to construct the full command.
     */
-   arg = kvm_getargv(kd, kproc, 500);
+   char **arg = kvm_getargv(kd, kproc, 500);
    if (arg == NULL || *arg == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
+fallback_to_name_only:
       *command = xStrdup(kproc->p_comm);
-      return;
-   }
-   for (i = 0; arg[i] != NULL; i++) {
-      len += strlen(arg[i]) + 1;   /* room for arg and trailing space or NUL */
-   }
-   /* don't use xMalloc here - we want to handle huge argv's gracefully */
-   if ((*command = malloc(len)) == NULL) {
-      *basenameEnd = strlen(kproc->p_comm);
-      *command = xStrdup(kproc->p_comm);
+      *argv0_len = strlen(kproc->p_comm);
       return;
    }
 
-   **command = 0;
-
-   for (i = 0; arg[i] != NULL; i++) {
-      n = strlcat(*command, arg[i], len);
-      if (i == 0) {
-         /* TODO: rename all basenameEnd to basenameLen, make size_t */
-         *basenameEnd = MINIMUM(n, len-1);
+   // Initialize 'len' because GCC 4.2.1 reports:
+   // warning: 'len' may be used uninitialized in this function
+   size_t len = 0;
+   unsigned int i = 0;
+   while(arg[i]) {
+      if(i) {
+         size_t arg_len = strlen(arg[i]) + 1;
+         char *p = realloc(*command, len + arg_len);
+         if(!p) return;
+         *command = p;
+         (*command)[len - 1] = ' ';
+         memcpy(*command + len, arg[i], arg_len);
+         len += arg_len;
+      } else {
+         len = strlen(arg[i]);
+         if(!len) goto fallback_to_name_only;
+         *argv0_len = len++;
+         /* don't use xMalloc here - we want to handle huge argv's gracefully */
+         *command = malloc(len);
+         if (!*command) goto fallback_to_name_only;
+         memcpy(*command, arg[i], len);
       }
-      /* the trailing space should get truncated anyway */
-      strlcat(*command, " ", len);
+      i++;
    }
 }
 

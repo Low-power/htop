@@ -334,30 +334,29 @@ fail:
    pl->usedSwap = 0;
 }
 
-static void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+static void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int *argv0_len) {
    *name = xStrdup(kproc->kp_comm);
    char** argv = kvm_getargv(kd, kproc, 0);
-   if (!argv) {
+   if (!argv || !*argv) {
       *command = xStrdup(kproc->kp_comm);
+      *argv0_len = strlen(kproc->kp_comm);
       return;
    }
    int len = 0;
    for (int i = 0; argv[i]; i++) {
-      len += strlen(argv[i]) + 1;
+      if(i) {
+         len += strlen(argv[i]) + 1;
+      } else {
+         len = strlen(argv[i]);
+         *argv0_len = len++;
+      }
    }
    *command = xMalloc(len);
    char* at = *command;
-   *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {
+      if(i) *at++ = ' ';
       at = stpcpy(at, argv[i]);
-      if (!*basenameEnd) {
-         *basenameEnd = at - *command;
-      }
-      *at = ' ';
-      at++;
    }
-   at--;
-   *at = '\0';
 }
 
 static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* dfpl) {

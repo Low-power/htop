@@ -398,7 +398,7 @@ fail:
    pl->usedSwap = 0;
 }
 
-static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct kinfo_proc* kproc, char **name, char **command, int* basenameEnd) {
+static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct kinfo_proc* kproc, char **name, char **command, int *argv0_len) {
    *name = xStrdup(kproc->ki_comm);
 #ifdef KERN_PROC_ARGS
    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, kproc->ki_pid };
@@ -406,40 +406,40 @@ static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct 
    size_t len = this->arg_max;
    if(sysctl(mib, 4, buffer, &len, NULL, 0) < 0 || len < 1) {
       *command = xStrdup(kproc->ki_comm);
+      *argv0_len = strlen(kproc->ki_comm);
       return;
    }
    *command = xMalloc(len);
    (*command)[--len] = 0;
-   *basenameEnd = 0;
+   *argv0_len = len;
    while(len-- > 0) {
-      (*command)[len] = buffer[len] ? : ' ';
-      if(!*basenameEnd) *basenameEnd = len;
+      (*command)[len] = buffer[len] ? : (*argv0_len = len, ' ');
    }
 #elif defined HAVE_LIBKVM
    char** argv = kvm_getargv(this->kd, kproc, 0);
-   if (!argv) {
+   if (!argv || !*argv) {
       *command = xStrdup(kproc->ki_comm);
+      *argv0_len = strlen(kproc->ki_comm);
       return;
    }
    int len = 0;
    for (int i = 0; argv[i]; i++) {
-      len += strlen(argv[i]) + 1;
+      if(i) {
+         len += strlen(argv[i]) + 1;
+      } else {
+         len = strlen(argv[i]);
+         *argv0_len = len++;
+      }
    }
    *command = xMalloc(len);
    char* at = *command;
-   *basenameEnd = 0;
    for (int i = 0; argv[i]; i++) {
+      if(i) *at++ = ' ';
       at = stpcpy(at, argv[i]);
-      if (!*basenameEnd) {
-         *basenameEnd = at - *command;
-      }
-      *at = ' ';
-      at++;
    }
-   at--;
-   *at = '\0';
 #else
    *command = xStrdup(kproc->ki_comm);
+   *argv0_len = strlen(kproc->ki_comm);
 #endif
 }
 

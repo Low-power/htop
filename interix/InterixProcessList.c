@@ -190,17 +190,22 @@ try_stat:
 					if(len && *buffer) {
 						if(len >= sizeof buffer) len = sizeof buffer - 1;
 						if(buffer[len - 1]) buffer[len] = 0;
-						len--;
+						else len--;
+						proc->argv0_length = len;
 						while(len > 0) {
-							len--;
-							if(!buffer[len]) buffer[len] = ' ';
+							if(!buffer[--len]) {
+								buffer[len] = ' ';
+								proc->argv0_length = len;
+							}
 						}
 						proc->comm = xStrdup(buffer);
 					} else {
 						proc->comm = xStrdup(comm);
+						proc->argv0_length = comm_len - 1;
 					}
 				} else {
 					proc->comm = xStrdup(comm);
+					proc->argv0_length = comm_len - 1;
 				}
 			}
 		}
