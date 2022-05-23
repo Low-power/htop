@@ -71,7 +71,7 @@ void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, tim
    proc->starttime_ctime = ep->p_starttime.tv_sec;
 }
 
-char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) {
+char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* argv0_length) {
    /* This function is from the old Mac version of htop. Originally from ps? */
    int mib[3], argmax, nargs, c = 0;
    size_t size;
@@ -169,7 +169,7 @@ char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) 
    /* Save where the argv[0] string starts. */
    sp = cp;
 
-   *basenameOffset = 0;
+   *argv0_length = 0;
    for ( np = NULL; c < nargs && cp < &procargs[size]; cp++ ) {
       if ( *cp == '\0' ) {
          c++;
@@ -179,8 +179,8 @@ char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) 
          }
         /* Note location of current '\0'. */
         np = cp;
-        if (*basenameOffset == 0) {
-           *basenameOffset = cp - sp;
+        if (*argv0_length == 0) {
+           *argv0_length = cp - sp;
         }
      }
    }
@@ -193,8 +193,8 @@ char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset) 
       /* Empty or unterminated string. */
       goto ERROR_B;
    }
-   if (*basenameOffset == 0) {
-      *basenameOffset = np - sp;
+   if (*argv0_length == 0) {
+      *argv0_length = np - sp;
    }
 
    /* Make a copy of the string. */
@@ -209,7 +209,7 @@ ERROR_B:
    free( procargs );
 ERROR_A:
    retval = xStrdup(k->kp_proc.p_comm);
-   *basenameOffset = strlen(retval);
+   *argv0_length = strlen(retval);
    return retval;
 }
 
@@ -238,7 +238,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
       proc->session = 0; /* TODO Get the session id */
       DarwinProcess_setStartTime(proc, ep, now);
       proc->name = xStrdup(ps->kp_proc.p_comm);
-      proc->comm = DarwinProcess_getCmdLine(ps, &(proc->basenameOffset));
+      proc->comm = DarwinProcess_getCmdLine(ps, &(proc->argv0_length));
       ((DarwinProcess *)proc)->is_kernel_process = ep->p_flag & P_SYSTEM;
    }
 

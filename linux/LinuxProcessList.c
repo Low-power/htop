@@ -776,7 +776,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
       tokenEnd = amtRead;
    }
    command[lastChar + 1] = '\0';
-   process->basenameOffset = tokenEnd;
+   process->argv0_length = tokenEnd;
    setCommand(process, command, lastChar + 1);
 
    return true;
@@ -936,12 +936,12 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (settings->flags & PROCESS_FLAG_LINUX_OOM)
          LinuxProcessList_readOomData(lp, dirname, name);
 
-      if (!proc->comm || (proc->state == 'Z' && proc->basenameOffset == 0)) {
-         proc->basenameOffset = -1;
+      if (!proc->comm || (proc->state == 'Z' && proc->argv0_length == 0)) {
+         proc->argv0_length = -1;
          setCommand(proc, command, commLen);
       } else if (Process_isExtraThreadProcess(proc)) {
-         if (settings->showThreadNames || (proc->state == 'Z' && proc->basenameOffset == 0)) {
-            proc->basenameOffset = -1;
+         if (settings->showThreadNames || (proc->state == 'Z' && proc->argv0_length == 0)) {
+            proc->argv0_length = -1;
             setCommand(proc, command, commLen);
          } else if (settings->showThreadNames && !LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
             goto errorReadingProcess;

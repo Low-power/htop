@@ -527,7 +527,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          ProcessList_add((ProcessList*)this, proc);
-         FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+         FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       } else {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
@@ -550,7 +550,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
-            FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+            FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          }
       }
 

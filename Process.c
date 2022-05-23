@@ -106,7 +106,7 @@ typedef struct Process_ {
    char *name;
    char* comm;
    int commLen;
-   int basenameOffset;
+   int argv0_length;
 
    unsigned int pgrp;
    unsigned int session;
@@ -315,7 +315,7 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
 
    if (this->settings->highlightBaseName || !this->settings->showProgramPath) {
       int i, basename = 0;
-      for (i = 0; i < this->basenameOffset; i++) {
+      for (i = 0; i < this->argv0_length; i++) {
          if (comm[i] == '/') {
             basename = i + 1;
          } else if (comm[i] == ':') {
@@ -328,7 +328,7 @@ static inline void Process_writeCommand(Process* this, int attr, int baseattr, R
             start += basename;
          else
             comm += basename;
-         finish = this->basenameOffset - basename;
+         finish = this->argv0_length - basename;
       }
       finish += start - 1;
    }
@@ -624,7 +624,7 @@ void Process_init(Process* this, struct Settings_* settings) {
    this->showChildren = true;
    this->show = true;
    this->updated = false;
-   this->basenameOffset = -1;
+   this->argv0_length = -1;
    if (Process_getuid == -1) Process_getuid = getuid();
 }
 

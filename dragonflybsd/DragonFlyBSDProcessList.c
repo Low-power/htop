@@ -462,7 +462,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->starttime_ctime = kproc->kp_start.tv_sec;
 
          ProcessList_add((ProcessList*)this, proc);
-         DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+         DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          dfp->jname = DragonFlyBSDProcessList_readJailName(dfpl, kproc->kp_jailid);
       } else {
          proc->processor = kproc->kp_lwp.kl_cpuid;
@@ -483,7 +483,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
-            DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+            DragonFlyBSDProcessList_readProcessName(dfpl->kd, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          }
       }
 

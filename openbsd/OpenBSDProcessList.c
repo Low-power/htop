@@ -265,14 +265,14 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
          openbsd_proc->is_kernel_process = (kproc->p_flag & P_SYSTEM);
          openbsd_proc->is_main_thread = !(kproc->p_flag & P_THREAD);
          ProcessList_add((ProcessList*)this, proc);
-         OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+         OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->argv0_length);
       } else {
          if(proc->ruid != kproc->p_ruid) proc->real_user = NULL;
          if(proc->euid != kproc->p_uid) proc->effective_user = NULL;
          if (this->settings->updateProcessNames) {
             free(proc->name);
             free(proc->comm);
-            OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->basenameOffset);
+            OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          }
       }
 

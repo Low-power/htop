@@ -35,7 +35,7 @@ bool Process_isExtraThreadProcess(const Process* this);
 
 void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, time_t now);
 
-char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* basenameOffset);
+char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* argv0_length);
 
 void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, time_t now, bool exists);
 

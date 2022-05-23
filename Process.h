@@ -83,7 +83,7 @@ typedef struct Process_ {
    char *name;
    char* comm;
    int commLen;
-   int basenameOffset;
+   int argv0_length;
 
    unsigned int pgrp;
    unsigned int session;
