@@ -85,6 +85,9 @@ struct Panel_ {
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
+#ifndef ROUND_UP
+#define ROUND_UP(A,B) ((((A)+((B)-1))/(B))*(B))
+#endif
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 

@@ -96,6 +96,9 @@ struct Panel_ {
 #ifndef MAX
 #define MAX(a,b) ((a)>(b)?(a):(b))
 #endif
+#ifndef ROUND_UP
+#define ROUND_UP(A,B) ((((A)+((B)-1))/(B))*(B))
+#endif
 
 #define KEY_CTRL(l) ((l)-'A'+1)
 
@@ -283,10 +286,11 @@ void Panel_draw(Panel* this, bool focus) {
    assert (this != NULL);
 
    int size = Vector_size(this->items);
-   int scrollH = this->scrollH;
    int y = this->y;
    int x = this->x;
    int h = this->h;
+
+   assert(this->scrollH >= 0);
 
    int headerLen = RichString_sizeVal(this->header);
    if (headerLen > 0) {
@@ -294,9 +298,9 @@ void Panel_draw(Panel* this, bool focus) {
             focus ? HTOP_PANEL_HEADER_FOCUS_COLOR : HTOP_PANEL_HEADER_UNFOCUS_COLOR
          ]);
       mvhline(y, x, ' ', this->w);
-      if (scrollH < headerLen) {
-         RichString_printoffnVal(this->header, y, x, scrollH,
-            MIN(headerLen - scrollH, this->w));
+      if (this->scrollH < headerLen) {
+         RichString_printoffnVal(this->header, y, x, this->scrollH,
+            MIN(headerLen - this->scrollH, this->w));
       }
       attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
       y++;
@@ -333,7 +337,7 @@ void Panel_draw(Panel* this, bool focus) {
          RichString_begin(item);
          Object_display(itemObj, &item);
          int itemLen = RichString_sizeVal(item);
-         int amt = MIN(itemLen - scrollH, this->w);
+         int amt = MIN(itemLen - this->scrollH, this->w);
          bool selected = (i == this->selected);
          if (selected) {
             attrset(selectionColor);
@@ -341,7 +345,7 @@ void Panel_draw(Panel* this, bool focus) {
             this->selectedLen = itemLen;
          }
          mvhline(y + line, x, ' ', this->w);
-         if (amt > 0) RichString_printoffnVal(item, y + line, x, scrollH, amt);
+         if (amt > 0) RichString_printoffnVal(item, y + line, x, this->scrollH, amt);
          if (selected) attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
          RichString_end(item);
          line++;
@@ -364,16 +368,16 @@ void Panel_draw(Panel* this, bool focus) {
       int newLen = RichString_sizeVal(new);
       this->selectedLen = newLen;
       mvhline(y+ this->oldSelected - first, x+0, ' ', this->w);
-      if (scrollH < oldLen) {
+      if (this->scrollH < oldLen) {
          RichString_printoffnVal(old, y+this->oldSelected - first, x,
-            scrollH, MIN(oldLen - scrollH, this->w));
+            this->scrollH, MIN(oldLen - this->scrollH, this->w));
       }
       attrset(selectionColor);
       mvhline(y+this->selected - first, x+0, ' ', this->w);
       RichString_setAttr(&new, selectionColor);
-      if (scrollH < newLen) {
+      if (this->scrollH < newLen) {
          RichString_printoffnVal(new, y+this->selected - first, x,
-            scrollH, MIN(newLen - scrollH, this->w));
+            this->scrollH, MIN(newLen - this->scrollH, this->w));
       }
       attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
       RichString_end(new);
@@ -402,23 +406,24 @@ bool Panel_onKey(Panel* this, int key, int repeat) {
       this->selected -= repeat;
       break;
    case KEY_LEFT:
-   case KEY_CTRL('B'):
       if (this->scrollH > 0) {
          this->scrollH -= MAX(CRT_scrollHAmount, 0);
+         if(this->scrollH < 0) this->scrollH = 0;
          this->needsRedraw = true;
       }
       break;
    case KEY_RIGHT:
-   case KEY_CTRL('F'):
       this->scrollH += CRT_scrollHAmount;
       this->needsRedraw = true;
       break;
    case KEY_PPAGE:
+   case KEY_CTRL('B'):
       this->selected -= (this->h - 1);
       this->scrollV = MAX(0, this->scrollV - this->h + 1);
       this->needsRedraw = true;
       break;
    case KEY_NPAGE:
+   case KEY_CTRL('F'):
       this->selected += (this->h - 1);
       this->scrollV = MAX(0, MIN(Vector_size(this->items) - this->h,
                                  this->scrollV + this->h - 1));
@@ -443,14 +448,12 @@ bool Panel_onKey(Panel* this, int key, int repeat) {
    case KEY_END:
       this->selected = size - 1;
       break;
-   case KEY_CTRL('A'):
    case '^':
       this->scrollH = 0;
       this->needsRedraw = true;
       break;
-   case KEY_CTRL('E'):
    case '$':
-      this->scrollH = MAX(this->selectedLen - this->w, 0);
+      this->scrollH = MAX(ROUND_UP(this->selectedLen - this->w, CRT_scrollHAmount), 0);
       this->needsRedraw = true;
       break;
    default:
