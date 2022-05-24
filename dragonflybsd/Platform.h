@@ -40,9 +40,9 @@ int Platform_getMaxPid();
 
 double Platform_setCPUValues(Meter* this, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter *meter);
 
-void Platform_setSwapValues(Meter* this);
+void Platform_setSwapValues(Meter *meter);
 
 char **Platform_getProcessArgv(const Process *proc);
 

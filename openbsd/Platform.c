@@ -185,16 +185,16 @@ double Platform_setCPUValues(Meter *meter, int cpu) {
    return totalPercent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+void Platform_setMemoryValues(Meter *meter) {
+   ProcessList *pl = meter->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   this->values[2] = cachedMem;
+   meter->total = pl->totalMem;
+   meter->values[0] = usedMem;
+   meter->values[1] = buffersMem;
+   meter->values[2] = cachedMem;
 }
 
 /*
@@ -204,7 +204,7 @@ void Platform_setMemoryValues(Meter* this) {
  * Based on OpenBSD's top(1)
  */
 void Platform_setSwapValues(Meter *meter) {
-   ProcessList* pl = (ProcessList *)meter->pl;
+   ProcessList* pl = meter->pl;
    unsigned long long int total = 0, used = 0;
    int nswap = swapctl(SWAP_NSWAP, 0, 0);
    if (nswap > 0) {

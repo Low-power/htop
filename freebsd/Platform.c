@@ -187,20 +187,18 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
-   // TODO
-   ProcessList* pl = (ProcessList*) this->pl;
-
-   this->total = pl->totalMem;
-   this->values[0] = pl->usedMem;
-   this->values[1] = pl->buffersMem;
-   this->values[2] = pl->cachedMem;
+void Platform_setMemoryValues(Meter *meter) {
+   ProcessList *pl = meter->pl;
+   meter->total = pl->totalMem;
+   meter->values[0] = pl->usedMem;
+   meter->values[1] = pl->buffersMem;
+   meter->values[2] = pl->cachedMem;
 }
 
-void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
+void Platform_setSwapValues(Meter *meter) {
+   ProcessList *pl = meter->pl;
+   meter->total = pl->totalSwap;
+   meter->values[0] = pl->usedSwap;
 }
 
 #if defined KERN_PROC_ARGS || defined KERN_PROC_ENV

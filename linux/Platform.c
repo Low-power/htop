@@ -222,22 +222,22 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
+void Platform_setMemoryValues(Meter *meter) {
+   ProcessList *pl = meter->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
-   this->total = pl->totalMem;
-   this->values[0] = usedMem;
-   this->values[1] = buffersMem;
-   this->values[2] = cachedMem;
+   meter->total = pl->totalMem;
+   meter->values[0] = usedMem;
+   meter->values[1] = buffersMem;
+   meter->values[2] = cachedMem;
 }
 
-void Platform_setSwapValues(Meter* this) {
-   ProcessList* pl = (ProcessList*) this->pl;
-   this->total = pl->totalSwap;
-   this->values[0] = pl->usedSwap;
+void Platform_setSwapValues(Meter *meter) {
+   ProcessList *pl = meter->pl;
+   meter->total = pl->totalSwap;
+   meter->values[0] = pl->usedSwap;
 }
 
 static char **get_process_vector(const Process *proc, const char *v_type) {

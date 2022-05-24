@@ -42,9 +42,9 @@ int Platform_getMaxPid();
 
 double Platform_setCPUValues(Meter* this, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter *meter);
 
-void Platform_setSwapValues(Meter* this);
+void Platform_setSwapValues(Meter *meter);
 
 #if defined KERN_PROC_ARGS || defined KERN_PROC_ENV
 #endif

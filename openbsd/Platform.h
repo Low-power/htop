@@ -48,7 +48,7 @@ int Platform_getMaxPid();
 
 double Platform_setCPUValues(Meter *meter, int cpu);
 
-void Platform_setMemoryValues(Meter* this);
+void Platform_setMemoryValues(Meter *meter);
 
 /*
  * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
