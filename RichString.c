@@ -55,7 +55,7 @@ typedef struct RichString_ {
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-#define charBytes(n) (sizeof(CharType) * (n)) 
+#define charBytes(n) (sizeof(CharType) * (n))
 
 static void RichString_extendLen(RichString* this, int len) {
    if (this->chlen <= RICHSTRING_MAXLEN) {
@@ -81,15 +81,14 @@ static void RichString_extendLen(RichString* this, int len) {
 
 #ifdef HAVE_LIBNCURSESW
 
-static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
-   wchar_t data[len+1];
-   len = mbstowcs(data, data_c, len);
-   if (len < 0)
-      return;
-   int newLen = from + len;
-   RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++) {
-      this->chptr[i] = (CharType) { .attr = attrs & 0xffffff, .chars = { (iswprint(data[j]) ? data[j] : '?') } };
+static inline void RichString_writeFrom(RichString* this, int attrs, const char *s, unsigned int from, size_t len) {
+   wchar_t wcs[len];
+   size_t wcs_len = mbstowcs(wcs, s, len);
+   size_t new_len = from + (wcs_len == (size_t)-1 ? len : wcs_len);
+   RichString_setLen(this, new_len);
+   for (unsigned int i = from, j = 0; i < new_len; i++, j++) {
+      wchar_t c = wcs_len == (size_t)-1 ? s[j] : wcs[j];
+      this->chptr[i] = (CharType){ .attr = attrs & 0xffffff, .chars = { iswprint(c) ? c : L'?' } };
    }
 }
 
@@ -115,12 +114,13 @@ int RichString_findChar(RichString* this, char c, int start) {
 
 #else
 
-static inline void RichString_writeFrom(RichString* this, int attrs, const char* data_c, int from, int len) {
-   int newLen = from + len;
-   RichString_setLen(this, newLen);
-   for (int i = from, j = 0; i < newLen; i++, j++)
-      this->chptr[i] = (data_c[j] >= 32 ? data_c[j] : '?') | attrs;
-   this->chptr[newLen] = 0;
+static inline void RichString_writeFrom(RichString* this, int attrs, const char *s, unsigned int from, size_t len) {
+   size_t new_len = from + len;
+   RichString_setLen(this, new_len);
+   for (unsigned int i = from, j = 0; i < new_len; i++, j++) {
+      this->chptr[i] = (s[j] >= 32 ? s[j] : '?') | attrs;
+   }
+   this->chptr[new_len] = 0;
 }
 
 void RichString_setAttrn(RichString* this, int attrs, int start, int finish) {
