@@ -266,7 +266,7 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
    if ((long long) number == -1LL) {
       int len = snprintf(buffer, sizeof buffer, "    no perm ");
       RichString_appendn(str, CRT_colors[HTOP_PROCESS_SHADOW_COLOR], buffer, len);
-   } else if (number > 10000000000) {
+   } else if (number > 10000000000ULL) {
       // Allow the trailing space be truncated by snprintf(3)
       int len = snprintf(buffer, sizeof buffer, "%10lluk ", number / 1000);
       if(len > 13) {
