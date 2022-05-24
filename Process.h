@@ -125,7 +125,6 @@ typedef struct ProcessFieldData_ {
 // Implemented in platform-specific code:
 void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
-void Process_delete(Object* cast);
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
 extern ProcessFieldData Process_fields[];

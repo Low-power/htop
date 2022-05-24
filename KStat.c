@@ -22,6 +22,10 @@ in the source distribution for its full text.
 #if defined __FreeBSD__ && !defined __FreeBSD_kernel__
 #define __FreeBSD_kernel__
 #endif
+#if defined __GLIBC__ || defined __gnu_hurd__
+// GNU is not BSD
+#undef BSD
+#endif
 #if (defined __DragonFly__ || (defined __APPLE__ && defined __MACH__) || defined __NetBSD__ || defined __OpenBSD__) && !defined BSD
 #define BSD 199506
 #endif

@@ -238,6 +238,25 @@ myhtopplatsources = \
 myhtopplatheaders = $(cygwin_platform_headers)
 endif
 
+# GNU/Hurd
+# --------
+
+hurd_platform_headers = \
+	hurd/Platform.h \
+	hurd/HurdProcess.h \
+	hurd/HurdProcessList.h \
+	hurd/Battery.h
+all_platform_headers += $(hurd_platform_headers)
+
+if HTOP_HURD
+myhtopplatsources = \
+	hurd/Platform.c \
+	hurd/HurdProcess.c \
+	hurd/HurdProcessList.c \
+	hurd/Battery.c
+myhtopplatheaders = $(hurd_platform_headers)
+endif
+
 # Unsupported
 # -----------
 

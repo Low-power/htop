@@ -52,6 +52,9 @@ interix*)
 cygwin)
    my_htop_platform=cygwin
    ;;
+gnu*)
+   my_htop_platform=hurd
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
@@ -467,6 +470,10 @@ if test "$my_htop_platform" = interix; then
    CPPFLAGS="$CPPFLAGS -D _REENTRANT=1"
 fi
 
+if test "$my_htop_platform" = hurd; then
+	CPPFLAGS="$CPPFLAGS -D _GNU_SOURCE=1"
+fi
+
 AC_ARG_ENABLE(linux_affinity,
 	[AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])],
 	[], [enable_linux_affinity=check])
@@ -570,6 +577,7 @@ AM_CONDITIONAL([HTOP_SOLARIS], [test "$my_htop_platform" = solaris])
 AM_CONDITIONAL([HTOP_AIX], [test "$my_htop_platform" = aix])
 AM_CONDITIONAL([HTOP_INTERIX], [test "$my_htop_platform" = interix])
 AM_CONDITIONAL([HTOP_CYGWIN], [test "$my_htop_platform" = cygwin])
+AM_CONDITIONAL([HTOP_HURD], [test "$my_htop_platform" = hurd])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])
