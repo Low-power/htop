@@ -21,7 +21,6 @@ in the source distribution for its full text.
 #include <sys/swap.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <err.h>
 #include <limits.h>
 #include <string.h>
 #include <procfs.h>
@@ -71,12 +70,18 @@ typedef struct SolarisProcessList_ {
 
 }*/
 
+#if !defined HAVE_DIRFD && !defined dirfd
+#define dirfd(D) ((D)->dd_fd)
+#endif
+
+#ifdef HAVE_ZONE_H
 static char *SolarisProcessList_readZoneName(kstat_ctl_t* kd, SolarisProcess* sproc) {
 	if(sproc->zoneid == 0) return xStrdup("global");
 	if(!kd) return xStrdup("unknown");
 	kstat_t *ks = kstat_lookup(kd, "zones", sproc->zoneid, NULL);
 	return xStrdup(ks ? ks->ks_name : "unknown");
 }
+#endif
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
@@ -121,25 +126,21 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 
    // Calculate per-CPU statistics first
    for (int i = 0; i < cpus; i++) {
-      if (spl->kd != NULL) {
-         cpuinfo = kstat_lookup(spl->kd,"cpu",i,"sys");
-         if(cpuinfo) kchain = kstat_read(spl->kd,cpuinfo,NULL);
-      }
-      if (kchain  != -1  ) {
-         idletime = kstat_data_lookup(cpuinfo,"cpu_nsec_idle");
-         intrtime = kstat_data_lookup(cpuinfo,"cpu_nsec_intr");
-         krnltime = kstat_data_lookup(cpuinfo,"cpu_nsec_kernel");
-         usertime = kstat_data_lookup(cpuinfo,"cpu_nsec_user");
-      }
+      assert(spl->kd != NULL);
+      cpuinfo = kstat_lookup(spl->kd,"cpu",i,"sys");
+      if(!cpuinfo) return;
+      kchain = kstat_read(spl->kd,cpuinfo,NULL);
+      if(kchain == -1) return;
+      idletime = kstat_data_lookup(cpuinfo,"cpu_nsec_idle");
+      intrtime = kstat_data_lookup(cpuinfo,"cpu_nsec_intr");
+      krnltime = kstat_data_lookup(cpuinfo,"cpu_nsec_kernel");
+      usertime = kstat_data_lookup(cpuinfo,"cpu_nsec_user");
 
-      assert( (idletime != NULL) && (intrtime != NULL)
-           && (krnltime != NULL) && (usertime != NULL) );
-
-      CPUData* cpuData = &(spl->cpus[i+arrskip]);
-      totaltime = (idletime->value.ui64 - cpuData->lidle)
-                + (intrtime->value.ui64 - cpuData->lintr)
-                + (krnltime->value.ui64 - cpuData->lkrnl)
-                + (usertime->value.ui64 - cpuData->luser);
+      CPUData *cpuData = spl->cpus + i + arrskip;
+      totaltime = (idletime->value.ui64 - cpuData->lidle) +
+                  (intrtime->value.ui64 - cpuData->lintr) +
+                  (krnltime->value.ui64 - cpuData->lkrnl) +
+                  (usertime->value.ui64 - cpuData->luser);
       // Calculate percentages of deltas since last reading
       cpuData->userPercent      = ((usertime->value.ui64 - cpuData->luser) / (double)totaltime) * 100.0;
       cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
@@ -249,8 +250,12 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
    SolarisProcess *sproc = (SolarisProcess *)proc;
    sproc->taskid            = _psinfo->pr_taskid;
    sproc->projid            = _psinfo->pr_projid;
+#ifdef HAVE_PSINFO_T_PR_POOLID
    sproc->poolid            = _psinfo->pr_poolid;
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    sproc->contid            = _psinfo->pr_contract;
+#endif
    // NOTE: This 'percentage' is a 16-bit BINARY FRACTIONS where 1.0 = 0x8000
    // Source: https://docs.oracle.com/cd/E19253-01/816-5174/proc-4/index.html
    // (accessed on 18 November 2017)
@@ -315,8 +320,10 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
    if (!preExisting) {
       sproc->realpid        = _psinfo->pr_pid;
       sproc->lwpid          = lwpid_real;
+#ifdef HAVE_ZONE_H
       sproc->zoneid         = _psinfo->pr_zoneid;
       sproc->zname          = SolarisProcessList_readZoneName(spl->kd, sproc);
+#endif
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
       proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
@@ -440,8 +447,10 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 			sol_proc->realpid = info.pr_pid;
 			sol_proc->is_lwp = false;
 			sol_proc->lwpid = -1;
+#ifdef HAVE_ZONE_H
 			sol_proc->zoneid = info.pr_zoneid;
 			sol_proc->zname = SolarisProcessList_readZoneName(this->kd, sol_proc);
+#endif
 			proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
 			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 			proc->name = xStrdup(info.pr_fname);

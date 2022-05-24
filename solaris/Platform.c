@@ -37,6 +37,7 @@ in the source distribution for its full text.
 #endif
 
 /*{
+#include "config.h"
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
@@ -98,8 +99,12 @@ const SignalItem Platform_signals[] = {
    SIG(CANCEL),
    SIG(LOST),
    SIG(XRES),
+#ifdef SIGJVM1
    SIG(JVM1),
+#endif
+#ifdef SIGJVM2
    SIG(JVM2),
+#endif
 #undef SIG
 };
 
@@ -154,8 +159,12 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 }
 
 int Platform_getMaxPid() {
+#if 0
+	/* Disabled because the maximum number of processes doesn't
+	 * necessarily mean the maximum possible PID value. */
 	struct var *kvar = read_unnamed_kstat(KSTAT_UNIX_VAR);
 	if(kvar && kvar->v_proc > 0) return kvar->v_proc - 1;
+#endif
 #ifdef PID_MAX
 	return PID_MAX;
 #else
@@ -295,4 +304,12 @@ char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, true);
 }
 
+#endif
+
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t max_len) {
+	size_t len = 0;
+	while(len < max_len && s[len]) len++;
+	return len;
+}
 #endif

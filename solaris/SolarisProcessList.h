@@ -50,6 +50,13 @@ typedef struct SolarisProcessList_ {
 } SolarisProcessList;
 
 
+#if !defined HAVE_DIRFD && !defined dirfd
+#define dirfd(D) ((D)->dd_fd)
+#endif
+
+#ifdef HAVE_ZONE_H
+#endif
+
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 
 void ProcessList_delete(ProcessList* pl);

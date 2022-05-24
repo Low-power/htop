@@ -10,18 +10,27 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Settings.h"
-#include <zone.h>
 #include <sys/proc.h>
+#ifdef HAVE_ZONE_H
+#include <zone.h>
+#endif
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
+#ifdef HAVE_ZONE_H
    ZONEID   = 100,
    ZONE  = 101,
+#endif
    PROJID = 102,
    TASKID = 103,
+#ifdef HAVE_PSINFO_T_PR_POOLID
    POOLID = 104,
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    CONTID = 105,
+#endif
    LWPID = 106,
    LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
@@ -29,12 +38,18 @@ typedef enum {
 typedef struct SolarisProcess_ {
    Process    super;
    bool       kernel;
+#ifdef HAVE_ZONE_H
    zoneid_t   zoneid;
+#endif
    char*      zname;
    taskid_t   taskid;
    projid_t   projid;
+#ifdef HAVE_PSINFO_T_PR_POOLID
    poolid_t   poolid;
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    ctid_t     contid;
+#endif
    bool       is_lwp;
    pid_t      realpid;
    pid_t      realppid;

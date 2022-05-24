@@ -16,18 +16,27 @@ in the source distribution for its full text.
 #include <string.h>
 
 /*{
+#include "config.h"
 #include "Settings.h"
-#include <zone.h>
 #include <sys/proc.h>
+#ifdef HAVE_ZONE_H
+#include <zone.h>
+#endif
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
+#ifdef HAVE_ZONE_H
    ZONEID   = 100,
    ZONE  = 101,
+#endif
    PROJID = 102,
    TASKID = 103,
+#ifdef HAVE_PSINFO_T_PR_POOLID
    POOLID = 104,
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    CONTID = 105,
+#endif
    LWPID = 106,
    LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
@@ -35,12 +44,18 @@ typedef enum {
 typedef struct SolarisProcess_ {
    Process    super;
    bool       kernel;
+#ifdef HAVE_ZONE_H
    zoneid_t   zoneid;
+#endif
    char*      zname;
    taskid_t   taskid;
    projid_t   projid;
+#ifdef HAVE_PSINFO_T_PR_POOLID
    poolid_t   poolid;
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    ctid_t     contid;
+#endif
    bool       is_lwp;
    pid_t      realpid;
    pid_t      realppid;
@@ -90,24 +105,36 @@ ProcessFieldData Process_fields[] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
+#ifdef HAVE_ZONE_H
    [ZONEID] = { .name = "ZONEID", .title = " ZONEID ", .description = "Zone ID", .flags = 0, },
    [ZONE] = { .name = "ZONE", .title = "ZONE             ", .description = "Zone name", .flags = 0, },
+#endif
    [PROJID] = { .name = "PROJID", .title = " PRJID ", .description = "Project ID", .flags = 0, },
    [TASKID] = { .name = "TASKID", .title = " TSKID ", .description = "Task ID", .flags = 0, },
+#ifdef HAVE_PSINFO_T_PR_POOLID
    [POOLID] = { .name = "POOLID", .title = " POLID ", .description = "Pool ID", .flags = 0, },
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    [CONTID] = { .name = "CONTID", .title = " CNTID ", .description = "Contract ID", .flags = 0, },
+#endif
 #ifdef HAVE_LIBPROC
    [LWPID] = { .name = "LWPID", .title = " LWPID ", .description = "LWP ID", .flags = 0, },
 #endif
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
+   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, }
 };
 
 ProcessPidColumn Process_pidColumns[] = {
+#ifdef HAVE_ZONE_H
    { .id = ZONEID, .label = "ZONEID" },
+#endif
    { .id = TASKID, .label = "TSKID" },
    { .id = PROJID, .label = "PRJID" },
+#ifdef HAVE_PSINFO_T_PR_POOLID
    { .id = POOLID, .label = "POLID" },
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    { .id = CONTID, .label = "CNTID" },
+#endif
    { .id = PID, .label = "PID" },
    { .id = PPID, .label = "PPID" },
 #ifdef HAVE_LIBPROC
@@ -117,7 +144,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = TGID, .label = "TGID" },
    { .id = PGRP, .label = "PGRP" },
    { .id = SESSION, .label = "SID" },
-   { .id = 0, .label = NULL },
+   { .id = 0, .label = NULL }
 };
 
 SolarisProcess* SolarisProcess_new(Settings* settings) {
@@ -141,21 +168,28 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
    int n = sizeof(buffer);
    switch ((int) field) {
    // add Solaris-specific fields here
+#ifdef HAVE_ZONE_H
    case ZONEID:
       xSnprintf(buffer, n, Process_pidFormat, sp->zoneid);
       break;
+#endif
    case PROJID:
       xSnprintf(buffer, n, Process_pidFormat, sp->projid);
       break;
    case TASKID:
       xSnprintf(buffer, n, Process_pidFormat, sp->taskid);
       break;
+#ifdef HAVE_PSINFO_T_PR_POOLID
    case POOLID:
       xSnprintf(buffer, n, Process_pidFormat, sp->poolid);
       break;
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    case CONTID:
       xSnprintf(buffer, n, Process_pidFormat, sp->contid);
       break;
+#endif
+#ifdef HAVE_ZONE_H
    case ZONE:
       xSnprintf(buffer, n, "%-*s ", ZONENAME_MAX/4, sp->zname);
       if (buffer[ZONENAME_MAX/4 + 1]) {
@@ -163,6 +197,7 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
          buffer[ZONENAME_MAX/4 + 1] = 0;
       }
       break;
+#endif
    case PID:
       xSnprintf(buffer, n, Process_pidFormat, sp->realpid);
       break;
@@ -192,19 +227,27 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
       p1 = v2;
    }
    switch ((int) settings->sortKey) {
+#ifdef HAVE_ZONE_H
    case ZONEID:
       return (p1->zoneid - p2->zoneid);
+#endif
    case PROJID:
       return (p1->projid - p2->projid);
    case TASKID:
       return (p1->taskid - p2->taskid);
+#ifdef HAVE_PSINFO_T_PR_POOLID
    case POOLID:
       return (p1->poolid - p2->poolid);
+#endif
+#ifdef HAVE_PSINFO_T_PR_CONTRACT
    case CONTID:
       return (p1->contid - p2->contid);
+#endif
+#ifdef HAVE_ZONE_H
    case ZONE:
       if(!p1->zname && !p2->zname) return p1->zoneid - p2->zoneid;
       return settings->sort_strcmp(p1->zname ? p1->zname : "global", p2->zname ? p2->zname : "global");
+#endif
    case PID:
       return (p1->realpid - p2->realpid);
    case PPID:

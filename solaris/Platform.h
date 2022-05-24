@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #else
 #endif
 
+#include "config.h"
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
@@ -71,6 +72,10 @@ char **Platform_getProcessEnvv(const Process *proc);
 
 char **Platform_getProcessEnvv(const Process *proc);
 
+#endif
+
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t max_len);
 #endif
 
 #endif
