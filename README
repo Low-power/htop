@@ -34,7 +34,7 @@ Changes from original version
 * Build-time detection of available signals
 * Process command line arguments screen (key `A`) just like the process
   environment screen (key `e`)
-* Processor times meter improvements, by Antoine Motet
+* Processor times meter improvements for OpenBSD, by Antoine Motet
   <antoine.motet@gmail.com>
 * (hopefully bug-free) **vi(1)**-style key bindings support
 * Support showing process start time for all platforms
@@ -43,5 +43,6 @@ Changes from original version
 * User-defined color schemes
 * Consistent process state names
 * Optional case-insensitive sorting
+* GNU/Hurd support
 
 See the commit log for more.
