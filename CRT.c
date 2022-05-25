@@ -907,12 +907,17 @@ static void load_user_defined_color_scheme(const char *path) {
 				fprintf(stderr, "%s:%u: NAME is empty\r\n", path, nlines);
 				return;
 			}
-			//name = xStrdup(p + 5);
 			size_t len = strlen(p + 5);
 			if(p[5 + len - 1] == '\n') len--;
 			name = xMalloc(len + 1);
 			memcpy(name, p + 5, len);
 			name[len] = 0;
+			if(CRT_getColorSchemeIndexForName(name) >= 0) {
+				fprintf(stderr, "%s: color scheme '%s' already exist\r\n",
+					path, name);
+				free(name);
+				return;
+			}
 		} else if(strncmp(p, "MONOCHROME=", 11) == 0) {
 			if(!parse_boolean_value(p + 11, &monochrome)) {
 				fprintf(stderr, "%s:%u: Warning: incorrect value for MONOCHROME",
