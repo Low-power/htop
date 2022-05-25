@@ -245,10 +245,10 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		}
 
 		ap->cid = pe->pi_cid;
-		// XXX: are the numbers here right? I think these are based on pages or 1K?
 		proc->m_resident = pe->pi_drss + pe->pi_trss;
 		proc->m_size = pe->pi_ru.ru_maxrss;//pe->pi_drss + pe->pi_trss;
-		proc->percent_mem = (pe->pi_drss + pe->pi_trss * CRT_page_size_kib) / (double)(super->totalMem) * 100.0;
+		proc->percent_mem =
+			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kib) * 100;
 		proc->nlwp = pe->pi_thcount;
 		proc->nice = pe->pi_nice - NZERO;
 		ap->utime = pe->pi_ru.ru_utime.tv_sec;

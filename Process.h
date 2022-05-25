@@ -106,8 +106,9 @@ typedef struct Process_ {
    long int nlwp;
    time_t starttime_ctime;
 
-   long m_size;
-   long m_resident;
+   // In pages
+   long int m_size;
+   long int m_resident;
 
    int exit_signal;
 

@@ -554,19 +554,16 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          }
       }
 
-      // from FreeBSD source /src/usr.bin/top/machine.c
       proc->m_size = kproc->ki_size / CRT_page_size;
       proc->m_resident = kproc->ki_rssize;
-      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem =
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = (kproc->ki_runtime + 5000) / 10000;
-
-      proc->percent_cpu = 100.0 * ((double)kproc->ki_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem);
+      proc->percent_cpu = (double)kproc->ki_pctcpu / (double)kernelFScale * 100;
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
-
-      if (strcmp("intr", kproc->ki_comm) == 0 && kproc->ki_flag & P_SYSTEM) {
+      if ((kproc->ki_flag & P_SYSTEM) && strcmp(kproc->ki_comm, "intr") == 0) {
          proc->nice = 0; //@etosan: intr kernel process (not thread) has weird nice value
       } else if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
          proc->nice = kproc->ki_nice - NZERO;

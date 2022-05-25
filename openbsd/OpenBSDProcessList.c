@@ -311,9 +311,10 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
          proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
       }
 
-      proc->m_size = kproc->p_vm_dsize;
+      proc->m_size = kproc->p_vm_dsize + kproc->p_vm_ssize + kproc->p_vm_tsize;
       proc->m_resident = kproc->p_vm_rssize;
-      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem =
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
       proc->nice = kproc->p_nice - NZERO;
       proc->time = kproc->p_rtime_sec + ((kproc->p_rtime_usec + 500000) / 1000000);

@@ -264,21 +264,18 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
    struct proc_taskinfo pti;
    if(proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof pti) != sizeof pti) return;
 
-   if(0 != proc->utime || 0 != proc->stime) {
-      uint64_t diff = (pti.pti_total_system - proc->stime)
-               + (pti.pti_total_user - proc->utime);
-
-      proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount
-               / ((double)dpl->global_diff * 100000.0);
+   if(proc->utime || proc->stime) {
+      uint64_t diff = (pti.pti_total_system - proc->stime) + (pti.pti_total_user - proc->utime);
+      proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount /
+         ((double)dpl->global_diff * 100000.0);
    }
 
    proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
    proc->super.nlwp = pti.pti_threadnum;
-   proc->super.m_size = pti.pti_virtual_size / 1024 / CRT_page_size_kib;
-   proc->super.m_resident = pti.pti_resident_size / 1024 / CRT_page_size_kib;
+   proc->super.m_size = pti.pti_virtual_size / CRT_page_size;
+   proc->super.m_resident = pti.pti_resident_size / CRT_page_size;
    proc->super.majflt = pti.pti_faults;
-   proc->super.percent_mem = (double)pti.pti_resident_size * 100.0
-           / (double)dpl->host_info.max_mem;
+   proc->super.percent_mem = (double)pti.pti_resident_size / (double)dpl->host_info.max_mem * 100;
 
    proc->stime = pti.pti_total_system;
    proc->utime = pti.pti_total_user;

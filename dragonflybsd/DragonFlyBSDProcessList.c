@@ -488,31 +488,26 @@ void ProcessList_goThroughEntries(ProcessList* this) {
 
       proc->m_size = kproc->kp_vm_map_size / CRT_page_size;
       proc->m_resident = kproc->kp_vm_rssize;
-      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem) * 100.0;
+      proc->percent_mem =
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = (kproc->kp_swtime + 5000) / 10000;
+      proc->percent_cpu = (double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale * 100;
 
-      proc->percent_cpu = 100.0 * ((double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale);
-      proc->percent_mem = 100.0 * (proc->m_resident * CRT_page_size_kib) / (double)(this->totalMem);
-
-      if (kproc->kp_lwp.kl_pid != -1)
-         proc->priority = kproc->kp_lwp.kl_prio;
-      else
-         proc->priority = -kproc->kp_lwp.kl_tdprio;
-
+      proc->priority = kproc->kp_lwp.kl_pid == -1 ? -kproc->kp_lwp.kl_tdprio : kproc->kp_lwp.kl_prio;
       switch(kproc->kp_lwp.kl_rtprio.type) {
-        case RTP_PRIO_REALTIME:
-                proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX + kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        case RTP_PRIO_IDLE:
-                proc->nice = PRIO_MAX + 1 + kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        case RTP_PRIO_THREAD:
-                proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX - kproc->kp_lwp.kl_rtprio.prio;
-                break;
-        default:
-                proc->nice = kproc->kp_nice;
-                break;
+         case RTP_PRIO_REALTIME:
+            proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX + kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         case RTP_PRIO_IDLE:
+            proc->nice = PRIO_MAX + 1 + kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         case RTP_PRIO_THREAD:
+            proc->nice = PRIO_MIN - 1 - RTP_PRIO_MAX - kproc->kp_lwp.kl_rtprio.prio;
+            break;
+         default:
+            proc->nice = kproc->kp_nice;
+            break;
       }
 
       // would be nice if we could store multiple states in proc->state (as enum) and have writeField render them
