@@ -14,10 +14,10 @@ in the source distribution for its full text.
 #else
 #endif
 
-
 #ifndef __PASE__
 #include <libperfstat.h>
 #endif
+#include <sys/time.h>
 
 // publically consumed
 typedef struct CPUData_ {
@@ -35,8 +35,8 @@ typedef struct AixProcessList_ {
    perfstat_cpu_t* ps_cpus;
    perfstat_cpu_total_t ps_ct;
 #endif
+   struct timeval last_updated;
 } AixProcessList;
-
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 

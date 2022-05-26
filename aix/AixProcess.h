@@ -25,7 +25,7 @@ typedef struct AixProcess_ {
    Process super;
    bool kernel;
    cid_t cid; // WPAR ID
-   unsigned long long int stime, utime; // System/User time (stored sep for calculations)
+   struct timeval tv; // More precise time for calculating percent_cpu
 } AixProcess;
 
 

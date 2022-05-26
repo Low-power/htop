@@ -15,7 +15,6 @@ in the source distribution for its full text.
 #include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 #include <math.h>
 #include <sys/types.h>
 #include <sys/proc.h>
@@ -27,10 +26,10 @@ in the source distribution for its full text.
 #endif
 
 /*{
-
 #ifndef __PASE__
 #include <libperfstat.h>
 #endif
+#include <sys/time.h>
 
 // publically consumed
 typedef struct CPUData_ {
@@ -48,8 +47,8 @@ typedef struct AixProcessList_ {
    perfstat_cpu_t* ps_cpus;
    perfstat_cpu_total_t ps_ct;
 #endif
+   struct timeval last_updated;
 } AixProcessList;
-
 }*/
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
@@ -180,16 +179,21 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
+	AixProcessList *this = (AixProcessList *)super;
+
 	bool hide_kernel_processes = super->settings->hide_kernel_processes;
-	/* getprocs stuff */
-	struct procentry64 *pes;
-	struct procentry64 *pe;
+
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	double interval = (double)(now.tv_sec - this->last_updated.tv_sec) +
+		(double)(now.tv_usec - this->last_updated.tv_usec) / 1000000;
+	if(interval < 0) interval = 0.000001;
+	this->last_updated = now;
+
+	AixProcessList_scanMemoryInfo(super);
+	AixProcessList_scanCpuInfo(this);
+
 	pid_t pid = 0;
-	int i;
-
-	AixProcessList_scanMemoryInfo (super);
-	AixProcessList_scanCpuInfo((AixProcessList *)super);
-
 	// 1000000 is what IBM ps uses; instead of rerunning getprocs with
 	// a PID cookie, get one big clump.
 	int count = getprocs64 (NULL, 0, NULL, 0, &pid, 1000000);
@@ -198,7 +202,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		_exit (1);
 	}
 	count += 25; // it's not atomic, new processes could spawn in next call
-	pes = xCalloc (count, sizeof (struct procentry64));
+	struct procentry64 *pes = xCalloc(count, sizeof (struct procentry64));
 	pid = 0;
 	count = getprocs64 (pes, sizeof (struct procentry64), NULL, 0, &pid, count);
 	if (count < 1) {
@@ -206,10 +210,9 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		_exit (1);
 	}
 
-	time_t t = time (NULL);
-	for (i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		bool preExisting;
-		pe = pes + i;
+		struct procentry64 *pe = pes + i;
 		Process *proc = ProcessList_getProcess(super, pe->pi_pid, &preExisting, (Process_New) AixProcess_new);
 		AixProcess *ap = (AixProcess *)proc;
 
@@ -245,19 +248,32 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		}
 
 		ap->cid = pe->pi_cid;
+
 		proc->m_resident = pe->pi_drss + pe->pi_trss;
 		proc->m_size = pe->pi_ru.ru_maxrss;//pe->pi_drss + pe->pi_trss;
 		proc->percent_mem =
 			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kib) * 100;
-		proc->nlwp = pe->pi_thcount;
-		proc->nice = pe->pi_nice - NZERO;
-		ap->utime = pe->pi_ru.ru_utime.tv_sec * 100 + pe->pi_ru.ru_utime.tv_usec / 10000;
-		ap->stime = pe->pi_ru.ru_stime.tv_sec * 100 + pe->pi_ru.ru_stime.tv_usec / 10000;
-		proc->time = ap->utime + ap->stime;
-		proc->percent_cpu = (double)proc->time / (t - proc->starttime_ctime);
-		// sometimes this happens with freshly spawned in procs
-		if (isnan(proc->percent_cpu)) proc->percent_cpu = 0;
+
+		struct timeval tv = {
+			.tv_sec = pe->pi_ru.ru_utime.tv_sec + pe->pi_ru.ru_stime.tv_sec,
+			.tv_usec = pe->pi_ru.ru_utime.tv_usec + pe->pi_ru.ru_stime.tv_usec
+		};
+		proc->time = tv.tv_sec * 100 + tv.tv_usec / 10000;
+		if(ap->kernel && strcmp(pe->pi_comm, "wait") == 0) {
+			proc->percent_cpu = 0;
+		} else {
+			double last_tenths_time =
+				(double)ap->tv.tv_sec * 100 + (double)ap->tv.tv_usec / 10000;
+			double tenths_time = (double)tv.tv_sec * 100 + (double)tv.tv_usec / 10000;
+			proc->percent_cpu = tenths_time > last_tenths_time ?
+				(tenths_time - last_tenths_time) / interval : 0;
+			ap->tv = tv;
+		}
+
 		proc->priority = pe->pi_ppri;
+		proc->nice = pe->pi_nice - NZERO;
+
+		proc->nlwp = pe->pi_thcount;
 
 		switch (pe->pi_state) {
 			case SIDL:    proc->state = 'I'; break;
