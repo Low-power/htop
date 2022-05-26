@@ -346,6 +346,8 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
             break;
       }
 
+      if(kproc->p_cpuid != KI_NOCPU) proc->processor = kproc->p_cpuid;
+
 #ifdef HAVE_STRUCT_KINFO_PROC_P_TID
       if(kproc->p_tid != -1) {
 #endif

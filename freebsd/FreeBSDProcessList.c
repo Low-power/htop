@@ -573,12 +573,15 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
       }
 
+      int on_processor = -1;
+
       switch (kproc->ki_stat) {
          case SIDL:
             proc->state = 'I';
             break;
          case SRUN:
             proc->state = 'R';
+            if(kproc->ki_oncpu != NOCPU) on_processor = kproc->ki_oncpu;
             break;
          case SSLEEP:
             proc->state = (kproc->ki_tdflags & TDF_SINTR) ?
@@ -599,6 +602,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          default:
             proc->state = '?';
             break;
+      }
+
+      if(on_processor < 0) {
+         if(kproc->ki_lastcpu != NOCPU) proc->processor = kproc->ki_lastcpu;
+      } else {
+         proc->processor = on_processor;
       }
 
       this->totalTasks++;
