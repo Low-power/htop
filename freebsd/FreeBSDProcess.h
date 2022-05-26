@@ -12,9 +12,10 @@ in the source distribution for its full text.
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
-   JID   = 100,
-   JAIL  = 101,
-   LAST_PROCESSFIELD = 102,
+   JID_FIELD = 100,
+   JAIL_FIELD,
+   EMULATION_FIELD,
+   LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
 
@@ -23,6 +24,7 @@ typedef struct FreeBSDProcess_ {
    bool kernel;
    int   jid;
    char* jname;
+   char *emulation;
 } FreeBSDProcess;
 
 

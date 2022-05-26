@@ -529,6 +529,7 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          ProcessList_add((ProcessList*)this, proc);
          FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
          fp->jname = FreeBSDProcessList_readJailName(kproc);
+         fp->emulation = xStrdup(kproc->ki_emul);
       } else {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          if(fp->jid != kproc->ki_jid) {
@@ -551,6 +552,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             free(proc->name);
             free(proc->comm);
             FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
+            free(fp->emulation);
+            fp->emulation = xStrdup(kproc->ki_emul);
          }
       }
 

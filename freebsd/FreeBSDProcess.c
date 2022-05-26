@@ -18,9 +18,10 @@ in the source distribution for its full text.
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
-   JID   = 100,
-   JAIL  = 101,
-   LAST_PROCESSFIELD = 102,
+   JID_FIELD = 100,
+   JAIL_FIELD,
+   EMULATION_FIELD,
+   LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
 
@@ -29,6 +30,7 @@ typedef struct FreeBSDProcess_ {
    bool kernel;
    int   jid;
    char* jname;
+   char *emulation;
 } FreeBSDProcess;
 
 
@@ -73,13 +75,14 @@ ProcessFieldData Process_fields[] = {
    [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
-   [JID] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
-   [JAIL] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
+   [JID_FIELD] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
+   [JAIL_FIELD] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
+   [EMULATION_FIELD] = { .name = "EMULATION", .title = "EMULATION        ", .description = "Binary format emulation type", .flags = 0 },
    [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
-   { .id = JID, .label = "JID" },
+   { .id = JID_FIELD, .label = "JID" },
    { .id = PID, .label = "PID" },
    { .id = PPID, .label = "PPID" },
    { .id = TPGID, .label = "TPGID" },
@@ -100,6 +103,7 @@ void Process_delete(Object* cast) {
    FreeBSDProcess* this = (FreeBSDProcess*) cast;
    Process_done((Process*)cast);
    free(this->jname);
+   free(this->emulation);
    free(this);
 }
 
@@ -109,20 +113,27 @@ void FreeBSDProcess_writeField(Process *super, RichString* str, ProcessField fie
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof buffer;
    switch ((int) field) {
-   // add FreeBSD-specific fields here
-   case JID:
-      xSnprintf(buffer, n, Process_pidFormat, this->jid);
-      break;
-   case JAIL:
-      xSnprintf(buffer, n, "%-11s ", this->jname);
-      if (buffer[12]) {
-         buffer[11] = ' ';
-         buffer[12] = '\0';
-      }
-      break;
-   default:
-      Process_writeField(super, str, field);
-      return;
+      // add FreeBSD-specific fields here
+      case JID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, this->jid);
+         break;
+      case JAIL_FIELD:
+         xSnprintf(buffer, n, "%-11s ", this->jname);
+         if (buffer[12]) {
+            buffer[11] = ' ';
+            buffer[12] = '\0';
+         }
+         break;
+      case EMULATION_FIELD:
+         xSnprintf(buffer, n, "%-16s ", this->emulation);
+         if(buffer[17]) {
+            buffer[16] = ' ';
+            buffer[17] = 0;
+         }
+         break;
+      default:
+         Process_writeField(super, str, field);
+         return;
    }
    RichString_append(str, attr, buffer);
 }
@@ -138,14 +149,16 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
       p1 = v2;
    }
    switch ((int) settings->sortKey) {
-   // add FreeBSD-specific fields here
-   case JID:
-      return (p1->jid - p2->jid);
-   case JAIL:
-      if(!p1->jname && !p2->jname) return p1->jid - p2->jid;
-      return settings->sort_strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
-   default:
-      return Process_compare(v1, v2);
+      // add FreeBSD-specific fields here
+      case JID_FIELD:
+         return (p1->jid - p2->jid);
+      case JAIL_FIELD:
+         if(!p1->jname && !p2->jname) return p1->jid - p2->jid;
+         return settings->sort_strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+      case EMULATION_FIELD:
+         return settings->sort_strcmp(p1->emulation, p2->emulation);
+      default:
+         return Process_compare(v1, v2);
    }
 }
 
