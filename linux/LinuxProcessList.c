@@ -393,7 +393,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    if(!location) return true;
    location++;
    lp->starttime = strtoll(location, &location, 10);
-   if(!*location || *++location != ' ') return true;
+   if(*location != ' ' || !*++location) return true;
    for (int i=0; i<15; i++) {
       location = strchr(location, ' ');
       if(!location) return true;
