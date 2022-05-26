@@ -254,21 +254,21 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		proc->percent_mem =
 			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kib) * 100;
 
+		/* WARNING: The AIX C library is broken:
+		 * Despite their name, 'ru_utime.tv_usec' and
+		 * 'ru_stime.tv_usec' here are actually in nanoseconds!
+		 */
 		struct timeval tv = {
 			.tv_sec = pe->pi_ru.ru_utime.tv_sec + pe->pi_ru.ru_stime.tv_sec,
-			.tv_usec = pe->pi_ru.ru_utime.tv_usec + pe->pi_ru.ru_stime.tv_usec
+			.tv_usec = (pe->pi_ru.ru_utime.tv_usec + pe->pi_ru.ru_stime.tv_usec) / 1000
 		};
 		proc->time = tv.tv_sec * 100 + tv.tv_usec / 10000;
-		if(ap->kernel && strcmp(pe->pi_comm, "wait") == 0) {
-			proc->percent_cpu = 0;
-		} else {
-			double last_tenths_time =
-				(double)ap->tv.tv_sec * 100 + (double)ap->tv.tv_usec / 10000;
-			double tenths_time = (double)tv.tv_sec * 100 + (double)tv.tv_usec / 10000;
-			proc->percent_cpu = tenths_time > last_tenths_time ?
-				(tenths_time - last_tenths_time) / interval : 0;
-			ap->tv = tv;
-		}
+		double last_tenths_time =
+			(double)ap->tv.tv_sec * 100 + (double)ap->tv.tv_usec / 10000;
+		double tenths_time = (double)tv.tv_sec * 100 + (double)tv.tv_usec / 10000;
+		proc->percent_cpu = tenths_time > last_tenths_time ?
+			(tenths_time - last_tenths_time) / interval : 0;
+		ap->tv = tv;
 
 		proc->priority = pe->pi_ppri;
 		proc->nice = pe->pi_nice - NZERO;
