@@ -513,7 +513,8 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       else xSnprintf(buffer, n, "%3ld ", this->priority);
       break;
    case PROCESSOR:
-      xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor));
+      if(this->processor < 0) strcpy(buffer, "  - ");
+      else xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor));
       break;
    case SESSION:
       xSnprintf(buffer, n, Process_pidFormat, this->session);
@@ -624,6 +625,7 @@ void Process_init(Process* this, struct Settings_* settings) {
    this->show = true;
    this->updated = false;
    this->argv0_length = -1;
+   this->processor = -1;
    if (Process_getuid == -1) Process_getuid = getuid();
 }
 
