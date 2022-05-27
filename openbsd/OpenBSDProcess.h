@@ -13,7 +13,7 @@ in the source distribution for its full text.
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
-   LAST_PROCESSFIELD = 100,
+   HTOP_LAST_PROCESSFIELD = 100,
 } OpenBSDProcessField;
 
 typedef struct OpenBSDProcess_ {

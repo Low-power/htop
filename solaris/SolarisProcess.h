@@ -20,19 +20,19 @@ in the source distribution for its full text.
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
 #ifdef HAVE_ZONE_H
-   ZONEID   = 100,
-   ZONE  = 101,
+   HTOP_ZONEID_FIELD = 100,
+   HTOP_ZONE_FIELD = 101,
 #endif
-   PROJID = 102,
-   TASKID = 103,
+   HTOP_PROJID_FIELD = 102,
+   HTOP_TASKID_FIELD = 103,
 #ifdef HAVE_PSINFO_T_PR_POOLID
-   POOLID = 104,
+   HTOP_POOLID_FIELD = 104,
 #endif
 #ifdef HAVE_PSINFO_T_PR_CONTRACT
-   CONTID = 105,
+   HTOP_CONTID_FIELD = 105,
 #endif
-   LWPID = 106,
-   LAST_PROCESSFIELD = 107,
+   HTOP_LWPID_FIELD = 106,
+   HTOP_LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
 typedef struct SolarisProcess_ {

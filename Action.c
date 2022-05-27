@@ -215,15 +215,15 @@ static Htop_Reaction actionResize(State* st) {
 }
 
 static Htop_Reaction actionSortByMemory(State* st) {
-   return Action_setSortKey(st->settings, PERCENT_MEM);
+   return Action_setSortKey(st->settings, HTOP_PERCENT_MEM_FIELD);
 }
 
 static Htop_Reaction actionSortByCPU(State* st) {
-   return Action_setSortKey(st->settings, PERCENT_CPU);
+   return Action_setSortKey(st->settings, HTOP_PERCENT_CPU_FIELD);
 }
 
 static Htop_Reaction actionSortByTime(State* st) {
-   return Action_setSortKey(st->settings, TIME);
+   return Action_setSortKey(st->settings, HTOP_TIME_FIELD);
 }
 
 static Htop_Reaction actionToggleKernelThreads(State* st) {

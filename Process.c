@@ -51,33 +51,33 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_IO 0x0001
 
 typedef enum {
-   NULL_PROCESSFIELD = 0,
-   PID = 1,
-   NAME = 2,
-   STATE = 3,
-   PPID = 4,
-   PGRP = 5,
-   SESSION = 6,
-   TTY_NR = 7,
-   TPGID = 8,
-   MINFLT = 10,
-   MAJFLT = 12,
-   PRIORITY = 18,
-   NICE = 19,
-   STARTTIME = 21,
-   PROCESSOR = 38,
-   M_SIZE = 39,
-   M_RESIDENT = 40,
-   EFFECTIVE_UID = 46,
-   PERCENT_CPU = 47,
-   PERCENT_MEM = 48,
-   EFFECTIVE_USER = 49,
-   TIME = 50,
-   NLWP = 51,
-   TGID = 52,
-   REAL_UID = 53,
-   REAL_USER = 54,
-   COMM = 99
+   HTOP_NULL_PROCESSFIELD = 0,
+   HTOP_PID_FIELD = 1,
+   HTOP_NAME_FIELD = 2,
+   HTOP_STATE_FIELD = 3,
+   HTOP_PPID_FIELD = 4,
+   HTOP_PGRP_FIELD = 5,
+   HTOP_SESSION_FIELD = 6,
+   HTOP_TTY_FIELD = 7,
+   HTOP_TPGID_FIELD = 8,
+   HTOP_MINFLT_FIELD = 10,
+   HTOP_MAJFLT_FIELD = 12,
+   HTOP_PRIORITY_FIELD = 18,
+   HTOP_NICE_FIELD = 19,
+   HTOP_STARTTIME_FIELD = 21,
+   HTOP_PROCESSOR_FIELD = 38,
+   HTOP_M_SIZE_FIELD = 39,
+   HTOP_M_RESIDENT_FIELD = 40,
+   HTOP_EFFECTIVE_UID_FIELD = 46,
+   HTOP_PERCENT_CPU_FIELD = 47,
+   HTOP_PERCENT_MEM_FIELD = 48,
+   HTOP_EFFECTIVE_USER_FIELD = 49,
+   HTOP_TIME_FIELD = 50,
+   HTOP_NLWP_FIELD = 51,
+   HTOP_TGID_FIELD = 52,
+   HTOP_REAL_UID_FIELD = 53,
+   HTOP_REAL_USER_FIELD = 54,
+   HTOP_COMM_FIELD = 99
 } ProcessField;
 
 typedef struct ProcessPidColumn_ {
@@ -421,180 +421,172 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
    bool coloring = this->settings->highlightMegabytes;
 
    switch (field) {
-      struct tm tm;
-   case PERCENT_CPU:
-      if (this->percent_cpu > 999.9) {
-         xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
-      } else if (this->percent_cpu > 99.9) {
-         xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu);
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
-      }
-      break;
-   case PERCENT_MEM:
-      if (this->percent_mem > 99.9) {
-         xSnprintf(buffer, n, "100. ");
-      } else {
-         xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
-      }
-      break;
-   case NAME:
-      copy_fixed_width_field(buffer, n, this->name, 16);
-      break;
-   case COMM:
-      if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
-         attr = CRT_colors[HTOP_PROCESS_THREAD_COLOR];
-         baseattr = CRT_colors[HTOP_PROCESS_THREAD_BASENAME_COLOR];
-      } else if(this->settings->highlight_kernel_processes && Process_isKernelProcess(this)) {
-         attr = CRT_colors[HTOP_PROCESS_KERNEL_PROCESS_COLOR];
-         baseattr = CRT_colors[HTOP_PROCESS_KERNEL_PROCESS_COLOR];
-      }
-      if (!this->settings->treeView || this->indent == 0) {
-         Process_writeCommand(this, attr, baseattr, str);
-         return;
-      } else {
-         char* buf = buffer;
-         int maxIndent = 0;
-         bool lastItem = (this->indent < 0);
-         int indent = (this->indent < 0 ? -this->indent : this->indent);
-
-         for (int i = 0; i < 32; i++)
-            if (indent & (1U << i))
-               maxIndent = i+1;
-          for (int i = 0; i < maxIndent - 1; i++) {
-            int written, ret;
-            if (indent & (1 << i))
-               ret = snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]);
-            else
-               ret = snprintf(buf, n, "   ");
-            if (ret < 0 || ret >= n) {
-               written = n;
-            } else {
-               written = ret;
-            }
-            buf += written;
-            n -= written;
+         struct tm tm;
+      case HTOP_PERCENT_CPU_FIELD:
+         if (this->percent_cpu > 999.9) {
+            xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
+         } else if (this->percent_cpu > 99.9) {
+            xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu);
+         } else {
+            xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
          }
-         const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
-         xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
-         RichString_append(str, CRT_colors[HTOP_PROCESS_TREE_COLOR], buffer);
-         Process_writeCommand(this, attr, baseattr, str);
+         break;
+      case HTOP_PERCENT_MEM_FIELD:
+         if (this->percent_mem > 99.9) {
+            xSnprintf(buffer, n, "100. ");
+         } else {
+            xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
+         }
+         break;
+      case HTOP_NAME_FIELD:
+         copy_fixed_width_field(buffer, n, this->name, 16);
+         break;
+      case HTOP_COMM_FIELD:
+         if (this->settings->highlightThreads && Process_isExtraThreadProcess(this)) {
+            attr = CRT_colors[HTOP_PROCESS_THREAD_COLOR];
+            baseattr = CRT_colors[HTOP_PROCESS_THREAD_BASENAME_COLOR];
+         } else if(this->settings->highlight_kernel_processes && Process_isKernelProcess(this)) {
+            attr = CRT_colors[HTOP_PROCESS_KERNEL_PROCESS_COLOR];
+            baseattr = CRT_colors[HTOP_PROCESS_KERNEL_PROCESS_COLOR];
+         }
+         if (!this->settings->treeView || this->indent == 0) {
+            Process_writeCommand(this, attr, baseattr, str);
+            return;
+         } else {
+            char* buf = buffer;
+            int maxIndent = 0;
+            bool lastItem = (this->indent < 0);
+            int indent = (this->indent < 0 ? -this->indent : this->indent);
+            for (int i = 0; i < 32; i++) if (indent & (1U << i)) maxIndent = i+1;
+            for (int i = 0; i < maxIndent - 1; i++) {
+               int written, ret;
+               ret = (indent & (1 << i)) ?
+                  snprintf(buf, n, "%s  ", CRT_treeStr[TREE_STR_VERT]) : snprintf(buf, n, "   ");
+               written = (ret < 0 || ret >= n) ? n : ret;
+               buf += written;
+               n -= written;
+            }
+            const char* draw = CRT_treeStr[lastItem ? (this->settings->direction == 1 ? TREE_STR_BEND : TREE_STR_TEND) : TREE_STR_RTEE];
+            xSnprintf(buf, n, "%s%s ", draw, this->showChildren ? CRT_treeStr[TREE_STR_SHUT] : CRT_treeStr[TREE_STR_OPEN] );
+            RichString_append(str, CRT_colors[HTOP_PROCESS_TREE_COLOR], buffer);
+            Process_writeCommand(this, attr, baseattr, str);
+            return;
+         }
+      case HTOP_MAJFLT_FIELD:
+         Process_colorNumber(str, this->majflt, coloring);
          return;
-      }
-   case MAJFLT:
-      Process_colorNumber(str, this->majflt, coloring);
-      return;
-   case MINFLT:
-      Process_colorNumber(str, this->minflt, coloring);
-      return;
-   case M_RESIDENT:
-      Process_humanNumber(str, this->m_resident * CRT_page_size_kib, coloring);
-      return;
-   case M_SIZE:
-      Process_humanNumber(str, this->m_size * CRT_page_size_kib, coloring);
-      return;
-   case NICE:
-      n = snprintf(buffer, n, "%3ld", this->nice);
-      assert(n >= 3);
-      if(n == 3) {
-         buffer[3] = ' ';
-         buffer[4] = 0;
-      }
-      if(this->nice < 0) attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
-      else if(this->nice > 0) attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
-      break;
-   case NLWP:
-      xSnprintf(buffer, n, "%4ld ", this->nlwp);
-      break;
-   case PGRP:
-      xSnprintf(buffer, n, Process_pidFormat, this->pgrp);
-      break;
-   case PID:
-      xSnprintf(buffer, n, Process_pidFormat, this->pid);
-      break;
-   case PPID:
-      xSnprintf(buffer, n, Process_pidFormat, this->ppid);
-      break;
-   case PRIORITY:
-      if(this->priority <= -100) xSnprintf(buffer, n, " RT ");
-      else xSnprintf(buffer, n, "%3ld ", this->priority);
-      break;
-   case PROCESSOR:
-      if(this->processor < 0) strcpy(buffer, "  - ");
-      else xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor));
-      break;
-   case SESSION:
-      xSnprintf(buffer, n, Process_pidFormat, this->session);
-      break;
-   case STARTTIME:
-      localtime_r(&this->starttime_ctime, &tm);
-      n = strftime(buffer, n, (this->starttime_ctime > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
-      if(n != 6) {
-         if(n < 6) memset(buffer + n, ' ', 6 - n);
-         buffer[6] = 0;
-      }
-      break;
-   case STATE:
-      xSnprintf(buffer, n, "%c ", this->state);
-      switch(this->state) {
-         case 'R':
-         case 'O':
-            attr = CRT_colors[HTOP_PROCESS_R_STATE_COLOR];
-            break;
-         case 'D':
-            attr = CRT_colors[HTOP_PROCESS_D_STATE_COLOR];
-            break;
-         case 'Z':
-            attr = CRT_colors[HTOP_PROCESS_Z_STATE_COLOR];
-            break;
-      }
-      break;
-   case REAL_UID:
-      xSnprintf(buffer, n, "%6d ", (int)this->ruid);
-      break;
-   case EFFECTIVE_UID:
-      xSnprintf(buffer, n, "%6d ", (int)this->euid);
-      break;
-   case TIME:
-      Process_printTime(str, this->time);
-      return;
-   case TGID:
-      xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid);
-      break;
-   case TPGID:
-      xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid);
-      break;
-   case TTY_NR:
-      if(this->tty_nr == NODEV) {
-         xSnprintf(buffer, n, "      ? ");
-         attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
-      } else {
-         xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
-      }
-      break;
-   case REAL_USER:
-      if (Process_getuid != (int)this->ruid) attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
-      if (this->real_user) {
-         xSnprintf(buffer, n, "%-9s ", this->real_user);
-      } else {
-         xSnprintf(buffer, n, "%-9d ", (int)this->ruid);
-      }
-      goto user_end;
-   case EFFECTIVE_USER:
-      if (Process_getuid != (int)this->euid) attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
-      if (this->effective_user) {
-         xSnprintf(buffer, n, "%-9s ", this->effective_user);
-      } else {
-         xSnprintf(buffer, n, "%-9d ", (int)this->euid);
-      }
-   user_end:
-      if (buffer[10]) {
-         buffer[9] = ' ';
-         buffer[10] = '\0';
-      }
-      break;
-   default:
-      xSnprintf(buffer, n, "- ");
+      case HTOP_MINFLT_FIELD:
+         Process_colorNumber(str, this->minflt, coloring);
+         return;
+      case HTOP_M_RESIDENT_FIELD:
+         Process_humanNumber(str, this->m_resident * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_M_SIZE_FIELD:
+         Process_humanNumber(str, this->m_size * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_NICE_FIELD:
+         n = snprintf(buffer, n, "%3ld", this->nice);
+         assert(n >= 3);
+         if(n == 3) {
+            buffer[3] = ' ';
+            buffer[4] = 0;
+         }
+         if(this->nice < 0) attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
+         else if(this->nice > 0) attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
+         break;
+      case HTOP_NLWP_FIELD:
+         xSnprintf(buffer, n, "%4ld ", this->nlwp);
+         break;
+      case HTOP_PGRP_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, this->pgrp);
+         break;
+      case HTOP_PID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, this->pid);
+         break;
+      case HTOP_PPID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, this->ppid);
+         break;
+      case HTOP_PRIORITY_FIELD:
+         if(this->priority <= -100) xSnprintf(buffer, n, " RT ");
+         else xSnprintf(buffer, n, "%3ld ", this->priority);
+         break;
+      case HTOP_PROCESSOR_FIELD:
+         if(this->processor < 0) strcpy(buffer, "  - ");
+         else xSnprintf(buffer, n, "%3d ", Settings_cpuId(this->settings, this->processor));
+         break;
+      case HTOP_SESSION_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, this->session);
+         break;
+      case HTOP_STARTTIME_FIELD:
+         localtime_r(&this->starttime_ctime, &tm);
+         n = strftime(buffer, n, (this->starttime_ctime > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
+         if(n != 6) {
+            if(n < 6) memset(buffer + n, ' ', 6 - n);
+            buffer[6] = 0;
+         }
+         break;
+      case HTOP_STATE_FIELD:
+         xSnprintf(buffer, n, "%c ", this->state);
+         switch(this->state) {
+            case 'R':
+            case 'O':
+               attr = CRT_colors[HTOP_PROCESS_R_STATE_COLOR];
+               break;
+            case 'D':
+               attr = CRT_colors[HTOP_PROCESS_D_STATE_COLOR];
+               break;
+            case 'Z':
+               attr = CRT_colors[HTOP_PROCESS_Z_STATE_COLOR];
+               break;
+         }
+         break;
+      case HTOP_REAL_UID_FIELD:
+         xSnprintf(buffer, n, "%6d ", (int)this->ruid);
+         break;
+      case HTOP_EFFECTIVE_UID_FIELD:
+         xSnprintf(buffer, n, "%6d ", (int)this->euid);
+         break;
+      case HTOP_TIME_FIELD:
+         Process_printTime(str, this->time);
+         return;
+      case HTOP_TGID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid);
+         break;
+      case HTOP_TPGID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid);
+         break;
+      case HTOP_TTY_FIELD:
+         if(this->tty_nr == NODEV) {
+            xSnprintf(buffer, n, "      ? ");
+            attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+         } else {
+            xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
+         }
+         break;
+      case HTOP_REAL_USER_FIELD:
+         if (Process_getuid != (int)this->ruid) attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+         if (this->real_user) {
+            xSnprintf(buffer, n, "%-9s ", this->real_user);
+         } else {
+            xSnprintf(buffer, n, "%-9d ", (int)this->ruid);
+         }
+         goto user_end;
+      case HTOP_EFFECTIVE_USER_FIELD:
+         if (Process_getuid != (int)this->euid) attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+         if (this->effective_user) {
+            xSnprintf(buffer, n, "%-9s ", this->effective_user);
+         } else {
+            xSnprintf(buffer, n, "%-9d ", (int)this->euid);
+         }
+      user_end:
+         if (buffer[10]) {
+            buffer[9] = ' ';
+            buffer[10] = '\0';
+         }
+         break;
+      default:
+         xSnprintf(buffer, n, "- ");
+         break;
    }
    RichString_append(str, attr, buffer);
 }
@@ -683,62 +675,62 @@ long Process_compare(const void* v1, const void* v2) {
       p1 = v2;
    }
    switch (settings->sortKey) {
-   case PERCENT_CPU:
-      return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
-   case PERCENT_MEM:
-      return (p2->m_resident - p1->m_resident);
-   case NAME:
-      return settings->sort_strcmp(p1->name, p2->name);
-   case COMM:
-      return settings->sort_strcmp(p1->comm, p2->comm);
-   case MAJFLT:
-      return (p2->majflt - p1->majflt);
-   case MINFLT:
-      return (p2->minflt - p1->minflt);
-   case M_RESIDENT:
-      return (p2->m_resident - p1->m_resident);
-   case M_SIZE:
-      return (p2->m_size - p1->m_size);
-   case NICE:
-      return (p1->nice - p2->nice);
-   case NLWP:
-      return (p1->nlwp - p2->nlwp);
-   case PGRP:
-      return (p1->pgrp - p2->pgrp);
-   case PID:
-      return (p1->pid - p2->pid);
-   case PPID:
-      return (p1->ppid - p2->ppid);
-   case PRIORITY:
-      return (p1->priority - p2->priority);
-   case PROCESSOR:
-      return (p1->processor - p2->processor);
-   case SESSION:
-      return (p1->session - p2->session);
-   case STARTTIME:
-      return p1->starttime_ctime == p2->starttime_ctime ?
-         p1->pid - p2->pid : p1->starttime_ctime - p2->starttime_ctime;
-   case STATE:
-      return (Process_sortState(p1->state) - Process_sortState(p2->state));
-   case REAL_UID:
-      return (p1->ruid - p2->ruid);
-   case EFFECTIVE_UID:
-      return (p1->euid - p2->euid);
-   case TIME:
-      return p2->time - p1->time;
-   case TGID:
-      return (p1->tgid - p2->tgid);
-   case TPGID:
-      return (p1->tpgid - p2->tpgid);
-   case TTY_NR:
-      return (p1->tty_nr - p2->tty_nr);
-   case REAL_USER:
-      if(!p1->real_user && !p2->real_user) return p1->ruid - p2->ruid;
-      return settings->sort_strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
-   case EFFECTIVE_USER:
-      if(!p1->effective_user && !p2->effective_user) return p1->euid - p2->euid;
-      return settings->sort_strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
-   default:
-      return (p1->pid - p2->pid);
+      case HTOP_PERCENT_CPU_FIELD:
+         return (p2->percent_cpu > p1->percent_cpu ? 1 : -1);
+      case HTOP_PERCENT_MEM_FIELD:
+         return (p2->m_resident - p1->m_resident);
+      case HTOP_NAME_FIELD:
+         return settings->sort_strcmp(p1->name, p2->name);
+      case HTOP_COMM_FIELD:
+            return settings->sort_strcmp(p1->comm, p2->comm);
+      case HTOP_MAJFLT_FIELD:
+            return (p2->majflt - p1->majflt);
+      case HTOP_MINFLT_FIELD:
+         return (p2->minflt - p1->minflt);
+      case HTOP_M_RESIDENT_FIELD:
+         return (p2->m_resident - p1->m_resident);
+      case HTOP_M_SIZE_FIELD:
+         return (p2->m_size - p1->m_size);
+      case HTOP_NICE_FIELD:
+         return (p1->nice - p2->nice);
+      case HTOP_NLWP_FIELD:
+         return (p1->nlwp - p2->nlwp);
+      case HTOP_PGRP_FIELD:
+         return (p1->pgrp - p2->pgrp);
+      case HTOP_PID_FIELD:
+         return (p1->pid - p2->pid);
+      case HTOP_PPID_FIELD:
+         return (p1->ppid - p2->ppid);
+      case HTOP_PRIORITY_FIELD:
+         return (p1->priority - p2->priority);
+      case HTOP_PROCESSOR_FIELD:
+            return (p1->processor - p2->processor);
+      case HTOP_SESSION_FIELD:
+         return (p1->session - p2->session);
+      case HTOP_STARTTIME_FIELD:
+         return p1->starttime_ctime == p2->starttime_ctime ?
+            p1->pid - p2->pid : p1->starttime_ctime - p2->starttime_ctime;
+      case HTOP_STATE_FIELD:
+         return (Process_sortState(p1->state) - Process_sortState(p2->state));
+      case HTOP_REAL_UID_FIELD:
+         return (p1->ruid - p2->ruid);
+      case HTOP_EFFECTIVE_UID_FIELD:
+         return (p1->euid - p2->euid);
+      case HTOP_TIME_FIELD:
+         return p2->time - p1->time;
+      case HTOP_TGID_FIELD:
+         return (p1->tgid - p2->tgid);
+      case HTOP_TPGID_FIELD:
+         return (p1->tpgid - p2->tpgid);
+      case HTOP_TTY_FIELD:
+         return (p1->tty_nr - p2->tty_nr);
+      case HTOP_REAL_USER_FIELD:
+         if(!p1->real_user && !p2->real_user) return p1->ruid - p2->ruid;
+         return settings->sort_strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
+      case HTOP_EFFECTIVE_USER_FIELD:
+         if(!p1->effective_user && !p2->effective_user) return p1->euid - p2->euid;
+         return settings->sort_strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
+      default:
+         return (p1->pid - p2->pid);
    }
 }

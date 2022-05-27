@@ -221,7 +221,7 @@ void ProcessList_sort(ProcessList* this) {
       int direction = this->settings->direction;
       int sortKey = this->settings->sortKey;
       // Sort by PID
-      this->settings->sortKey = PID;
+      this->settings->sortKey = HTOP_PID_FIELD;
       this->settings->direction = 1;
       Vector_quickSort(this->processes);
       // Restore settings
@@ -312,7 +312,7 @@ ProcessField ProcessList_keyAt(ProcessList* this, int at) {
       }
       x += len;
    }
-   return COMM;
+   return HTOP_COMM_FIELD;
 }
 
 void ProcessList_expandTree(ProcessList* this) {

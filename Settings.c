@@ -164,7 +164,7 @@ static void readFields(ProcessField* fields, int* flags, const char* line) {
          j++;
       }
    }
-   fields[j] = NULL_PROCESSFIELD;
+   fields[j] = HTOP_NULL_PROCESSFIELD;
    String_freeArray(ids);
 }
 
@@ -351,7 +351,7 @@ bool Settings_write(Settings* this) {
 Settings* Settings_new(int cpuCount) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
-   this->sortKey = PERCENT_CPU;
+   this->sortKey = HTOP_PERCENT_CPU_FIELD;
    this->direction = 1;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;

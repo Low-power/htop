@@ -12,10 +12,10 @@ in the source distribution for its full text.
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
-   JID_FIELD = 100,
-   JAIL_FIELD,
-   EMULATION_FIELD,
-   LAST_PROCESSFIELD
+   HTOP_JID_FIELD = 100,
+   HTOP_JAIL_FIELD,
+   HTOP_EMULATION_FIELD,
+   HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
 

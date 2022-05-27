@@ -17,8 +17,8 @@ in the source distribution for its full text.
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
-   WPAR_ID = 100,
-   LAST_PROCESSFIELD = 101,
+   HTOP_WPAR_ID_FIELD = 100,
+   HTOP_LAST_PROCESSFIELD = 101,
 } AixProcessField;
 
 typedef struct AixProcess_ {

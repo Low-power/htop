@@ -42,11 +42,11 @@ in the source distribution for its full text.
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
-ProcessField Platform_defaultFields[] = { PID, EFFECTIVE_USER, PRIORITY, NICE, M_SIZE, M_RESIDENT, M_SHARE, STATE, PERCENT_CPU, PERCENT_MEM, TIME, COMM, 0 };
+ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_M_SIZE_FIELD, HTOP_M_RESIDENT_FIELD, HTOP_M_SHARE_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_PERCENT_MEM_FIELD, HTOP_TIME_FIELD, HTOP_COMM_FIELD, 0 };
 
-//static ProcessField defaultIoFields[] = { PID, IO_PRIORITY, EFFECTIVE_USER, IO_READ_RATE, IO_WRITE_RATE, IO_RATE, COMM, 0 };
+//static ProcessField defaultIoFields[] = { HTOP_PID_FIELD, HTOP_IO_PRIORITY_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_IO_READ_RATE_FIELD, HTOP_IO_WRITE_RATE_FIELD, HTOP_IO_RATE_FIELD, HTOP_COMM_FIELD, 0 };
 
-int Platform_numberOfFields = LAST_PROCESSFIELD;
+int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },

@@ -28,68 +28,68 @@ in the source distribution for its full text.
 #define PROCESS_FLAG_LINUX_OOM      0x1000
 
 typedef enum {
-   FLAGS = 9,
-   ITREALVALUE = 20,
-   VSIZE = 22,
-   RSS = 23,
-   RLIM = 24,
-   STARTCODE = 25,
-   ENDCODE = 26,
-   STARTSTACK = 27,
-   KSTKESP = 28,
-   KSTKEIP = 29,
-   SIGNAL = 30,
-   BLOCKED = 31,
-   SSIGIGNORE = 32,
-   SIGCATCH = 33,
-   WCHAN = 34,
-   NSWAP = 35,
-   CNSWAP = 36,
-   EXIT_SIGNAL = 37,
+   HTOP_FLAGS_FIELD = 9,
+   HTOP_ITREALVALUE_FIELD = 20,
+   HTOP_VSIZE_FIELD = 22,
+   HTOP_RSS_FIELD = 23,
+   HTOP_RLIM_FIELD = 24,
+   HTOP_STARTCODE_FIELD = 25,
+   HTOP_ENDCODE_FIELD = 26,
+   HTOP_STARTSTACK_FIELD = 27,
+   HTOP_KSTKESP_FIELD = 28,
+   HTOP_KSTKEIP_FIELD = 29,
+   HTOP_SIGNAL_FIELD = 30,
+   HTOP_BLOCKED_FIELD = 31,
+   HTOP_SSIGIGNORE_FIELD = 32,
+   HTOP_SIGCATCH_FIELD = 33,
+   HTOP_WCHAN_FIELD = 34,
+   HTOP_NSWAP_FIELD = 35,
+   HTOP_CNSWAP_FIELD = 36,
+   HTOP_EXIT_SIGNAL_FIELD = 37,
 } UnsupportedProcessField;
 
 typedef enum {
-   CMINFLT = 11,
-   CMAJFLT = 13,
-   UTIME = 14,
-   STIME = 15,
-   CUTIME = 16,
-   CSTIME = 17,
-   M_SHARE = 41,
-   M_TRS = 42,
-   M_DRS = 43,
-   M_LRS = 44,
-   M_DT = 45,
+   HTOP_CMINFLT_FIELD = 11,
+   HTOP_CMAJFLT_FIELD = 13,
+   HTOP_UTIME_FIELD = 14,
+   HTOP_STIME_FIELD = 15,
+   HTOP_CUTIME_FIELD = 16,
+   HTOP_CSTIME_FIELD = 17,
+   HTOP_M_SHARE_FIELD = 41,
+   HTOP_M_TRS_FIELD = 42,
+   HTOP_M_DRS_FIELD = 43,
+   HTOP_M_LRS_FIELD = 44,
+   HTOP_M_DT_FIELD = 45,
    #ifdef HAVE_OPENVZ
-   CTID = 100,
-   VPID = 101,
+   HTOP_CTID_FIELD = 100,
+   HTOP_VPID_FIELD = 101,
    #endif
    #ifdef HAVE_VSERVER
-   VXID = 102,
+   HTOP_VXID_FIELD = 102,
    #endif
    #ifdef HAVE_TASKSTATS
-   RCHAR = 103,
-   WCHAR = 104,
-   SYSCR = 105,
-   SYSCW = 106,
-   RBYTES = 107,
-   WBYTES = 108,
-   CNCLWB = 109,
-   IO_READ_RATE = 110,
-   IO_WRITE_RATE = 111,
-   IO_RATE = 112,
+   HTOP_RCHAR_FIELD = 103,
+   HTOP_WCHAR_FIELD = 104,
+   HTOP_SYSCR_FIELD = 105,
+   HTOP_SYSCW_FIELD = 106,
+   HTOP_RBYTES_FIELD = 107,
+   HTOP_WBYTES_FIELD = 108,
+   HTOP_CNCLWB_FIELD = 109,
+   HTOP_IO_READ_RATE_FIELD = 110,
+   HTOP_IO_WRITE_RATE_FIELD = 111,
+   HTOP_IO_RATE_FIELD = 112,
    #endif
    #ifdef HAVE_CGROUP
-   CGROUP = 113,
+   HTOP_CGROUP_FIELD = 113,
    #endif
-   OOM = 114,
-   IO_PRIORITY = 115,
+   HTOP_OOM_FIELD = 114,
+   HTOP_IO_PRIORITY_FIELD = 115,
    #ifdef HAVE_DELAYACCT
-   PERCENT_CPU_DELAY = 116,
-   PERCENT_IO_DELAY = 117,
-   PERCENT_SWAP_DELAY = 118,
+   HTOP_PERCENT_CPU_DELAY_FIELD = 116,
+   HTOP_PERCENT_IO_DELAY_FIELD = 117,
+   HTOP_PERCENT_SWAP_DELAY_FIELD = 118,
    #endif
-   LAST_PROCESSFIELD = 119,
+   HTOP_LAST_PROCESSFIELD = 119,
 } LinuxProcessField;
 
 #include "IOPriority.h"
@@ -152,104 +152,104 @@ long long btime; /* semi-global */
 
 ProcessFieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
-   [PID] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
-   [NAME] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
-   [COMM] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
-   [STATE] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, D disk, Z zombie, T stoppd, W paging, I idle)", .flags = 0, },
-   [PPID] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
-   [PGRP] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
-   [SESSION] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
-   [TTY_NR] = { .name = "TTY_NR", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
-   [TPGID] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
-   [FLAGS] = { .name = "FLAGS", .title = NULL, .description = NULL, .flags = 0, },
-   [MINFLT] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
-   [CMINFLT] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, },
-   [MAJFLT] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
-   [CMAJFLT] = { .name = "CMAJFLT", .title = "    CMAJFLT ", .description = "Children processes' major faults", .flags = 0, },
-   [UTIME] = { .name = "UTIME", .title = " UTIME+  ", .description = "User CPU time - time the process spent executing in user mode", .flags = 0, },
-   [STIME] = { .name = "STIME", .title = " STIME+  ", .description = "System CPU time - time the kernel spent running system calls for this process", .flags = 0, },
-   [CUTIME] = { .name = "CUTIME", .title = " CUTIME+ ", .description = "Children processes' user CPU time", .flags = 0, },
-   [CSTIME] = { .name = "CSTIME", .title = " CSTIME+ ", .description = "Children processes' system CPU time", .flags = 0, },
-   [PRIORITY] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
-   [NICE] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
-   [ITREALVALUE] = { .name = "ITREALVALUE", .title = NULL, .description = NULL, .flags = 0, },
-   [STARTTIME] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
-   [VSIZE] = { .name = "VSIZE", .title = NULL, .description = NULL, .flags = 0, },
-   [RSS] = { .name = "RSS", .title = NULL, .description = NULL, .flags = 0, },
-   [RLIM] = { .name = "RLIM", .title = NULL, .description = NULL, .flags = 0, },
-   [STARTCODE] = { .name = "STARTCODE", .title = NULL, .description = NULL, .flags = 0, },
-   [ENDCODE] = { .name = "ENDCODE", .title = NULL, .description = NULL, .flags = 0, },
-   [STARTSTACK] = { .name = "STARTSTACK", .title = NULL, .description = NULL, .flags = 0, },
-   [KSTKESP] = { .name = "KSTKESP", .title = NULL, .description = NULL, .flags = 0, },
-   [KSTKEIP] = { .name = "KSTKEIP", .title = NULL, .description = NULL, .flags = 0, },
-   [SIGNAL] = { .name = "SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
-   [BLOCKED] = { .name = "BLOCKED", .title = NULL, .description = NULL, .flags = 0, },
-   [SSIGIGNORE] = { .name = "SIGIGNORE", .title = NULL, .description = NULL, .flags = 0, },
-   [SIGCATCH] = { .name = "SIGCATCH", .title = NULL, .description = NULL, .flags = 0, },
-   [WCHAN] = { .name = "WCHAN", .title = NULL, .description = NULL, .flags = 0, },
-   [NSWAP] = { .name = "NSWAP", .title = NULL, .description = NULL, .flags = 0, },
-   [CNSWAP] = { .name = "CNSWAP", .title = NULL, .description = NULL, .flags = 0, },
-   [EXIT_SIGNAL] = { .name = "EXIT_SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
-   [PROCESSOR] = { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
-   [M_SIZE] = { .name = "M_SIZE", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
-   [M_RESIDENT] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, },
-   [M_SHARE] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, },
-   [M_TRS] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, },
-   [M_DRS] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, },
-   [M_LRS] = { .name = "M_LRS", .title = " LIB ", .description = "The library size of the process", .flags = 0, },
-   [M_DT] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process", .flags = 0, },
-   [REAL_UID] = { .name = "REAL_UID", .title = "  RUID ", .description = "Real user ID", .flags = 0, },
-   [EFFECTIVE_UID] = { .name = "EFFECTIVE_UID", .title = "  EUID ", .description = "Effective user ID", .flags = 0, },
-   [PERCENT_CPU] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, },
-   [PERCENT_MEM] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, },
-   [REAL_USER] = { .name = "REAL_USER", .title = "REAL_USER ", .description = "Real user (or numeric user ID if name cannot be determined)", .flags = 0, },
-   [EFFECTIVE_USER] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
-   [TIME] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
-   [NLWP] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
-   [TGID] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
+   [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
+   [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
+   [HTOP_COMM_FIELD] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
+   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, D disk, Z zombie, T stoppd, W paging, I idle)", .flags = 0, },
+   [HTOP_PPID_FIELD] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
+   [HTOP_PGRP_FIELD] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
+   [HTOP_SESSION_FIELD] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
+   [HTOP_TTY_FIELD] = { .name = "TTY", .title = "TTY      ", .description = "Controlling terminal", .flags = 0, },
+   [HTOP_TPGID_FIELD] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
+   [HTOP_FLAGS_FIELD] = { .name = "FLAGS", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_MINFLT_FIELD] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
+   [HTOP_CMINFLT_FIELD] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, },
+   [HTOP_MAJFLT_FIELD] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
+   [HTOP_CMAJFLT_FIELD] = { .name = "CMAJFLT", .title = "    CMAJFLT ", .description = "Children processes' major faults", .flags = 0, },
+   [HTOP_UTIME_FIELD] = { .name = "UTIME", .title = " UTIME+  ", .description = "User CPU time - time the process spent executing in user mode", .flags = 0, },
+   [HTOP_STIME_FIELD] = { .name = "STIME", .title = " STIME+  ", .description = "System CPU time - time the kernel spent running system calls for this process", .flags = 0, },
+   [HTOP_CUTIME_FIELD] = { .name = "CUTIME", .title = " CUTIME+ ", .description = "Children processes' user CPU time", .flags = 0, },
+   [HTOP_CSTIME_FIELD] = { .name = "CSTIME", .title = " CSTIME+ ", .description = "Children processes' system CPU time", .flags = 0, },
+   [HTOP_PRIORITY_FIELD] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
+   [HTOP_NICE_FIELD] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
+   [HTOP_ITREALVALUE_FIELD] = { .name = "ITREALVALUE", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_STARTTIME_FIELD] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
+   [HTOP_VSIZE_FIELD] = { .name = "VSIZE", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_RSS_FIELD] = { .name = "RSS", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_RLIM_FIELD] = { .name = "RLIM", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_STARTCODE_FIELD] = { .name = "STARTCODE", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_ENDCODE_FIELD] = { .name = "ENDCODE", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_STARTSTACK_FIELD] = { .name = "STARTSTACK", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_KSTKESP_FIELD] = { .name = "KSTKESP", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_KSTKEIP_FIELD] = { .name = "KSTKEIP", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_SIGNAL_FIELD] = { .name = "SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_BLOCKED_FIELD] = { .name = "BLOCKED", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_SSIGIGNORE_FIELD] = { .name = "SIGIGNORE", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_SIGCATCH_FIELD] = { .name = "SIGCATCH", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_WCHAN_FIELD] = { .name = "WCHAN", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_NSWAP_FIELD] = { .name = "NSWAP", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_CNSWAP_FIELD] = { .name = "CNSWAP", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_EXIT_SIGNAL_FIELD] = { .name = "EXIT_SIGNAL", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_PROCESSOR_FIELD] = { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
+   [HTOP_M_SIZE_FIELD] = { .name = "M_SIZE", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
+   [HTOP_M_RESIDENT_FIELD] = { .name = "M_RESIDENT", .title = "  RES ", .description = "Resident set size, size of the text and data sections, plus stack usage", .flags = 0, },
+   [HTOP_M_SHARE_FIELD] = { .name = "M_SHARE", .title = "  SHR ", .description = "Size of the process's shared pages", .flags = 0, },
+   [HTOP_M_TRS_FIELD] = { .name = "M_TRS", .title = " CODE ", .description = "Size of the text segment of the process", .flags = 0, },
+   [HTOP_M_DRS_FIELD] = { .name = "M_DRS", .title = " DATA ", .description = "Size of the data segment plus stack usage of the process", .flags = 0, },
+   [HTOP_M_LRS_FIELD] = { .name = "M_LRS", .title = " LIB ", .description = "The library size of the process", .flags = 0, },
+   [HTOP_M_DT_FIELD] = { .name = "M_DT", .title = " DIRTY ", .description = "Size of the dirty pages of the process", .flags = 0, },
+   [HTOP_REAL_UID_FIELD] = { .name = "REAL_UID", .title = "  RUID ", .description = "Real user ID", .flags = 0, },
+   [HTOP_EFFECTIVE_UID_FIELD] = { .name = "EFFECTIVE_UID", .title = "  EUID ", .description = "Effective user ID", .flags = 0, },
+   [HTOP_PERCENT_CPU_FIELD] = { .name = "PERCENT_CPU", .title = "CPU% ", .description = "Percentage of the CPU time the process used in the last sampling", .flags = 0, },
+   [HTOP_PERCENT_MEM_FIELD] = { .name = "PERCENT_MEM", .title = "MEM% ", .description = "Percentage of the memory the process is using, based on resident memory size", .flags = 0, },
+   [HTOP_REAL_USER_FIELD] = { .name = "REAL_USER", .title = "REAL_USER ", .description = "Real user (or numeric user ID if name cannot be determined)", .flags = 0, },
+   [HTOP_EFFECTIVE_USER_FIELD] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
+   [HTOP_TIME_FIELD] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
+   [HTOP_NLWP_FIELD] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
+   [HTOP_TGID_FIELD] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
 #ifdef HAVE_OPENVZ
-   [CTID] = { .name = "CTID", .title = "   CTID ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
-   [VPID] = { .name = "VPID", .title = " VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [HTOP_CTID_FIELD] = { .name = "CTID", .title = "   CTID ", .description = "OpenVZ container ID (a.k.a. virtual environment ID)", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
+   [HTOP_VPID_FIELD] = { .name = "VPID", .title = " VPID ", .description = "OpenVZ process ID", .flags = PROCESS_FLAG_LINUX_OPENVZ, },
 #endif
 #ifdef HAVE_VSERVER
-   [VXID] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
+   [HTOP_VXID_FIELD] = { .name = "VXID", .title = " VXID ", .description = "VServer process ID", .flags = PROCESS_FLAG_LINUX_VSERVER, },
 #endif
 #ifdef HAVE_TASKSTATS
-   [RCHAR] = { .name = "RCHAR", .title = "    RD_CHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, },
-   [WCHAR] = { .name = "WCHAR", .title = "    WR_CHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, },
-   [SYSCR] = { .name = "SYSCR", .title = "    RD_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
-   [SYSCW] = { .name = "SYSCW", .title = "    WR_SYSC ", .description = "Number of write(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
-   [RBYTES] = { .name = "RBYTES", .title = "  IO_RBYTES ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
-   [WBYTES] = { .name = "WBYTES", .title = "  IO_WBYTES ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
-   [CNCLWB] = { .name = "CNCLWB", .title = "  IO_CANCEL ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, },
-   [IO_READ_RATE] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
-   [IO_WRITE_RATE] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
-   [IO_RATE] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, },
+   [HTOP_RCHAR_FIELD] = { .name = "RCHAR", .title = "    RD_CHAR ", .description = "Number of bytes the process has read", .flags = PROCESS_FLAG_IO, },
+   [HTOP_WCHAR_FIELD] = { .name = "WCHAR", .title = "    WR_CHAR ", .description = "Number of bytes the process has written", .flags = PROCESS_FLAG_IO, },
+   [HTOP_SYSCR_FIELD] = { .name = "SYSCR", .title = "    RD_SYSC ", .description = "Number of read(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_SYSCW_FIELD] = { .name = "SYSCW", .title = "    WR_SYSC ", .description = "Number of write(2) syscalls for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_RBYTES_FIELD] = { .name = "RBYTES", .title = "  IO_RBYTES ", .description = "Bytes of read(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_WBYTES_FIELD] = { .name = "WBYTES", .title = "  IO_WBYTES ", .description = "Bytes of write(2) I/O for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_CNCLWB_FIELD] = { .name = "CNCLWB", .title = "  IO_CANCEL ", .description = "Bytes of cancelled write(2) I/O", .flags = PROCESS_FLAG_IO, },
+   [HTOP_IO_READ_RATE_FIELD] = { .name = "IO_READ_RATE", .title = "  DISK READ ", .description = "The I/O rate of read(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_IO_WRITE_RATE_FIELD] = { .name = "IO_WRITE_RATE", .title = " DISK WRITE ", .description = "The I/O rate of write(2) in bytes per second for the process", .flags = PROCESS_FLAG_IO, },
+   [HTOP_IO_RATE_FIELD] = { .name = "IO_RATE", .title = "   DISK R/W ", .description = "Total I/O rate in bytes per second", .flags = PROCESS_FLAG_IO, },
 #endif
 #ifdef HAVE_CGROUP
-   [CGROUP] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
+   [HTOP_CGROUP_FIELD] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
 #endif
-   [OOM] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
-   [IO_PRIORITY] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
+   [HTOP_OOM_FIELD] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
+   [HTOP_IO_PRIORITY_FIELD] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
-   [PERCENT_CPU_DELAY] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = 0, },
-   [PERCENT_IO_DELAY] = { .name = "PERCENT_IO_DELAY", .title = "IOD% ", .description = "Block I/O delay %", .flags = 0, },
-   [PERCENT_SWAP_DELAY] = { .name = "PERCENT_SWAP_DELAY", .title = "SWAPD% ", .description = "Swapin delay %", .flags = 0, },
+   [HTOP_PERCENT_CPU_DELAY_FIELD] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = 0, },
+   [HTOP_PERCENT_IO_DELAY_FIELD] = { .name = "PERCENT_IO_DELAY", .title = "IOD% ", .description = "Block I/O delay %", .flags = 0, },
+   [HTOP_PERCENT_SWAP_DELAY_FIELD] = { .name = "PERCENT_SWAP_DELAY", .title = "SWAPD% ", .description = "Swapin delay %", .flags = 0, },
 #endif
-   [LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
 ProcessPidColumn Process_pidColumns[] = {
-   { .id = PID, .label = "PID" },
-   { .id = PPID, .label = "PPID" },
+   { .id = HTOP_PID_FIELD, .label = "PID" },
+   { .id = HTOP_PPID_FIELD, .label = "PPID" },
    #ifdef HAVE_OPENVZ
-   { .id = VPID, .label = "VPID" },
+   { .id = HTOP_VPID_FIELD, .label = "VPID" },
    #endif
-   { .id = TPGID, .label = "TPGID" },
-   { .id = TGID, .label = "TGID" },
-   { .id = PGRP, .label = "PGRP" },
-   { .id = SESSION, .label = "SID" },
-   { .id = OOM, .label = "OOM" },
+   { .id = HTOP_TPGID_FIELD, .label = "TPGID" },
+   { .id = HTOP_TGID_FIELD, .label = "TGID" },
+   { .id = HTOP_PGRP_FIELD, .label = "PGRP" },
+   { .id = HTOP_SESSION_FIELD, .label = "SID" },
+   { .id = HTOP_OOM_FIELD, .label = "OOM" },
    { .id = 0, .label = NULL },
 };
 
@@ -325,145 +325,145 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof(buffer);
    switch ((int)field) {
-      struct tm tm;
-      time_t start_wall_time;
-      double total_rate;
-   case TTY_NR:
-      if (lp->ttyDevice) {
-         xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
-      } else {
-         attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
-         xSnprintf(buffer, n, "?        ");
-      }
-      break;
-   case CMINFLT: 
-      Process_colorNumber(str, lp->cminflt, coloring);
-      return;
-   case CMAJFLT:
-      Process_colorNumber(str, lp->cmajflt, coloring);
-      return;
-   case M_DRS:
-      Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring);
-      return;
-   case M_DT:
-      Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring);
-      return;
-   case M_LRS:
-      Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring);
-      return;
-   case M_TRS:
-      Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring);
-      return;
-   case M_SHARE:
-      Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring);
-      return;
-   case UTIME:
-      Process_printTime(str, lp->utime);
-      return;
-   case STIME:
-      Process_printTime(str, lp->stime);
-      return;
-   case CUTIME:
-      Process_printTime(str, lp->cutime);
-      return;
-   case CSTIME:
-      Process_printTime(str, lp->cstime);
-      return;
-   case STARTTIME:
-      start_wall_time = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
-      localtime_r(&start_wall_time, &tm);
-      strftime(buffer, n, (start_wall_time > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
-      break;
+         struct tm tm;
+         time_t start_wall_time;
+         double total_rate;
+      case HTOP_TTY_FIELD:
+         if (lp->ttyDevice) {
+            xSnprintf(buffer, n, "%-9s", lp->ttyDevice + 5 /* skip "/dev/" */);
+         } else {
+            attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+            xSnprintf(buffer, n, "?        ");
+         }
+         break;
+      case HTOP_CMINFLT_FIELD: 
+         Process_colorNumber(str, lp->cminflt, coloring);
+         return;
+      case HTOP_CMAJFLT_FIELD:
+         Process_colorNumber(str, lp->cmajflt, coloring);
+         return;
+      case HTOP_M_DRS_FIELD:
+         Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_M_DT_FIELD:
+         Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_M_LRS_FIELD:
+         Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_M_TRS_FIELD:
+         Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_M_SHARE_FIELD:
+         Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring);
+         return;
+      case HTOP_UTIME_FIELD:
+         Process_printTime(str, lp->utime);
+         return;
+      case HTOP_STIME_FIELD:
+         Process_printTime(str, lp->stime);
+         return;
+      case HTOP_CUTIME_FIELD:
+         Process_printTime(str, lp->cutime);
+         return;
+      case HTOP_CSTIME_FIELD:
+         Process_printTime(str, lp->cstime);
+         return;
+      case HTOP_STARTTIME_FIELD:
+         start_wall_time = btime + (lp->starttime / sysconf(_SC_CLK_TCK));
+         localtime_r(&start_wall_time, &tm);
+         strftime(buffer, n, (start_wall_time > time(NULL) - 86400) ? "%R " : "%b%d ", &tm);
+         break;
    #ifdef HAVE_TASKSTATS
-   case RCHAR:
-      Process_colorNumber(str, lp->io_rchar, coloring);
-      return;
-   case WCHAR:
-      Process_colorNumber(str, lp->io_wchar, coloring);
-      return;
-   case SYSCR:
-      Process_colorNumber(str, lp->io_syscr, coloring);
-      return;
-   case SYSCW:
-      Process_colorNumber(str, lp->io_syscw, coloring);
-      return;
-   case RBYTES:
-      Process_colorNumber(str, lp->io_read_bytes, coloring);
-      return;
-   case WBYTES:
-      Process_colorNumber(str, lp->io_write_bytes, coloring);
-      return;
-   case CNCLWB:
-      Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring);
-      return;
-   case IO_READ_RATE:
-      Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring);
-      return;
-   case IO_WRITE_RATE:
-      Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring);
-      return;
-   case IO_RATE:
-      total_rate = (lp->io_rate_read_bps != -1) ? lp->io_rate_read_bps + lp->io_rate_write_bps : -1;
-      Process_outputRate(str, buffer, n, total_rate, coloring);
-      return;
+      case HTOP_RCHAR_FIELD:
+         Process_colorNumber(str, lp->io_rchar, coloring);
+         return;
+      case HTOP_WCHAR_FIELD:
+         Process_colorNumber(str, lp->io_wchar, coloring);
+         return;
+      case HTOP_SYSCR_FIELD:
+         Process_colorNumber(str, lp->io_syscr, coloring);
+         return;
+      case HTOP_SYSCW_FIELD:
+         Process_colorNumber(str, lp->io_syscw, coloring);
+         return;
+      case HTOP_RBYTES_FIELD:
+         Process_colorNumber(str, lp->io_read_bytes, coloring);
+         return;
+      case HTOP_WBYTES_FIELD:
+         Process_colorNumber(str, lp->io_write_bytes, coloring);
+         return;
+      case HTOP_CNCLWB_FIELD:
+         Process_colorNumber(str, lp->io_cancelled_write_bytes, coloring);
+         return;
+      case HTOP_IO_READ_RATE_FIELD:
+         Process_outputRate(str, buffer, n, lp->io_rate_read_bps, coloring);
+         return;
+      case HTOP_IO_WRITE_RATE_FIELD:
+         Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring);
+         return;
+      case HTOP_IO_RATE_FIELD:
+         total_rate = (lp->io_rate_read_bps != -1) ? lp->io_rate_read_bps + lp->io_rate_write_bps : -1;
+         Process_outputRate(str, buffer, n, total_rate, coloring);
+         return;
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID:
-      xSnprintf(buffer, n, "%7u ", lp->ctid);
-      break;
-   case VPID:
-      xSnprintf(buffer, n, Process_pidFormat, lp->vpid);
-      break;
+      case HTOP_CTID_FIELD:
+         xSnprintf(buffer, n, "%7u ", lp->ctid);
+         break;
+      case HTOP_VPID_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, lp->vpid);
+         break;
    #endif
    #ifdef HAVE_VSERVER
-   case VXID:
-      xSnprintf(buffer, n, "%5u ", lp->vxid);
-      break;
+      case HTOP_VXID_FIELD:
+         xSnprintf(buffer, n, "%5u ", lp->vxid);
+         break;
    #endif
    #ifdef HAVE_CGROUP
-   case CGROUP:
-      xSnprintf(buffer, n, "%-10s ", lp->cgroup);
-      break;
+      case HTOP_CGROUP_FIELD:
+         xSnprintf(buffer, n, "%-10s ", lp->cgroup);
+         break;
    #endif
-   case OOM:
-      xSnprintf(buffer, n, Process_pidFormat, lp->oom);
-      break;
-   case IO_PRIORITY:
-      switch(IOPriority_class(lp->ioPriority)) {
-         case IOPRIO_CLASS_NONE:
-            // see note [1] above
-            xSnprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
-            break;
-         case IOPRIO_CLASS_BE:
-            xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
-            break;
-         case IOPRIO_CLASS_RT:
-            attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
-            xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
-            break;
-         case IOPRIO_CLASS_IDLE:
-            attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
-            xSnprintf(buffer, n, "id ");
-            break;
-         default:
-            xSnprintf(buffer, n, "?? ");
-            break;
-      }
-      break;
+      case HTOP_OOM_FIELD:
+         xSnprintf(buffer, n, Process_pidFormat, lp->oom);
+         break;
+      case HTOP_IO_PRIORITY_FIELD:
+         switch(IOPriority_class(lp->ioPriority)) {
+            case IOPRIO_CLASS_NONE:
+               // see note [1] above
+               xSnprintf(buffer, n, "B%1d ", (int) (this->nice + 20) / 5);
+               break;
+            case IOPRIO_CLASS_BE:
+               xSnprintf(buffer, n, "B%1d ", IOPriority_data(lp->ioPriority));
+               break;
+            case IOPRIO_CLASS_RT:
+               attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
+               xSnprintf(buffer, n, "R%1d ", IOPriority_data(lp->ioPriority));
+               break;
+            case IOPRIO_CLASS_IDLE:
+               attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
+               xSnprintf(buffer, n, "id ");
+               break;
+            default:
+               xSnprintf(buffer, n, "?? ");
+               break;
+         }
+         break;
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY:
-      LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n);
-      break;
-   case PERCENT_IO_DELAY:
-      LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n);
-      break;
-   case PERCENT_SWAP_DELAY:
-      LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n);
-      break;
+      case HTOP_PERCENT_CPU_DELAY_FIELD:
+         LinuxProcess_printDelay(lp->cpu_delay_percent, buffer, n);
+         break;
+      case HTOP_PERCENT_IO_DELAY_FIELD:
+         LinuxProcess_printDelay(lp->blkio_delay_percent, buffer, n);
+         break;
+      case HTOP_PERCENT_SWAP_DELAY_FIELD:
+         LinuxProcess_printDelay(lp->swapin_delay_percent, buffer, n);
+         break;
    #endif
-   default:
-      Process_writeField(this, str, field);
-      return;
+      default:
+         Process_writeField(this, str, field);
+         return;
    }
    RichString_append(str, attr, buffer);
 }
@@ -479,94 +479,94 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       p1 = v2;
    }
    switch ((int)settings->sortKey) {
-      long long int diff;
-   case M_DRS:
-      return (p2->m_drs - p1->m_drs);
-   case M_DT:
-      return (p2->m_dt - p1->m_dt);
-   case M_LRS:
-      return (p2->m_lrs - p1->m_lrs);
-   case M_TRS:
-      return (p2->m_trs - p1->m_trs);
-   case M_SHARE:
-      return (p2->m_share - p1->m_share);
-   case UTIME:
-      diff = p2->utime - p1->utime;
-      goto test_diff;
-   case CUTIME:
-      diff = p2->cutime - p1->cutime;
-      goto test_diff;
-   case STIME:
-      diff = p2->stime - p1->stime;
-      goto test_diff;
-   case CSTIME:
-      diff = p2->cstime - p1->cstime;
-      goto test_diff;
-   case STARTTIME:
-      return p1->starttime == p2->starttime ?
-         p1->super.pid - p2->super.pid : (long long int)p1->starttime - (long long int)p2->starttime;
+         long long int diff;
+      case HTOP_M_DRS_FIELD:
+         return (p2->m_drs - p1->m_drs);
+      case HTOP_M_DT_FIELD:
+         return (p2->m_dt - p1->m_dt);
+      case HTOP_M_LRS_FIELD:
+         return (p2->m_lrs - p1->m_lrs);
+      case HTOP_M_TRS_FIELD:
+         return (p2->m_trs - p1->m_trs);
+      case HTOP_M_SHARE_FIELD:
+         return (p2->m_share - p1->m_share);
+      case HTOP_UTIME_FIELD:
+         diff = p2->utime - p1->utime;
+         goto test_diff;
+      case HTOP_CUTIME_FIELD:
+         diff = p2->cutime - p1->cutime;
+         goto test_diff;
+      case HTOP_STIME_FIELD:
+         diff = p2->stime - p1->stime;
+         goto test_diff;
+      case HTOP_CSTIME_FIELD:
+         diff = p2->cstime - p1->cstime;
+         goto test_diff;
+      case HTOP_STARTTIME_FIELD:
+         return p1->starttime == p2->starttime ?
+            p1->super.pid - p2->super.pid : (long long int)p1->starttime - (long long int)p2->starttime;
    #ifdef HAVE_TASKSTATS
-   case RCHAR:
-      diff = p2->io_rchar - p1->io_rchar;
-      goto test_diff;
-   case WCHAR:
-      diff = p2->io_wchar - p1->io_wchar;
-      goto test_diff;
-   case SYSCR:
-      diff = p2->io_syscr - p1->io_syscr;
-      goto test_diff;
-   case SYSCW:
-      diff = p2->io_syscw - p1->io_syscw;
-      goto test_diff;
-   case RBYTES:
-      diff = p2->io_read_bytes - p1->io_read_bytes;
-      goto test_diff;
-   case WBYTES:
-      diff = p2->io_write_bytes - p1->io_write_bytes;
-      goto test_diff;
-   case CNCLWB:
-      diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes;
-      goto test_diff;
-   case IO_READ_RATE:
-      diff = p2->io_rate_read_bps - p1->io_rate_read_bps;
-      goto test_diff;
-   case IO_WRITE_RATE:
-      diff = p2->io_rate_write_bps - p1->io_rate_write_bps;
-      goto test_diff;
-   case IO_RATE:
-      diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps);
-      goto test_diff;
+      case HTOP_RCHAR_FIELD:
+         diff = p2->io_rchar - p1->io_rchar;
+         goto test_diff;
+      case HTOP_WCHAR_FIELD:
+         diff = p2->io_wchar - p1->io_wchar;
+         goto test_diff;
+      case HTOP_SYSCR_FIELD:
+         diff = p2->io_syscr - p1->io_syscr;
+         goto test_diff;
+      case HTOP_SYSCW_FIELD:
+         diff = p2->io_syscw - p1->io_syscw;
+         goto test_diff;
+      case HTOP_RBYTES_FIELD:
+         diff = p2->io_read_bytes - p1->io_read_bytes;
+         goto test_diff;
+      case HTOP_WBYTES_FIELD:
+         diff = p2->io_write_bytes - p1->io_write_bytes;
+         goto test_diff;
+      case HTOP_CNCLWB_FIELD:
+         diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes;
+         goto test_diff;
+      case HTOP_IO_READ_RATE_FIELD:
+         diff = p2->io_rate_read_bps - p1->io_rate_read_bps;
+         goto test_diff;
+      case HTOP_IO_WRITE_RATE_FIELD:
+         diff = p2->io_rate_write_bps - p1->io_rate_write_bps;
+         goto test_diff;
+      case HTOP_IO_RATE_FIELD:
+         diff = (p2->io_rate_read_bps + p2->io_rate_write_bps) - (p1->io_rate_read_bps + p1->io_rate_write_bps);
+         goto test_diff;
    #endif
    #ifdef HAVE_OPENVZ
-   case CTID:
+         case HTOP_CTID_FIELD:
       return (p2->ctid - p1->ctid);
-   case VPID:
-      return (p2->vpid - p1->vpid);
+      case HTOP_VPID_FIELD:
+         return (p2->vpid - p1->vpid);
    #endif
    #ifdef HAVE_VSERVER
-   case VXID:
-      return (p2->vxid - p1->vxid);
+      case HTOP_VXID_FIELD:
+         return (p2->vxid - p1->vxid);
    #endif
    #ifdef HAVE_CGROUP
-   case CGROUP:
-      return settings->sort_strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
+      case HTOP_CGROUP_FIELD:
+         return settings->sort_strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
-   case OOM:
+         case HTOP_OOM_FIELD:
       return (p2->oom - p1->oom);
    #ifdef HAVE_DELAYACCT
-   case PERCENT_CPU_DELAY:
-      return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);
-   case PERCENT_IO_DELAY:
-      return (p2->blkio_delay_percent > p1->blkio_delay_percent ? 1 : -1);
-   case PERCENT_SWAP_DELAY:
-      return (p2->swapin_delay_percent > p1->swapin_delay_percent ? 1 : -1);
+      case HTOP_PERCENT_CPU_DELAY_FIELD:
+         return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);
+      case HTOP_PERCENT_IO_DELAY_FIELD:
+         return (p2->blkio_delay_percent > p1->blkio_delay_percent ? 1 : -1);
+      case HTOP_PERCENT_SWAP_DELAY_FIELD:
+         return (p2->swapin_delay_percent > p1->swapin_delay_percent ? 1 : -1);
    #endif
-   case IO_PRIORITY:
-      return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
-   default:
-      return Process_compare(v1, v2);
-   test_diff:
-      return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
+      case HTOP_IO_PRIORITY_FIELD:
+         return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
+      default:
+         return Process_compare(v1, v2);
+      test_diff:
+         return (diff > 0) ? 1 : (diff < 0 ? -1 : 0);
    }
 }
 
