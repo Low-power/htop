@@ -134,10 +134,12 @@ extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+typedef bool (*ProcessSendSignalFunction)(const Process *, int);
 
 typedef struct ProcessClass_ {
-   const ObjectClass super;
-   const Process_WriteField writeField;
+   ObjectClass super;
+   Process_WriteField writeField;
+   ProcessSendSignalFunction sendSignal;
 } ProcessClass;
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
@@ -189,7 +191,7 @@ bool Process_setPriority(Process* this, int priority);
 
 bool Process_changePriorityBy(Process* this, int delta);
 
-void Process_sendSignal(Process* this, int sgn);
+bool Process_sendSignal(const Process *this, int sgn);
 
 long Process_pidCompare(const void* v1, const void* v2);
 

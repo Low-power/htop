@@ -43,6 +43,8 @@ void AixProcess_writeField(Process *super, RichString* str, ProcessField field);
 
 long AixProcess_compare(const void* v1, const void* v2);
 
+bool AixProcess_sendSignal(const Process *this, int sig);
+
 bool Process_isKernelProcess(const Process *this);
 
 bool Process_isExtraThreadProcess(const Process *this);

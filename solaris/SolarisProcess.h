@@ -74,6 +74,8 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
 
 long SolarisProcess_compare(const void* v1, const void* v2);
 
+bool SolarisProcess_sendSignal(const Process *this, int sig);
+
 bool Process_isKernelProcess(const Process *this);
 
 bool Process_isExtraThreadProcess(const Process* this);

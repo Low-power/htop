@@ -156,10 +156,12 @@ extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+typedef bool (*ProcessSendSignalFunction)(const Process *, int);
 
 typedef struct ProcessClass_ {
-   const ObjectClass super;
-   const Process_WriteField writeField;
+   ObjectClass super;
+   Process_WriteField writeField;
+   ProcessSendSignalFunction sendSignal;
 } ProcessClass;
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
@@ -613,13 +615,27 @@ void Process_done(Process* this) {
    free(this->comm);
 }
 
+static bool base_Process_sendSignal(const Process *this, int sig) {
+	return kill(this->pid, sig) == 0;
+}
+
+static void Process_inherit(ObjectClass *super_class) {
+	if(!super_class->display) super_class->display = Process_display;
+	if(!super_class->compare) super_class->compare = Process_compare;
+	ProcessClass *class = (ProcessClass *)super_class;
+	if(!class->writeField) class->writeField = Process_writeField;
+	if(!class->sendSignal) class->sendSignal = base_Process_sendSignal;
+}
+
 ProcessClass Process_class = {
    .super = {
       .extends = Class(Object),
+      .inherit = Process_inherit,
       .display = Process_display,
       .compare = Process_compare
    },
    .writeField = Process_writeField,
+   .sendSignal = base_Process_sendSignal
 };
 
 void Process_init(Process* this, struct Settings_* settings) {
@@ -652,10 +668,11 @@ bool Process_changePriorityBy(Process* this, int delta) {
    return Process_setPriority(this, this->nice + delta);
 }
 
-void Process_sendSignal(Process* this, int sgn) {
+bool Process_sendSignal(const Process *this, int sgn) {
    CRT_dropPrivileges();
-   kill(this->pid, sgn);
+   int r = As_Process(this)->sendSignal(this, sgn);
    CRT_restorePrivileges();
+   return r;
 }
 
 long Process_pidCompare(const void* v1, const void* v2) {

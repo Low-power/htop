@@ -11,15 +11,24 @@ in the source distribution for its full text.
 
 #include "RichString.h"
 #include "XAlloc.h"
+#include <stdbool.h>
 
-typedef struct Object_ Object;
+typedef struct htop_object_class ObjectClass;
+typedef struct htop_object Object;
 
+typedef void (*ObjectInheritFunction)(ObjectClass *);
 typedef void(*Object_Display)(Object*, RichString*);
 typedef long(*Object_Compare)(const void*, const void*);
 typedef void(*Object_Delete)(Object*);
 
 #define Object_getClass(obj_)         ((Object*)(obj_))->klass
-#define Object_setClass(obj_, class_) Object_getClass(obj_) = (ObjectClass*) class_
+#define Object_setClass(obj_, class_) do { \
+      ObjectClass *c = (ObjectClass *)(class_); \
+      ((Object *)(obj_))->klass = c; \
+      if(c->extends && ((ObjectClass *)c->extends)->inherit) { \
+         ((ObjectClass *)c->extends)->inherit(c); \
+      } \
+   } while(false)
 
 #define Object_delete(obj_)           Object_getClass(obj_)->delete((Object*)(obj_))
 #define Object_displayFn(obj_)        Object_getClass(obj_)->display
@@ -30,14 +39,15 @@ typedef void(*Object_Delete)(Object*);
 
 #define AllocThis(class_) (class_*) xMalloc(sizeof(class_)); Object_setClass(this, Class(class_));
  
-typedef struct ObjectClass_ {
-   const void* extends;
-   const Object_Display display;
-   const Object_Delete delete;
-   const Object_Compare compare;
-} ObjectClass;
+struct htop_object_class {
+   void *extends;
+   ObjectInheritFunction inherit;
+   Object_Display display;
+   Object_Delete delete;
+   Object_Compare compare;
+};
 
-struct Object_ {
+struct htop_object {
    ObjectClass* klass;
 };
 

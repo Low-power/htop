@@ -49,10 +49,6 @@ in the source distribution for its full text.
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
 
-#ifdef HAVE_LIBPROC
-#define  kill(pid, signal) kill(pid / 1024, signal)
-#endif
-
 extern ProcessFieldData Process_fields[];
 }*/
 

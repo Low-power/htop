@@ -9,7 +9,15 @@ in the source distribution for its full text.
 #include "Process.h"
 #include "AixProcess.h"
 #include "CRT.h"
+#include "XAlloc.h"
+#include <sys/types.h>
+#include <sys/procfs.h>
+#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /*{
 #include "Settings.h"
@@ -40,6 +48,7 @@ ProcessClass AixProcess_class = {
       .compare = AixProcess_compare
    },
    .writeField = AixProcess_writeField,
+   .sendSignal = AixProcess_sendSignal
 };
 
 ProcessFieldData Process_fields[] = {
@@ -224,6 +233,21 @@ long AixProcess_compare(const void* v1, const void* v2) {
       default:
          return Process_compare(v1, v2);
    }
+}
+
+bool AixProcess_sendSignal(const Process *this, int sig) {
+	if(kill(this->pid, sig) < 0) {
+		if(errno != EINVAL) return false;
+		char path[22];
+		xSnprintf(path, sizeof path, "/proc/%d/ctl", (int)this->pid);
+		int fd = open(path, O_WRONLY);
+		if(fd == -1) return false;
+		int msg[] = { PCKILL, sig };
+		bool r = write(fd, msg, sizeof msg) == sizeof msg;
+		close(fd);
+		return r;
+	}
+	return true;
 }
 
 bool Process_isKernelProcess(const Process *this) {

@@ -11,9 +11,16 @@ in the source distribution for its full text.
 #include "SolarisProcess.h"
 #include "Platform.h"
 #include "CRT.h"
-
-#include <stdlib.h>
+#include "XAlloc.h"
+#include <sys/types.h>
+#include <signal.h>
+#include <procfs.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /*{
 #include "config.h"
@@ -75,6 +82,7 @@ ProcessClass SolarisProcess_class = {
       .compare = SolarisProcess_compare
    },
    .writeField = SolarisProcess_writeField,
+   .sendSignal = SolarisProcess_sendSignal
 };
 
 ProcessFieldData Process_fields[] = {
@@ -259,6 +267,26 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
       default:
          return Process_compare(v1, v2);
    }
+}
+
+bool SolarisProcess_sendSignal(const Process *this, int sig) {
+#ifdef HAVE_LIBPROC
+	pid_t pid = this->pid / 1024;
+#else
+	pid_t pid = this->pid;
+#endif
+	if(kill(pid, sig) < 0) {
+		if(errno != EPERM) return false;
+		char path[22];
+		xSnprintf(path, sizeof path, "/proc/%d/ctl", (int)pid);
+		int fd = open(path, O_WRONLY);
+		if(fd == -1) return false;
+		long int msg[] = { PCKILL, sig };
+		bool r = write(fd, msg, sizeof msg) == sizeof msg;
+		close(fd);
+		return r;
+	}
+	return true;
 }
 
 bool Process_isKernelProcess(const Process *this) {
