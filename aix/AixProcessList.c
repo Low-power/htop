@@ -250,7 +250,7 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 		ap->cid = pe->pi_cid;
 
 		proc->m_resident = pe->pi_drss + pe->pi_trss;
-		proc->m_size = pe->pi_ru.ru_maxrss;//pe->pi_drss + pe->pi_trss;
+		proc->m_size = pe->pi_size + pe->pi_dvm;
 		proc->percent_mem =
 			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kib) * 100;
 
