@@ -87,7 +87,7 @@ typedef struct Process_ {
 
    unsigned int pgrp;
    unsigned int session;
-   unsigned int tty_nr;
+   dev_t tty_nr;
    int tpgid;
    uid_t ruid;
    uid_t euid;
@@ -152,6 +152,14 @@ typedef struct ProcessClass_ {
 
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
+
+#ifndef NODEV
+#ifdef __INTERIX
+#define NODEV ((dev_t)0)
+#else
+#define NODEV ((dev_t)-1)
+#endif
+#endif
 
 extern char Process_pidFormat[20];
 

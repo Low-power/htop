@@ -12,21 +12,20 @@ in the source distribution for its full text.
 #include "StringUtils.h"
 #include "RichString.h"
 #include "Platform.h"
-
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 #include <sys/param.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/resource.h>
+#include <sys/time.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
 #include <pwd.h>
 #include <time.h>
-#include <assert.h>
+#include <stdio.h>
 #include <math.h>
+#include <assert.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
 #elif defined(MAJOR_IN_SYSMACROS) || \
@@ -110,7 +109,7 @@ typedef struct Process_ {
 
    unsigned int pgrp;
    unsigned int session;
-   unsigned int tty_nr;
+   dev_t tty_nr;
    int tpgid;
    uid_t ruid;
    uid_t euid;
@@ -176,6 +175,14 @@ typedef struct ProcessClass_ {
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
 }*/
+
+#ifndef NODEV
+#ifdef __INTERIX
+#define NODEV ((dev_t)0)
+#else
+#define NODEV ((dev_t)-1)
+#endif
+#endif
 
 static int Process_getuid = -1;
 
@@ -558,7 +565,12 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
       xSnprintf(buffer, n, Process_pidFormat, (int)this->tpgid);
       break;
    case TTY_NR:
-      xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
+      if(this->tty_nr == NODEV) {
+         xSnprintf(buffer, n, "      ? ");
+         attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+      } else {
+         xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
+      }
       break;
    case REAL_USER:
       if (Process_getuid != (int)this->ruid) attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
