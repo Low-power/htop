@@ -359,7 +359,7 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    if(*location != ' ' || !*++location) return false;
    process->session = strtoul(location, &location, 10);
    if(*location != ' ' || !*++location) return false;
-   process->tty_nr = strtoul(location, &location, 10);
+   process->tty_nr = strtol(location, &location, 10);
    if(*location != ' ' || !*++location) return false;
    process->tpgid = strtol(location, &location, 10);
    if(*location != ' ' || !*++location) return false;
@@ -782,7 +782,7 @@ static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirna
    return true;
 }
 
-static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, unsigned int tty_nr) {
+static char* LinuxProcessList_updateTtyDevice(TtyDriver* ttyDrivers, dev_t tty_nr) {
    unsigned int maj = major(tty_nr);
    unsigned int min = minor(tty_nr);
    int i = -1;
@@ -876,9 +876,10 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       char command[MAX_NAME+1];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
       int commLen = 0;
-      unsigned int tty_nr = proc->tty_nr;
-      if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen))
+      dev_t tty_nr = proc->tty_nr;
+      if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen)) {
          goto errorReadingProcess;
+      }
       free(proc->name);
       proc->name = xStrdup(command);
       if(!this->support_kthread_flag && !lp->is_kernel_process) check_legacy_kernel_process(lp);

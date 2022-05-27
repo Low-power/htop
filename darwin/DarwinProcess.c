@@ -248,7 +248,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
    proc->tpgid = ps->kp_eproc.e_tpgid;
    /* e_tdev = (major << 24) | (minor & 0xffffff) */
    /* e_tdev == -1 for "no device" */
-   proc->tty_nr = ps->kp_eproc.e_tdev & 0xff; /* TODO tty_nr is unsigned */
+   proc->tty_nr = ps->kp_eproc.e_tdev;
    proc->ruid = ps->kp_eproc.e_pcred.p_ruid;
    proc->euid = ps->kp_eproc.e_ucred.cr_uid;
    proc->nice = ep->p_nice;
