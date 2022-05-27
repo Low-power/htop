@@ -7,17 +7,19 @@ in the source distribution for its full text.
 
 #include "Process.h"
 #include "DarwinProcess.h"
+#include "bsd/BSDProcess.h"
 #include "CRT.h"
+#include <sys/sysctl.h>
 #include <stdlib.h>
 #include <libproc.h>
 #include <string.h>
 #include <mach/mach.h>
 
 /*{
-#include "Settings.h"
 #include "DarwinProcessList.h"
-
-#include <sys/sysctl.h>
+#include "Settings.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct DarwinProcess_ {
    Process super;
@@ -26,7 +28,6 @@ typedef struct DarwinProcess_ {
    uint64_t stime;
    bool taskAccess;
 } DarwinProcess;
-
 }*/
 
 ProcessClass DarwinProcess_class = {
@@ -36,7 +37,7 @@ ProcessClass DarwinProcess_class = {
       .delete = Process_delete,
       .compare = Process_compare
    },
-   .writeField = Process_writeField,
+   .writeField = BSDProcess_writeField,
 };
 
 DarwinProcess* DarwinProcess_new(Settings* settings) {

@@ -9,6 +9,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Settings.h"
+#include <stdbool.h>
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -18,7 +20,6 @@ typedef enum {
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
-
 typedef struct FreeBSDProcess_ {
    Process super;
    bool kernel;
@@ -26,8 +27,6 @@ typedef struct FreeBSDProcess_ {
    char* jname;
    char *emulation;
 } FreeBSDProcess;
-
-
 
 extern ProcessClass FreeBSDProcess_class;
 

@@ -10,6 +10,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Settings.h"
+#include <stdbool.h>
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -18,15 +20,12 @@ typedef enum {
    HTOP_LAST_PROCESSFIELD = 102,
 } DragonFlyBSDProcessField;
 
-
 typedef struct DragonFlyBSDProcess_ {
    Process super;
    bool kernel;
    int   jid;
    char* jname;
 } DragonFlyBSDProcess;
-
-
 
 extern ProcessClass DragonFlyBSDProcess_class;
 

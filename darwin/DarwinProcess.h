@@ -9,10 +9,10 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Settings.h"
 #include "DarwinProcessList.h"
-
-#include <sys/sysctl.h>
+#include "Settings.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct DarwinProcess_ {
    Process super;
@@ -21,7 +21,6 @@ typedef struct DarwinProcess_ {
    uint64_t stime;
    bool taskAccess;
 } DarwinProcess;
-
 
 extern ProcessClass DarwinProcess_class;
 

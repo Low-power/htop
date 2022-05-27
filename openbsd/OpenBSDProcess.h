@@ -10,6 +10,8 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "Settings.h"
+#include <stdbool.h>
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -21,7 +23,6 @@ typedef struct OpenBSDProcess_ {
    bool is_kernel_process;
    bool is_main_thread;
 } OpenBSDProcess;
-
 
 extern ProcessClass OpenBSDProcess_class;
 

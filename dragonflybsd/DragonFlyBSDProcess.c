@@ -7,15 +7,17 @@ in the source distribution for its full text.
 */
 
 #include "Process.h"
-#include "ProcessList.h"
 #include "DragonFlyBSDProcess.h"
+#include "bsd/BSDProcess.h"
+#include "ProcessList.h"
 #include "Platform.h"
 #include "CRT.h"
-
 #include <stdlib.h>
 #include <string.h>
 
 /*{
+#include "Settings.h"
+#include <stdbool.h>
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -24,15 +26,12 @@ typedef enum {
    HTOP_LAST_PROCESSFIELD = 102,
 } DragonFlyBSDProcessField;
 
-
 typedef struct DragonFlyBSDProcess_ {
    Process super;
    bool kernel;
    int   jid;
    char* jname;
 } DragonFlyBSDProcess;
-
-
 }*/
 
 ProcessClass DragonFlyBSDProcess_class = {
@@ -54,7 +53,7 @@ ProcessFieldData Process_fields[] = {
    [HTOP_PPID_FIELD] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [HTOP_PGRP_FIELD] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [HTOP_SESSION_FIELD] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
-   [HTOP_TTY_FIELD] = { .name = "TTY", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
+   [HTOP_TTY_FIELD] = { .name = "TTY", .title = "TTY     ", .description = "Controlling terminal", .flags = 0, },
    [HTOP_TPGID_FIELD] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [HTOP_MINFLT_FIELD] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
    [HTOP_MAJFLT_FIELD] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
@@ -124,7 +123,7 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
          }
          break;
       default:
-         Process_writeField(this, str, field);
+         BSDProcess_writeField(this, str, field);
          return;
    }
    RichString_append(str, attr, buffer);

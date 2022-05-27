@@ -65,6 +65,7 @@ endif
 
 freebsd_platform_headers = \
 	bsd/Platform.h \
+	bsd/BSDProcess.h \
 	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
@@ -75,6 +76,7 @@ all_platform_headers += $(freebsd_platform_headers)
 if HTOP_FREEBSD
 myhtopplatsources = \
 	bsd/Platform.c \
+	bsd/BSDProcess.c \
 	freebsd/Platform.c \
 	freebsd/FreeBSDProcessList.c \
 	freebsd/FreeBSDProcess.c \
@@ -88,6 +90,7 @@ endif
 
 dragonflybsd_platform_headers = \
 	bsd/Platform.h \
+	bsd/BSDProcess.h \
 	dragonflybsd/Platform.h \
 	dragonflybsd/DragonFlyBSDProcessList.h \
 	dragonflybsd/DragonFlyBSDProcess.h \
@@ -99,6 +102,7 @@ if HTOP_DRAGONFLYBSD
 AM_LDFLAGS += -lkvm -lkinfo
 myhtopplatsources = \
 	bsd/Platform.c \
+	bsd/BSDProcess.c \
 	dragonflybsd/Platform.c \
 	dragonflybsd/DragonFlyBSDProcessList.c \
 	dragonflybsd/DragonFlyBSDProcess.c \
@@ -112,6 +116,7 @@ endif
 
 openbsd_platform_headers = \
 	bsd/Platform.h \
+	bsd/BSDProcess.h \
 	openbsd/Platform.h \
 	openbsd/OpenBSDProcessList.h \
 	openbsd/OpenBSDProcess.h \
@@ -122,6 +127,7 @@ all_platform_headers += $(openbsd_platform_headers)
 if HTOP_OPENBSD
 myhtopplatsources = \
 	bsd/Platform.c \
+	bsd/BSDProcess.c \
 	openbsd/Platform.c \
 	openbsd/OpenBSDProcessList.c \
 	openbsd/OpenBSDProcess.c \
@@ -135,6 +141,7 @@ endif
 
 darwin_platform_headers = \
 	bsd/Platform.h \
+	bsd/BSDProcess.h \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
@@ -146,6 +153,7 @@ if HTOP_DARWIN
 AM_LDFLAGS += -framework IOKit -framework CoreFoundation
 myhtopplatsources = \
 	bsd/Platform.c \
+	bsd/BSDProcess.c \
 	darwin/Platform.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \

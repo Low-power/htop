@@ -8,14 +8,16 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "Process.h"
-#include "ProcessList.h"
 #include "OpenBSDProcess.h"
+#include "bsd/BSDProcess.h"
+#include "ProcessList.h"
 #include "Platform.h"
 #include "CRT.h"
-
 #include <stdlib.h>
 
 /*{
+#include "Settings.h"
+#include <stdbool.h>
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -27,7 +29,6 @@ typedef struct OpenBSDProcess_ {
    bool is_kernel_process;
    bool is_main_thread;
 } OpenBSDProcess;
-
 }*/
 
 ProcessClass OpenBSDProcess_class = {
@@ -77,7 +78,7 @@ ProcessFieldData Process_fields[] = {
       .title = "   SESN ",
       .description = "Process's session ID",
       .flags = 0, },
-   [HTOP_TTY_FIELD] = { .name = "TTY", .title = "    TTY ", .description = "Controlling terminal", .flags = 0, },
+   [HTOP_TTY_FIELD] = { .name = "TTY", .title = "TTY     ", .description = "Controlling terminal", .flags = 0, },
    [HTOP_TPGID_FIELD] = {
       .name = "TPGID",
       .title = "  TPGID ",
@@ -189,7 +190,7 @@ void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField fiel
    switch (field) {
       // add OpenBSD-specific fields here
       default:
-         Process_writeField(this, str, field);
+         BSDProcess_writeField(this, str, field);
          return;
    }
    RichString_append(str, attr, buffer);
