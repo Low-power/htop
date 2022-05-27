@@ -1,3 +1,10 @@
+/*
+htop - darwin/Battery.c
+(C) 2015 David C. Hunt
+(C) 2015 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
 #include "BatteryMeter.h"
 
@@ -33,38 +40,33 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       for(int i = 0; i < len && battery == NULL; ++i) {
          CFDictionaryRef candidate = IOPSGetPowerSourceDescription(power_sources,
                                      CFArrayGetValueAtIndex(list, i)); /* GET rule */
-         CFStringRef type;
-
-         if(NULL != candidate) {
-            type = (CFStringRef) CFDictionaryGetValue(candidate,
-                   CFSTR(kIOPSTransportTypeKey)); /* GET rule */
-
-            if(kCFCompareEqualTo == CFStringCompare(type, CFSTR(kIOPSInternalType), 0)) {
+         if(candidate) {
+            CFStringRef type = (CFStringRef)CFDictionaryGetValue(candidate,
+               CFSTR(kIOPSTransportTypeKey)); /* GET rule */
+            if(type && CFStringCompare(type, CFSTR(kIOPSInternalType), 0) == kCFCompareEqualTo) {
                CFRetain(candidate);
                battery = candidate;
+               break;
             }
          }
       }
 
-      if(NULL != battery) {
+      if(battery) {
          /* Determine the AC state */
          CFStringRef power_state = CFDictionaryGetValue(battery, CFSTR(kIOPSPowerSourceStateKey));
+         if(power_state) {
+            *isOnAC = CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0) == kCFCompareEqualTo ?
+               AC_PRESENT : AC_ABSENT;
 
-         *isOnAC = (kCFCompareEqualTo == CFStringCompare(power_state, CFSTR(kIOPSACPowerValue), 0))
-                 ? AC_PRESENT
-                 : AC_ABSENT;
-
-         /* Get the percentage remaining */
-         double current;
-         double max;
-
-         CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSCurrentCapacityKey)),
+            /* Get the percentage remaining */
+            double current;
+            double max;
+            CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSCurrentCapacityKey)),
                  kCFNumberDoubleType, &current);
-         CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSMaxCapacityKey)),
+            CFNumberGetValue(CFDictionaryGetValue(battery, CFSTR(kIOPSMaxCapacityKey)),
                  kCFNumberDoubleType, &max);
-
-         *level = (current * 100.0) / max;
-
+            *level = (current * 100) / max;
+         }
          CFRelease(battery);
       }
 
@@ -72,4 +74,3 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
       CFRelease(power_sources);
    }
 }
-
