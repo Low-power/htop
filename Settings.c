@@ -175,13 +175,9 @@ static bool Settings_read(Settings* this, const char* fileName) {
    FILE *f = fopen(fileName, "r");
    CRT_restorePrivileges();
    if (!f) return false;
-   bool didReadMeters = false;
    bool didReadFields = false;
-   for (;;) {
-      char* line = String_readLine(f);
-      if (!line) {
-         break;
-      }
+   char *line;
+   while((line = String_readLine(f))) {
       int nOptions;
       char** option = String_split(line, '=', &nOptions);
       free (line);
@@ -255,23 +251,16 @@ static bool Settings_read(Settings* this, const char* fileName) {
          }
       } else if (String_eq(option[0], "left_meters")) {
          Settings_readMeters(this, option[1], 0);
-         didReadMeters = true;
       } else if (String_eq(option[0], "right_meters")) {
          Settings_readMeters(this, option[1], 1);
-         didReadMeters = true;
       } else if (String_eq(option[0], "left_meter_modes")) {
          Settings_readMeterModes(this, option[1], 0);
-         didReadMeters = true;
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
-         didReadMeters = true;
       }
       String_freeArray(option);
    }
    fclose(f);
-   if (!didReadMeters) {
-      Settings_defaultMeters(this);
-   }
    return didReadFields;
 }
 
