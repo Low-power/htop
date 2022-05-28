@@ -142,7 +142,13 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    this->settings = settings;
    this->header = header;
    this->pl = pl;
-   Panel_setHeader(super, "Setup");
+   if(settings->terminal_type) {
+      char title[17];
+      snprintf(title, sizeof title, "Setup (%s)", settings->terminal_type);
+      Panel_setHeader(super, title);
+   } else {
+      Panel_setHeader(super, "Setup");
+   }
    Panel_add(super, (Object *)ListItem_new("Meters", 0, settings));
    Panel_add(super, (Object *)ListItem_new("Display options", 0, settings));
    Panel_add(super, (Object *)ListItem_new("Colors", 0, settings));

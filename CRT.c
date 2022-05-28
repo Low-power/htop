@@ -993,6 +993,7 @@ void CRT_initColorSchemes() {
          if(*e->d_name == '.') continue;
          size_t len = strlen(e->d_name);
          if(len < 13) continue;
+         if(strncmp(e->d_name, "htoprc.", 7) == 0) continue;
          if(strcmp(e->d_name + (len - 12), ".colorscheme")) continue;
          char *path = String_cat(config_dir_path, e->d_name);
          struct stat st;

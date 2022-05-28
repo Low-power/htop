@@ -23,6 +23,8 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
+   const char *terminal_type;
+
    MeterColumnSettings columns[2];
 
    ProcessField* fields;

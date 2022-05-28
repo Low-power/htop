@@ -32,6 +32,8 @@ typedef struct {
 
 typedef struct Settings_ {
    char* filename;
+   const char *terminal_type;
+
    MeterColumnSettings columns[2];
 
    ProcessField* fields;
@@ -348,6 +350,34 @@ bool Settings_write(Settings* this) {
    return true;
 }
 
+static const char *get_terminal_type() {
+	const char *term = getenv("TERM");
+	if(!term || !*term) return NULL;
+	int i = 0;
+	do {
+		switch(term[i]) {
+			case 0x4:
+			case '\b':
+			case '	':
+			case '\n':
+			case '\r':
+			case 0x1b:
+			case ' ':
+			case '"':
+			case '#':
+			case '\'':
+			case '*':
+			case '/':
+			case ':':
+			case '\\':
+			case 0x7f:
+				return NULL;
+		}
+		if(++i > 31) return NULL;
+	} while(term[i]);
+	return term;
+}
+
 Settings* Settings_new(int cpuCount) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
@@ -385,13 +415,28 @@ Settings* Settings_new(int cpuCount) {
    this->use_mouse = true;
 
    char* legacyDotfile = NULL;
-   char* rcfile = getenv("HTOPRC");
-   if (rcfile) {
-      this->filename = xStrdup(rcfile);
+   char *global_file_path = NULL;
+   const char *override = getenv("HTOPRC");
+   if (override) {
+      this->filename = xStrdup(override);
    } else {
       const char *home;
       char* htopDir = CRT_getConfigDirPath(&home);
-      this->filename = String_cat(htopDir, "htoprc");
+      const char *term = get_terminal_type();
+      global_file_path = String_cat(htopDir, "htoprc");
+      if(term) {
+         size_t global_len = strlen(global_file_path);
+         size_t term_len = strlen(term);
+         this->filename = xMalloc(global_len + 1 + term_len + 1);
+         memcpy(this->filename, global_file_path, global_len);
+         this->filename[global_len] = '.';
+         memcpy(this->filename + global_len + 1, term, term_len);
+         this->filename[global_len + 1 + term_len] = 0;
+         this->terminal_type = this->filename + global_len + 1;
+      } else {
+         this->filename = global_file_path;
+         global_file_path = NULL;
+      }
       legacyDotfile = String_cat(home, "/.htoprc");
       free(htopDir);
       struct stat st;
@@ -410,14 +455,18 @@ Settings* Settings_new(int cpuCount) {
       ok = Settings_read(this, legacyDotfile);
       if (ok) {
          // Transition to new location and delete old configuration file
-         if (Settings_write(this))
-            unlink(legacyDotfile);
+         if (Settings_write(this)) unlink(legacyDotfile);
       }
       free(legacyDotfile);
    }
    if (!ok) {
       ok = Settings_read(this, this->filename);
    }
+   if(!ok && !override && global_file_path) {
+      // Try read 'htoprc' without terminal name suffix
+      ok = Settings_read(this, global_file_path);
+   }
+   free(global_file_path);
    if (!ok) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
