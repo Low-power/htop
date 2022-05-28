@@ -23,10 +23,10 @@ typedef bool(*InfoScreen_OnKey)(InfoScreen*, int);
 
 typedef struct InfoScreenClass_ {
    ObjectClass super;
-   const InfoScreen_Scan scan;
-   const InfoScreen_Draw draw;
-   const InfoScreen_OnErr onErr;
-   const InfoScreen_OnKey onKey;
+   InfoScreen_Scan scan;
+   InfoScreen_Draw draw;
+   InfoScreen_OnErr onErr;
+   InfoScreen_OnKey onKey;
 } InfoScreenClass;
 
 #define As_InfoScreen(this_)          ((InfoScreenClass*)(((InfoScreen*)(this_))->super.klass))

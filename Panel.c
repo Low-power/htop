@@ -36,10 +36,10 @@ typedef bool (*Panel_BoolFunction)(const Panel *);
 typedef void (*Panel_VoidFunction)(const Panel *);
 
 typedef struct PanelClass_ {
-   const ObjectClass super;
-   const Panel_EventHandler eventHandler;
-   const Panel_BoolFunction isInsertMode;
-   const Panel_VoidFunction placeCursor;
+   ObjectClass super;
+   Panel_EventHandler eventHandler;
+   Panel_BoolFunction isInsertMode;
+   Panel_VoidFunction placeCursor;
 } PanelClass;
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))

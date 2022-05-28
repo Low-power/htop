@@ -42,13 +42,13 @@ typedef void(*Meter_Draw)(Meter*, int, int, int);
 
 typedef struct MeterClass_ {
    ObjectClass super;
-   const Meter_Init init;
-   const Meter_Done done;
-   const Meter_UpdateMode updateMode;
-   const Meter_Draw draw;
-   const Meter_UpdateValues updateValues;
-   const int defaultMode;
-   const double total;
+   Meter_Init init;
+   Meter_Done done;
+   Meter_UpdateMode updateMode;
+   Meter_Draw draw;
+   Meter_UpdateValues updateValues;
+   int defaultMode;
+   double total;
    const int* attributes;
    const char* name;
    const char* uiName;
