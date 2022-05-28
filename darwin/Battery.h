@@ -6,6 +6,7 @@
 htop - darwin/Battery.h
 (C) 2015 David C. Hunt
 (C) 2015 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
