@@ -22,6 +22,9 @@ in the source distribution for its full text.
 #include <string.h>
 #include <math.h>
 #include <procinfo.h>
+#ifndef __PASE__
+#include <libperfstat.h>
+#endif
 
 /*{
 #define _LARGE_FILE_API
@@ -229,4 +232,12 @@ char **Platform_getProcessArgv(const Process *proc) {
 
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, getevars);
+}
+
+bool Platform_haveSwap() {
+#ifdef __PASE__
+	return false;
+#else
+	return perfstat_pagingspace(NULL, NULL, sizeof(perfstat_pagingspace_t), 0) > 0;
+#endif
 }

@@ -113,11 +113,8 @@ static void Settings_readMeterModes(Settings* this, char* line, int column) {
    this->columns[column].modes = modes;
 }
 
-static void Settings_defaultMeters(Settings* this) {
-   int sizes[] = { 3, 3 };
-   if (this->cpuCount > 4) {
-      sizes[1]++;
-   }
+static void Settings_defaultMeters(Settings* this, bool have_swap) {
+   int sizes[] = { have_swap ? 3 : 2, this->cpuCount > 4 ? 4 : 3 };
    for (int i = 0; i < 2; i++) {
       this->columns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
       this->columns[i].modes = xCalloc(sizes[i], sizeof(int));
@@ -140,8 +137,10 @@ static void Settings_defaultMeters(Settings* this) {
    }
    this->columns[0].names[1] = xStrdup("Memory");
    this->columns[0].modes[1] = BAR_METERMODE;
-   this->columns[0].names[2] = xStrdup("Swap");
-   this->columns[0].modes[2] = BAR_METERMODE;
+   if(have_swap) {
+      this->columns[0].names[2] = xStrdup("Swap");
+      this->columns[0].modes[2] = BAR_METERMODE;
+   }
    this->columns[1].names[r] = xStrdup("Tasks");
    this->columns[1].modes[r++] = TEXT_METERMODE;
    this->columns[1].names[r] = xStrdup("LoadAverage");
@@ -367,7 +366,7 @@ static const char *get_terminal_type() {
 	return term;
 }
 
-Settings* Settings_new(int cpuCount) {
+Settings* Settings_new(int cpuCount, bool have_swap) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = HTOP_PERCENT_CPU_FIELD;
@@ -464,7 +463,7 @@ Settings* Settings_new(int cpuCount) {
       free(systemSettings);
    }
    if (!ok) {
-      Settings_defaultMeters(this);
+      Settings_defaultMeters(this, have_swap);
       this->hide_kernel_processes = true;
       this->highlightMegabytes = true;
       this->highlightThreads = true;

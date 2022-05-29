@@ -272,3 +272,12 @@ char **Platform_getProcessArgv(const Process *proc) {
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, "environ");
 }
+
+bool Platform_haveSwap() {
+	FILE *f = fopen(PROCDIR "/swaps", "r");
+	if(!f) return true;	// XXX
+	char buffer[256];
+	bool r = fgets(buffer, sizeof buffer, f) && fgets(buffer, sizeof buffer, f);
+	fclose(f);
+	return r;
+}

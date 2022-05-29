@@ -18,12 +18,12 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "DragonFlyBSDProcess.h"
 #include "DragonFlyBSDProcessList.h"
-
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/proc.h>
+#include <sys/blist.h>
 #include <vm/vm_param.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -235,4 +235,15 @@ char **Platform_getProcessArgv(const Process *proc) {
 
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, kvm_getenvv);
+}
+
+bool Platform_haveSwap() {
+#if defined SWBLK_BITS && SWBLK_BITS == 64
+	long int swap_size;
+#else
+	int swap_size;
+#endif
+	size_t len = sizeof swap_size;
+	if(sysctlbyname("vm.swap_size", &swap_size, &len, NULL, 0) < 0) return false;
+	return swap_size > 0;
 }

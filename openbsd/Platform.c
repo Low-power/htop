@@ -280,3 +280,7 @@ char **Platform_getProcessArgv(const Process *proc) {
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, kvm_getenvv);
 }
+
+bool Platform_haveSwap() {
+	return swapctl(SWAP_NSWAP, NULL, 0) > 0;
+}

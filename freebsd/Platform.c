@@ -303,3 +303,10 @@ char **Platform_getProcessEnvv(const Process *proc) {
 	return NULL;
 #endif
 }
+
+bool Platform_haveSwap() {
+	int nswapdev;
+	size_t len = sizeof nswapdev;
+	if(sysctlbyname("vm.nswapdev", &nswapdev, &len, NULL, 0) < 0) return false;
+	return nswapdev > 0;
+}

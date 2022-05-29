@@ -71,7 +71,7 @@ void Settings_delete(Settings* this);
 
 bool Settings_write(Settings* this);
 
-Settings* Settings_new(int cpuCount);
+Settings* Settings_new(int cpuCount, bool have_swap);
 
 void Settings_invertSortOrder(Settings* this);
 

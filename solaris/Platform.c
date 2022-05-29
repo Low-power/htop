@@ -24,6 +24,8 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/loadavg.h>
+#include <sys/stat.h>
+#include <sys/swap.h>
 #include <string.h>
 #include <limits.h>
 #include <math.h>
@@ -309,3 +311,7 @@ size_t strnlen(const char *s, size_t max_len) {
 	return len;
 }
 #endif
+
+bool Platform_haveSwap() {
+	return swapctl(SC_GETNSWP, NULL) > 0;
+}

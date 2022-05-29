@@ -135,3 +135,7 @@ char **Platform_getProcessArgv(const Process *proc) {
 char **Platform_getProcessEnvv(const Process *proc) {
 	return NULL;
 }
+
+bool Platform_haveSwap() {
+	return false;
+}

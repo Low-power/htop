@@ -11,6 +11,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifndef __PASE__
+#endif
+
 #define _LARGE_FILE_API
 
 #include "Action.h"
@@ -54,5 +57,7 @@ void Platform_setSwapValues(Meter *meter);
 char **Platform_getProcessArgv(const Process *proc);
 
 char **Platform_getProcessEnvv(const Process *proc);
+
+bool Platform_haveSwap();
 
 #endif

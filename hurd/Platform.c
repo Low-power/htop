@@ -21,12 +21,15 @@ in the source distribution for its full text.
 #include <sys/mman.h>
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
+#include <mach/default_pager.h>
 #include <hurd/process.h>
+#include <hurd/paths.h>
 #include <hurd.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <errno.h>
 
 /*{
@@ -203,4 +206,18 @@ char **Platform_getProcessArgv(const Process *proc) {
 
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, proc_getprocenv);
+}
+
+bool Platform_haveSwap() {
+#ifdef _SERVERS_DEFPAGER
+	mach_port_t defpager = file_name_lookup(_SERVERS_DEFPAGER, O_READ, 0);
+	if(defpager != MACH_PORT_NULL) {
+		struct default_pager_info info;
+		error_t e = default_pager_info(defpager, &info);
+		bool r = !e && info.dpi_total_space > 0;
+		mach_port_deallocate(mach_task_self(), defpager);
+		return r;
+	}
+#endif
+	return false;
 }

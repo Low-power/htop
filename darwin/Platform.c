@@ -292,3 +292,11 @@ char **Platform_getProcessArgv(const Process *proc) {
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, true);
 }
+
+bool Platform_haveSwap() {
+	int mib[] = { CTL_VM, VM_SWAPUSAGE };
+	struct xsw_usage swap_usage;
+	size_t len = sizeof swap_usage;
+	if(sysctl(mib, 2, &swap_usage, &len, NULL, 0) < 0) return false;
+	return swap_usage.xsu_total > 0;
+}

@@ -157,3 +157,7 @@ char **Platform_getProcessArgv(const Process *proc) {
 char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, "environ");
 }
+
+bool Platform_haveSwap() {
+	return false;
+}

@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
    Process_setupColumnWidths();
    UsersTable* ut = UsersTable_new();
    ProcessList* pl = ProcessList_new(ut, flags.pidWhiteList, flags.userId);
-   Settings* settings = Settings_new(pl->cpuCount);
+   Settings* settings = Settings_new(pl->cpuCount, Platform_haveSwap());
    pl->settings = settings;
 
    Header* header = Header_new(pl, settings, 2);

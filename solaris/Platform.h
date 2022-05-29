@@ -74,4 +74,6 @@ char **Platform_getProcessEnvv(const Process *proc);
 size_t strnlen(const char *s, size_t max_len);
 #endif
 
+bool Platform_haveSwap();
+
 #endif
