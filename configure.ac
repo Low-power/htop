@@ -551,7 +551,10 @@ AC_ARG_WITH(bug-reporting-url,
 	[
 		test "x$withval" = xyes && AC_MSG_ERROR([option --bug-reporting-url requires the URL to be specified])
 		AC_DEFINE(BUG_REPORTING_URL, "$withval", [Defines where should users report bugs])
-	], [AC_DEFINE(BUG_REPORTING_URL, "ssh://beijing.rivoreo.one:6666/", [Defines where should users report bugs])])
+	], [
+		AC_DEFINE(BUG_REPORTING_URL, "https://sourceforge.net/p/rivoreo/htop/tickets/",
+			[Defines where should users report bugs])
+	])
 
 
 # Bail out on errors.
