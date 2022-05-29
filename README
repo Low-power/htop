@@ -44,5 +44,7 @@ Changes from original version
 * Consistent process state names
 * Optional case-insensitive sorting
 * GNU/Hurd support
+* Kernel stack tracing of processes for Linux-based and kFreeBSD-based
+platforms
 
 See the commit log for more.
