@@ -19,6 +19,7 @@ in the source distribution for its full text.
 #include <mach/vm_cache_statistics.h>
 #include <mach/default_pager.h>
 #include <mach/gnumach.h>
+#include <hurd/paths.h>
 #include <hurd.h>
 #include <error.h>
 #include <unistd.h>
@@ -26,6 +27,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -84,10 +86,8 @@ static void scan_memory_info(ProcessList *this) {
 		struct default_pager_info info;
 		e = default_pager_info(defpager, &info);
 		if(!e) {
-			this->totalSwap = dpi_total_space.dpi_total_space / 1024;
-			this->usedSwap =
-				(dpi_total_space.dpi_total_space - dpi_total_space.dpi_free_space) /
-					1024;
+			this->totalSwap = info.dpi_total_space / 1024;
+			this->usedSwap = (info.dpi_total_space - info.dpi_free_space) / 1024;
 		}
 		mach_port_deallocate(mach_task_self(), defpager);
 	}
