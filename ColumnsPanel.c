@@ -133,7 +133,8 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    ProcessField* fields = this->settings->fields;
    while(*fields) {
       if (Process_fields[*fields].name) {
-         Panel_add(super, (Object *)ListItem_new(Process_fields[*fields].name, *fields, settings));
+         Panel_add(super,
+            (Object *)ListItem_new(Process_fields[*fields].name, HTOP_DEFAULT_COLOR, *fields, settings));
       }
       fields++;
    }

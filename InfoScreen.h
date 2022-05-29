@@ -40,7 +40,7 @@ typedef struct InfoScreenClass_ {
 
 struct InfoScreen_ {
    Object super;
-   Process* process;
+   const Process *process;
    Panel* display;
    FunctionBar* bar;
    IncSet* inc;
@@ -53,13 +53,13 @@ struct InfoScreen_ {
 #define ERR (-1)
 #endif
 
-InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, char* panelHeader);
+InfoScreen* InfoScreen_init(InfoScreen* this, const Process *process, FunctionBar* bar, int height, char* panelHeader);
 
 InfoScreen* InfoScreen_done(InfoScreen* this);
 
 void InfoScreen_drawTitled(InfoScreen* this, char* fmt, ...);
 
-void InfoScreen_addLine(InfoScreen* this, const char* line);
+void InfoScreen_addLine(InfoScreen* this, const char* line, unsigned int color_index);
 
 void InfoScreen_appendLine(InfoScreen* this, const char* line);
 

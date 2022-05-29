@@ -15,6 +15,7 @@ in the source distribution for its full text.
 typedef struct ListItem_ {
    Object super;
    char* value;
+   unsigned int color_index;
    int key;
    bool moving;
    const Settings *settings;
@@ -23,7 +24,7 @@ typedef struct ListItem_ {
 
 extern ObjectClass ListItem_class;
 
-ListItem* ListItem_new(const char* value, int key, const Settings *settings);
+ListItem* ListItem_new(const char* value, unsigned int color_index, int key, const Settings *settings);
 
 void ListItem_append(ListItem* this, const char* text);
 

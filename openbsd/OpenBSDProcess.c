@@ -223,3 +223,7 @@ bool Process_isExtraThreadProcess(const Process* this) {
 #endif
 	return this->pid != this->tgid;
 }
+
+char **Process_getKernelStackTrace(const Process *this) {
+	return NULL;
+}

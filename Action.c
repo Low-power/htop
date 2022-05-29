@@ -14,6 +14,7 @@ in the source distribution for its full text.
 #include "CRT.h"
 #include "ArgScreen.h"
 #include "EnvScreen.h"
+#include "KernelStackTraceScreen.h"
 #include "MainPanel.h"
 #include "OpenFilesScreen.h"
 #include "Process.h"
@@ -133,7 +134,7 @@ struct panel_context {
 static void addUserToVector(int key, void* userCast, void *gen_ctxt) {
    char *user = userCast;
    struct panel_context *ctxt = gen_ctxt;
-   Panel_add(ctxt->panel, (Object *)ListItem_new(user, key, ctxt->settings));
+   Panel_add(ctxt->panel, (Object *)ListItem_new(user, HTOP_DEFAULT_COLOR, key, ctxt->settings));
 }
 
 bool Action_setUserOnly(const char* userName, uid_t* userId) {
@@ -193,7 +194,7 @@ static Htop_Reaction sortBy(State* st) {
    ProcessField* fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
-      Panel_add(sortPanel, (Object *)ListItem_new(name, fields[i], st->settings));
+      Panel_add(sortPanel, (Object *)ListItem_new(name, HTOP_DEFAULT_COLOR, fields[i], st->settings));
       if (fields[i] == st->settings->sortKey)
          Panel_setSelected(sortPanel, i);
       free(name);
@@ -357,7 +358,7 @@ static Htop_Reaction actionFilterByUser(State* st) {
    Panel_setHeader(usersPanel, "Show processes of:");
    UsersTable_foreach(st->ut, addUserToVector, &ctxt);
    Vector_insertionSort(usersPanel->items);
-   ListItem* allUsers = ListItem_new("All users", -1, st->settings);
+   ListItem* allUsers = ListItem_new("All users", HTOP_DEFAULT_COLOR, -1, st->settings);
    Panel_insert(usersPanel, 0, (Object*) allUsers);
    ListItem* picked = (ListItem*) Action_pickFromVector(st, usersPanel, 20, false);
    if (picked) {
@@ -471,7 +472,7 @@ static const struct key_help_entry helpRight[] = {
    { "      o: ", "list open files with lsof(8)", KEY_VI_MODE_ONLY },
    { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
    { "         ", "strace(1)", KEY_VI_MODE_COMPATIBLE },
-   { " F2 C S: ", "setup", KEY_VI_MODE_COMPATIBLE },
+   { "   F2 C: ", "setup", KEY_VI_MODE_COMPATIBLE },
    { "   F1 h: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
    { "     F1: ", "show this help screen", KEY_VI_MODE_ONLY },
    { "  F10 q: ", "quit", KEY_VI_MODE_COMPATIBLE },
@@ -632,6 +633,17 @@ static Htop_Reaction actionShowEnvScreen(State* st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction show_kernel_stack_trace_screen(State *st) {
+	const Process *proc = (const Process *)Panel_getSelected(st->panel);
+	if(!proc) return HTOP_OK;
+	KernelStackTraceScreen *screen = KernelStackTraceScreen_new(proc);
+	InfoScreen_run((InfoScreen *)screen);
+	KernelStackTraceScreen_delete((Object *)screen);
+	clear();
+	CRT_enableDelay();
+	return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 
 void Action_setBindings(Htop_Action* keys) {
    keys[KEY_RESIZE] = actionResize;
@@ -673,7 +685,6 @@ void Action_setBindings(Htop_Action* keys) {
    keys['\177'] = actionCollapseIntoParent;
    keys['u'] = actionFilterByUser;
    keys['F'] = Action_follow;
-   keys['S'] = actionSetup;
    keys['C'] = actionSetup;
    keys[KEY_F(2)] = actionSetup;
    keys['o'] = actionLsof;
@@ -688,5 +699,5 @@ void Action_setBindings(Htop_Action* keys) {
    keys['c'] = actionTagAllChildren;
    keys['A'] = show_arg_screen_action;
    keys['e'] = actionShowEnvScreen;
+   keys['S'] = show_kernel_stack_trace_screen;
 }
-

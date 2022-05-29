@@ -56,11 +56,12 @@ void ArgScreen_scan(InfoScreen* this) {
    if (argv) {
       char **p = argv;
       while(*p) {
-         InfoScreen_addLine(this, *p);
+         InfoScreen_addLine(this, *p, HTOP_DEFAULT_COLOR);
          free(*p++);
       }
       free(argv);
    } else {
-      InfoScreen_addLine(this, "Could not read process command line arguments.");
+      InfoScreen_addLine(this, "Could not read process command line arguments.",
+         HTOP_LARGE_NUMBER_COLOR);
    }
 }

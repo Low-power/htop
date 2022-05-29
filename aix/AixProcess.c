@@ -257,3 +257,7 @@ bool Process_isKernelProcess(const Process *this) {
 bool Process_isExtraThreadProcess(const Process *this) {
 	return false;
 }
+
+char **Process_getKernelStackTrace(const Process *this) {
+	return NULL;
+}

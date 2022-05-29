@@ -246,7 +246,7 @@ ListItem* Meter_toListItem(Meter* this, bool moving) {
    }
    char buffer[50];
    xSnprintf(buffer, sizeof buffer, "%s%s%s", Meter_uiName(this), number, mode);
-   ListItem* li = ListItem_new(buffer, 0, NULL);
+   ListItem* li = ListItem_new(buffer, HTOP_DEFAULT_COLOR, 0, NULL);
    li->moving = moving;
    return li;
 }

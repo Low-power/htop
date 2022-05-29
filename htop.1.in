@@ -111,10 +111,13 @@ screen.
 .B e
 Display environment variables of the selected process in a separated screen.
 .TP
+.B S
+Display kernel stack trace of the selected process in a separated screen.
+.TP
 .B F1, h, ?
 Go to the help screen
 .TP
-.B F2, S
+.B F2, C
 Go to the setup screen, where you can configure the meters displayed at the top
 of the screen, set various display options, choose among color schemes, and
 select which columns are displayed, in which order.

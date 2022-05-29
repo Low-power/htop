@@ -297,3 +297,7 @@ bool Process_isExtraThreadProcess(const Process* this) {
    const SolarisProcess *fp = (const SolarisProcess *)this;
    return fp->is_lwp;
 }
+
+char **Process_getKernelStackTrace(const Process *this) {
+	return NULL;
+}

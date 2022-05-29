@@ -364,3 +364,7 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
          break;
    }
 }
+
+char **Process_getKernelStackTrace(const Process *this) {
+	return NULL;
+}

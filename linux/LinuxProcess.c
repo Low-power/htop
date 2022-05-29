@@ -10,7 +10,7 @@ in the source distribution for its full text.
 #include "LinuxProcess.h"
 #include "Platform.h"
 #include "CRT.h"
-
+#include "StringUtils.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #include <sys/syscall.h>
 #endif
 #include <time.h>
+#include <errno.h>
 
 /*{
 
@@ -576,4 +577,36 @@ bool Process_isKernelProcess(const Process *this) {
 
 bool Process_isExtraThreadProcess(const Process *this) {
 	return this->pid != this->tgid;
+}
+
+char **Process_getKernelStackTrace(const Process *this) {
+	char **v = xMalloc(2 * sizeof(char *));
+	unsigned int i = 0;
+	char path[sizeof PROCDIR + 17];
+	xSnprintf(path, sizeof path, PROCDIR "/%d/stack", (int)this->pid);
+	FILE *f = fopen(path, "r");
+	if(!f) {
+		v[0] = strdup(strerror(errno));
+		if(v[0]) {
+			v[1] = NULL;
+		} else {
+			free(v);
+			v = NULL;
+		}
+		return v;
+	}
+	char *line;
+	while((line = String_readLine(f))) {
+		size_t len = strlen(line) + 1;
+		v[i] = xMalloc(12 + len);
+		int j = snprintf(v[i], 12 + len, "#%u ", i);
+		assert(j > 0 && (size_t)j < 12 + len);
+		if(j > 12) v[i] = xRealloc(v[i], j + len);
+		memcpy(v[i] + j, line, len);
+		free(line);
+		v = xRealloc(v, (++i + 1) * sizeof(char *));
+	}
+	fclose(f);
+	v[i] = NULL;
+	return v;
 }

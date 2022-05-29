@@ -37,7 +37,7 @@ typedef struct InfoScreenClass_ {
 
 struct InfoScreen_ {
    Object super;
-   Process* process;
+   const Process *process;
    Panel* display;
    FunctionBar* bar;
    IncSet* inc;
@@ -70,7 +70,7 @@ static const char* const InfoScreenKeys[] = {"F3", "F4", "F5", "Esc"};
 
 static int InfoScreenEvents[] = {KEY_F(3), KEY_F(4), KEY_F(5), 27};
 
-InfoScreen* InfoScreen_init(InfoScreen* this, Process* process, FunctionBar* bar, int height, char* panelHeader) {
+InfoScreen* InfoScreen_init(InfoScreen* this, const Process *process, FunctionBar* bar, int height, char* panelHeader) {
    this->process = process;
    if (!bar) {
       bar = FunctionBar_new(InfoScreenFunctions, InfoScreenKeys, InfoScreenEvents);
@@ -104,11 +104,12 @@ void InfoScreen_drawTitled(InfoScreen* this, char* fmt, ...) {
    va_end(ap);
 }
 
-void InfoScreen_addLine(InfoScreen* this, const char* line) {
-   Vector_add(this->lines, (Object *)ListItem_new(line, 0, this->settings));
+void InfoScreen_addLine(InfoScreen* this, const char* line, unsigned int color_index) {
+   Vector_add(this->lines, (Object *)ListItem_new(line, color_index, 0, this->settings));
    const char* incFilter = IncSet_filter(this->inc);
-   if (!incFilter || String_contains_i(line, incFilter))
+   if (!incFilter || String_contains_i(line, incFilter)) {
       Panel_add(this->display, (Object*)Vector_get(this->lines, Vector_size(this->lines)-1));
+   }
 }
 
 void InfoScreen_appendLine(InfoScreen* this, const char* line) {

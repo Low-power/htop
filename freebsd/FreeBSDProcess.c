@@ -11,8 +11,12 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "Platform.h"
 #include "CRT.h"
-#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
 #include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 
 /*{
 #include "Settings.h"
@@ -167,4 +171,73 @@ bool Process_isKernelProcess(const Process *this) {
 
 bool Process_isExtraThreadProcess(const Process* this) {
 	return false;
+}
+
+char **Process_getKernelStackTrace(const Process *this) {
+#ifdef KERN_PROC_KSTACK
+	char **v = xMalloc(2 * sizeof(char *));
+	unsigned int i = 0;
+	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_KSTACK, this->pid };
+	size_t len;
+	if(sysctl(mib, 4, NULL, &len, NULL, 0) < 0) {
+ret_err_msg:
+		v[0] = strdup(strerror(errno));
+		if(v[0]) {
+			v[1] = NULL;
+		} else {
+			free(v);
+			v = NULL;
+		}
+		return v;
+	}
+	if(len < sizeof(struct kinfo_kstack)) {
+		v[0] = xStrdup("No stack available");
+		v[1] = NULL;
+		return v;
+	}
+	struct kinfo_kstack *kiks_buffer = malloc(len);
+	if(!kiks_buffer) goto ret_err_msg;
+	if(sysctl(mib, 4, kiks_buffer, &len, NULL, 0) < 0) {
+		free(kiks_buffer);
+		goto ret_err_msg;
+	}
+	len /= sizeof(struct kinfo_kstack);
+	for(size_t j = 0; j < len; j++) {
+		struct kinfo_kstack *kiks = kiks_buffer + j;
+		v = xRealloc(v, (i + 3) * sizeof(char *));
+		v[i] = xMalloc(32);
+		snprintf(v[i++], 32, "Thread %d:", kiks->kkst_tid);
+		switch(kiks->kkst_state) {
+				char *p, *end_p;
+			case KKST_STATE_STACKOK:
+				p = kiks->kkst_trace;
+				do {
+					end_p = strchr(p, '\n');
+					int prefix_len = *p == '#' ? 0 : 3;
+					size_t frame_len = prefix_len +
+						(end_p ? (size_t)(end_p - p) : strlen(p));
+					v[i] = xMalloc(frame_len + 1);
+					if(*p != '#') memcpy(v[i], "#? ", 3);
+					memcpy(v[i] + prefix_len, p, frame_len - prefix_len);
+					v[i][frame_len] = 0;
+					v = xRealloc(v, (++i + 1) * sizeof(char *));
+				} while(end_p && *(p = end_p + 1));
+				break;
+			case KKST_STATE_SWAPPED:
+				v[i++] = xStrdup("swapped");
+				break;
+			case KKST_STATE_RUNNING:
+				v[i++] = xStrdup("running");
+				break;
+			default:
+				v[i++] = xStrdup("unknown state");
+				break;
+		}
+	}
+	free(kiks_buffer);
+	v[i] = NULL;
+	return v;
+#else
+	return NULL;
+#endif
 }

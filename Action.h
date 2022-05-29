@@ -56,5 +56,4 @@ Htop_Reaction Action_follow(State* st);
 
 void Action_setBindings(Htop_Action* keys);
 
-
 #endif

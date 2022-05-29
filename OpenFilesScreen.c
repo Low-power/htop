@@ -145,9 +145,11 @@ void OpenFilesScreen_scan(InfoScreen* this) {
    Panel_prune(panel);
    OpenFiles_ProcessData* pdata = OpenFilesScreen_getProcessData(((OpenFilesScreen*)this)->pid);
    if (pdata->error == 127) {
-      InfoScreen_addLine(this, "Could not execute 'lsof'. Please make sure it is available in your $PATH.");
+      InfoScreen_addLine(this,
+         "Could not execute 'lsof'. Please make sure it is available in your $PATH.",
+         HTOP_LARGE_NUMBER_COLOR);
    } else if (pdata->error == 1) {
-      InfoScreen_addLine(this, "Failed listing open files.");
+      InfoScreen_addLine(this, "Failed listing open files.", HTOP_LARGE_NUMBER_COLOR);
    } else {
       OpenFiles_FileData* fdata = pdata->files;
       while (fdata) {
@@ -162,7 +164,7 @@ void OpenFilesScreen_scan(InfoScreen* this) {
             data['s'] ? data['s'] : "",
             data['i'] ? data['i'] : "",
             data['n'] ? data['n'] : "");
-         InfoScreen_addLine(this, entry);
+         InfoScreen_addLine(this, entry, HTOP_DEFAULT_COLOR);
          OpenFiles_Data_clear(&fdata->data);
          OpenFiles_FileData* old = fdata;
          fdata = fdata->next;

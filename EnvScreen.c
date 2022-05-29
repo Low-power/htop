@@ -54,13 +54,13 @@ void EnvScreen_scan(InfoScreen* this) {
    if (envv) {
       char **p = envv;
       while(*p) {
-         InfoScreen_addLine(this, *p);
+         InfoScreen_addLine(this, *p, HTOP_DEFAULT_COLOR);
          free(*p++);
       }
       free(envv);
    }
    else {
-      InfoScreen_addLine(this, "Could not read process environment.");
+      InfoScreen_addLine(this, "Could not read process environment.", HTOP_LARGE_NUMBER_COLOR);
    }
 
    Vector_insertionSort(this->lines);

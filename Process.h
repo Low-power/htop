@@ -128,6 +128,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field);
 long Process_compare(const void* v1, const void* v2);
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
+char **Process_getKernelStackTrace(const Process *);
 extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 extern char Process_pidFormat[20];

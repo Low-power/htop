@@ -22,6 +22,7 @@ in the source distribution for its full text.
 typedef struct ListItem_ {
    Object super;
    char* value;
+   unsigned int color_index;
    int key;
    bool moving;
    const Settings *settings;
@@ -36,15 +37,10 @@ static void ListItem_delete(Object* cast) {
 }
 
 static void ListItem_display(Object* cast, RichString* out) {
-   ListItem* const this = (ListItem*)cast;
-   assert (this != NULL);
-   /*
-   int len = strlen(this->value)+1;
-   char buffer[len];
-   xSnprintf(buffer, len, "%s", this->value);
-   */
+   ListItem *this = (ListItem *)cast;
+   assert(this != NULL);
    if (this->moving) {
-      RichString_write(out, CRT_colors[HTOP_DEFAULT_COLOR],
+      RichString_write(out, CRT_colors[this->color_index],
 #ifdef HAVE_LIBNCURSESW
             CRT_utf8 ? "↕ " :
 #endif
@@ -52,7 +48,7 @@ static void ListItem_display(Object* cast, RichString* out) {
    } else {
       RichString_prune(out);
    }
-   RichString_append(out, CRT_colors[HTOP_DEFAULT_COLOR], this->value/*buffer*/);
+   RichString_append(out, CRT_colors[this->color_index], this->value/*buffer*/);
 }
 
 ObjectClass ListItem_class = {
@@ -61,9 +57,10 @@ ObjectClass ListItem_class = {
    .compare = ListItem_compare
 };
 
-ListItem* ListItem_new(const char* value, int key, const Settings *settings) {
+ListItem* ListItem_new(const char* value, unsigned int color_index, int key, const Settings *settings) {
    ListItem* this = AllocThis(ListItem);
    this->value = xStrdup(value);
+   this->color_index = color_index;
    this->key = key;
    this->moving = false;
    this->settings = settings;

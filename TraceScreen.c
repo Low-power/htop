@@ -151,7 +151,7 @@ void TraceScreen_updateTrace(InfoScreen* super) {
             InfoScreen_appendLine(&this->super, line);
             this->contLine = false;
          } else {
-            InfoScreen_addLine(&this->super, line);
+            InfoScreen_addLine(&this->super, line, HTOP_DEFAULT_COLOR);
          }
          line = buffer + i + 1;
          skip_space = true;
@@ -176,7 +176,7 @@ void TraceScreen_updateTrace(InfoScreen* super) {
          break;
    }
    if (line < buffer + len) {
-      InfoScreen_addLine(&this->super, line);
+      InfoScreen_addLine(&this->super, line, HTOP_DEFAULT_COLOR);
       this->contLine = true;
    }
    if (this->follow) {

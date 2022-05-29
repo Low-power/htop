@@ -13,8 +13,9 @@ in the source distribution for its full text.
 #include "ColorsPanel.h"
 #include "AvailableColumnsPanel.h"
 #include "ControlOptionsPanel.h"
-#include <assert.h>
+#include "CRT.h"
 #include <stdlib.h>
+#include <assert.h>
 
 /*{
 #include "Panel.h"
@@ -149,10 +150,10 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    } else {
       Panel_setHeader(super, "Setup");
    }
-   Panel_add(super, (Object *)ListItem_new("Meters", 0, settings));
-   Panel_add(super, (Object *)ListItem_new("Display options", 0, settings));
-   Panel_add(super, (Object *)ListItem_new("Colors", 0, settings));
-   Panel_add(super, (Object *)ListItem_new("Columns", 0, settings));
-   Panel_add(super, (Object *)ListItem_new("Control options", 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Meters", HTOP_DEFAULT_COLOR, 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Display options", HTOP_DEFAULT_COLOR, 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Colors", HTOP_DEFAULT_COLOR, 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Columns", HTOP_DEFAULT_COLOR, 0, settings));
+   Panel_add(super, (Object *)ListItem_new("Control options", HTOP_DEFAULT_COLOR, 0, settings));
    return this;
 }

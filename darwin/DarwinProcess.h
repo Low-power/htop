@@ -47,4 +47,6 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
  */
 void DarwinProcess_scanThreads(DarwinProcess *dp);
 
+char **Process_getKernelStackTrace(const Process *this);
+
 #endif

@@ -22,4 +22,6 @@ bool Process_isKernelProcess(const Process *this);
 
 bool Process_isExtraThreadProcess(const Process *this);
 
+char **Process_getKernelStackTrace(const Process *this);
+
 #endif

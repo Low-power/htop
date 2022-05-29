@@ -7,14 +7,13 @@ in the source distribution for its full text.
 
 #include "AvailableMetersPanel.h"
 #include "MetersPanel.h"
-
 #include "CPUMeter.h"
 #include "Header.h"
 #include "ListItem.h"
 #include "Platform.h"
-
-#include <assert.h>
+#include "CRT.h"
 #include <stdlib.h>
+#include <assert.h>
 
 /*{
 #include "Settings.h"
@@ -115,20 +114,20 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
       MeterClass* type = Platform_meterTypes[i];
       assert(type != &CPUMeter_class);
       const char* label = type->description ? type->description : type->uiName;
-      Panel_add(super, (Object *)ListItem_new(label, i << 16, settings));
+      Panel_add(super, (Object *)ListItem_new(label, HTOP_DEFAULT_COLOR, i << 16, settings));
    }
    // Handle (&CPUMeter_class)
    MeterClass* type = &CPUMeter_class;
    int cpus = pl->cpuCount;
    if (cpus > 1) {
-      Panel_add(super, (Object* )ListItem_new("CPU average", 0, settings));
+      Panel_add(super, (Object* )ListItem_new("CPU average", HTOP_DEFAULT_COLOR, 0, settings));
       for (int i = 1; i <= cpus; i++) {
          char buffer[50];
          xSnprintf(buffer, 50, "%s %d", type->uiName, Settings_cpuId(this->settings, i - 1));
-         Panel_add(super, (Object *)ListItem_new(buffer, i, settings));
+         Panel_add(super, (Object *)ListItem_new(buffer, HTOP_DEFAULT_COLOR, i, settings));
       }
    } else {
-      Panel_add(super, (Object *)ListItem_new("CPU", 1, settings));
+      Panel_add(super, (Object *)ListItem_new("CPU", HTOP_DEFAULT_COLOR, 1, settings));
    }
    return this;
 }

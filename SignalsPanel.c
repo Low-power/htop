@@ -5,25 +5,21 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Panel.h"
-#include "SignalsPanel.h"
-#include "Platform.h"
-
-#include "ListItem.h"
-#include "RichString.h"
-
-#include <stdlib.h>
-#include <assert.h>
-#include <signal.h>
-
 /*{
-
 typedef struct SignalItem_ {
    const char* name;
    int number;
 } SignalItem;
-
 }*/
+
+#include "Panel.h"
+#include "SignalsPanel.h"
+#include "Platform.h"
+#include "ListItem.h"
+#include "CRT.h"
+#include <signal.h>
+#include <stdlib.h>
+#include <assert.h>
 
 #define DEFAULT_SIGNAL SIGTERM
 
@@ -35,7 +31,7 @@ Panel* SignalsPanel_new() {
    for (i = 0; i < Platform_numberOfSignals; i++) {
       const SignalItem *sig = Platform_signals + i;
       xSnprintf(buf, sizeof buf, "%3d %s", sig->number, sig->name);
-      Panel_set(this, i, (Object *)ListItem_new(buf, sig->number, NULL));
+      Panel_set(this, i, (Object *)ListItem_new(buf, HTOP_DEFAULT_COLOR, sig->number, NULL));
       // signal 15 is not always the 15th signal in the table
       if (sig->number == DEFAULT_SIGNAL) {
          defaultPosition = i;
@@ -49,7 +45,7 @@ Panel* SignalsPanel_new() {
          if (n == 0) {
             buf[11] = '\0';
          }
-         Panel_set(this, i, (Object *)ListItem_new(buf, sig, NULL));
+         Panel_set(this, i, (Object *)ListItem_new(buf, HTOP_DEFAULT_COLOR, sig, NULL));
       }
    }
    #endif

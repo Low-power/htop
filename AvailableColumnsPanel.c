@@ -7,14 +7,13 @@ in the source distribution for its full text.
 
 #include "AvailableColumnsPanel.h"
 #include "Platform.h"
-
 #include "Header.h"
 #include "ColumnsPanel.h"
-
-#include <assert.h>
-#include <stdlib.h>
+#include "CRT.h"
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include <assert.h>
 
 /*{
 #include "Panel.h"
@@ -46,7 +45,8 @@ static HandlerResult AvailableColumnsPanel_eventHandler(Panel* super, int ch, in
       case KEY_ENTER:
       case KEY_F(5):
          at = Panel_getSelectedIndex(this->columns);
-         Panel_insert(this->columns, at, (Object *)ListItem_new(Process_fields[key].name, key, NULL));
+         Panel_insert(this->columns, at,
+            (Object *)ListItem_new(Process_fields[key].name, HTOP_DEFAULT_COLOR, key, NULL));
          Panel_setSelected(this->columns, at+1);
          ColumnsPanel_update(this->columns);
          result = HANDLED;
@@ -78,7 +78,7 @@ AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns) {
       if (i != HTOP_COMM_FIELD && Process_fields[i].description) {
          char description[256];
          xSnprintf(description, sizeof(description), "%s - %s", Process_fields[i].name, Process_fields[i].description);
-         Panel_add(super, (Object *)ListItem_new(description, i, NULL));
+         Panel_add(super, (Object *)ListItem_new(description, HTOP_DEFAULT_COLOR, i, NULL));
       }
    }
    this->columns = columns;
