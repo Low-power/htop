@@ -58,11 +58,7 @@ ProcessFieldData Process_fields[] = {
       .title = "Command ",
       .description = "Command line",
       .flags = 0, },
-   [HTOP_STATE_FIELD] = {
-      .name = "STATE",
-      .title = "S ",
-      .description = "Process state (S sleeping, R running, D disk, Z zombie, T stoppd, W paging)",
-      .flags = 0, },
+   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (O running, R runnable, I idle, S sleeping, D uninterruptible sleeping, T stopped, Z zombie)", .flags = 0 },
    [HTOP_PPID_FIELD] = {
       .name = "PPID",
       .title = "   PPID ",

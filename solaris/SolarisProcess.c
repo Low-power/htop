@@ -90,7 +90,7 @@ ProcessFieldData Process_fields[] = {
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID    ", .description = "Process/thread ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
    [HTOP_COMM_FIELD] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
-   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping, R running, O onproc, Z zombie, T stopped, W waiting)", .flags = 0, },
+   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (O running, R runnable, S sleeping, T stopped, Z zombie, W waiting CPU-caps)", .flags = 0 },
    [HTOP_PPID_FIELD] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [HTOP_PGRP_FIELD] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [HTOP_SESSION_FIELD] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },

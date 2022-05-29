@@ -49,7 +49,7 @@ ProcessFieldData Process_fields[] = {
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
    [HTOP_COMM_FIELD] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
-   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (S sleeping (<20s), I Idle, Q Queued for Run, R running, D disk, Z zombie, T stoppd, W paging, B Blocked, A AskedPage, C Core, J Jailed)", .flags = 0, },
+   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (R running, I idle, S sleeping, D uninterruptible sleeping, B uninterruptible kernel process, T stoppd, Z zombie, A asked page)", .flags = 0 },
    [HTOP_PPID_FIELD] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [HTOP_PGRP_FIELD] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [HTOP_SESSION_FIELD] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },
