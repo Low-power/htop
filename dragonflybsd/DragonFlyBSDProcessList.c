@@ -483,7 +483,8 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->percent_mem =
          (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
-      proc->time = (kproc->kp_swtime + 5000) / 10000;
+      proc->time = 
+         (kproc->kp_lwp.kl_uticks + kproc->kp_lwp.kl_sticks + kproc->kp_lwp.kl_iticks) / 10000;
       proc->percent_cpu = (double)kproc->kp_lwp.kl_pctcpu / (double)kernelFScale * 100;
 
       proc->priority = kproc->kp_lwp.kl_pid == -1 ? -kproc->kp_lwp.kl_tdprio : kproc->kp_lwp.kl_prio;
