@@ -10,6 +10,7 @@ in the source distribution for its full text.
 */
 
 #include "InfoScreen.h"
+#include <stdbool.h>
 
 typedef struct TraceScreen_ {
    InfoScreen super;

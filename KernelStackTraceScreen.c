@@ -15,13 +15,10 @@ typedef struct KernelStackTraceScreen_ {
 }*/
 
 #include "KernelStackTraceScreen.h"
-#include "config.h"
 #include "CRT.h"
-#include "IncSet.h"
 #include "ListItem.h"
 #include "Process.h"
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 InfoScreenClass KernelStackTraceScreen_class = {

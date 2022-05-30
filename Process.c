@@ -13,10 +13,8 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "Platform.h"
 #include <sys/param.h>
-#include <sys/types.h>
-#include <sys/resource.h>
 #include <sys/time.h>
-#include <sys/stat.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>

@@ -10,6 +10,7 @@ in the source distribution for its full text.
 */
 
 #include "InfoScreen.h"
+#include <sys/types.h>
 
 typedef struct OpenFiles_Data_ {
    char* data[256];
@@ -30,7 +31,6 @@ typedef struct OpenFilesScreen_ {
    InfoScreen super;
    pid_t pid;
 } OpenFilesScreen;
-
 
 extern InfoScreenClass OpenFilesScreen_class;
 

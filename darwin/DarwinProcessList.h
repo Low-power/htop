@@ -17,7 +17,10 @@ negative value if more than the installed version
 */
 #include "ProcessList.h"
 #include <mach/mach_host.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct DarwinProcessList_ {
    ProcessList super;

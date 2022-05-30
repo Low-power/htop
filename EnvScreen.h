@@ -2,7 +2,6 @@
 
 #ifndef HEADER_EnvScreen
 #define HEADER_EnvScreen
-
 #include "InfoScreen.h"
 
 typedef struct EnvScreen_ {

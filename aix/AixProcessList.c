@@ -6,7 +6,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
 #include "AixProcess.h"
 #include "AixProcessList.h"
 #include "CRT.h"
@@ -19,13 +18,12 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <sys/proc.h>
 #include <procinfo.h>
-#ifndef __PASE__
-#include <libperfstat.h>
-#else
+#ifdef __PASE__
 #include <sys/vminfo.h>
 #endif
 
 /*{
+#include "ProcessList.h"
 #ifndef __PASE__
 #include <libperfstat.h>
 #endif

@@ -15,14 +15,10 @@ typedef struct ArgScreen_ {
 }*/
 
 #include "ArgScreen.h"
-#include "config.h"
 #include "CRT.h"
-#include "IncSet.h"
 #include "ListItem.h"
 #include "Platform.h"
-#include "StringUtils.h"
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 InfoScreenClass ArgScreen_class = {

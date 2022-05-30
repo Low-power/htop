@@ -5,13 +5,19 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+/*{
+#include "Action.h"
+#include "MainPanel.h"
+#include "BatteryMeter.h"
+#include "SignalsPanel.h"
+}*/
+
 #include "Platform.h"
-#include "IOPriority.h"
-#include "IOPriorityPanel.h"
 #include "LinuxProcess.h"
 #include "LinuxProcessList.h"
+#include "IOPriority.h"
+#include "IOPriorityPanel.h"
 #include "Battery.h"
-
 #include "Meter.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -21,22 +27,12 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
-#include "LinuxProcess.h"
 #include <signal.h>
 #include <string.h>
 #include <math.h>
-#include <assert.h>
 #include <limits.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-/*{
-#include "Action.h"
-#include "MainPanel.h"
-#include "BatteryMeter.h"
-#include "LinuxProcess.h"
-#include "SignalsPanel.h"
-}*/
+#include <stdio.h>
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))

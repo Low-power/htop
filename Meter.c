@@ -5,32 +5,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "Meter.h"
-#include "RichString.h"
-#include "Object.h"
-#include "CRT.h"
-#include "StringUtils.h"
+/*{
+#include "ProcessList.h"
 #include "ListItem.h"
-#include "Settings.h"
-
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <assert.h>
 #include <sys/time.h>
 
 #define METER_BUFFER_LEN 256
-
-#define GRAPH_DELAY (DEFAULT_DELAY/2)
-
-#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
-
-/*{
-#include "ListItem.h"
-#include "ProcessList.h"
-#include <sys/time.h>
 
 typedef struct Meter_ Meter;
 
@@ -109,6 +89,20 @@ typedef struct GraphData_ {
 } GraphData;
 
 }*/
+
+#include "config.h"
+#include "Meter.h"
+#include "RichString.h"
+#include "Object.h"
+#include "CRT.h"
+#include "StringUtils.h"
+#include "Settings.h"
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

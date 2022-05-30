@@ -6,30 +6,25 @@ in the source distribution for its full text.
 */
 
 #include "TraceScreen.h"
-
 #include "CRT.h"
 #include "InfoScreen.h"
-#include "ProcessList.h"
 #include "ListItem.h"
 #include "IncSet.h"
-#include "StringUtils.h"
 #include "FunctionBar.h"
-
-#include <stdio.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
+#include <stdio.h>
 #include <errno.h>
 
 /*{
 #include "InfoScreen.h"
+#include <stdbool.h>
 
 typedef struct TraceScreen_ {
    InfoScreen super;

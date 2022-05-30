@@ -5,26 +5,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "OpenFilesScreen.h"
-
-#include "CRT.h"
-#include "ProcessList.h"
-#include "IncSet.h"
-#include "StringUtils.h"
-#include "FunctionBar.h"
-
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
 /*{
 #include "InfoScreen.h"
+#include <sys/types.h>
 
 typedef struct OpenFiles_Data_ {
    char* data[256];
@@ -45,8 +28,17 @@ typedef struct OpenFilesScreen_ {
    InfoScreen super;
    pid_t pid;
 } OpenFilesScreen;
-
 }*/
+
+#include "OpenFilesScreen.h"
+#include "CRT.h"
+#include "StringUtils.h"
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 InfoScreenClass OpenFilesScreen_class = {
    .super = {

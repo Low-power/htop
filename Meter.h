@@ -9,15 +9,11 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#define METER_BUFFER_LEN 256
-
-#define GRAPH_DELAY (DEFAULT_DELAY/2)
-
-#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
-
-#include "ListItem.h"
 #include "ProcessList.h"
+#include "ListItem.h"
 #include <sys/time.h>
+
+#define METER_BUFFER_LEN 256
 
 typedef struct Meter_ Meter;
 
@@ -95,6 +91,8 @@ typedef struct GraphData_ {
    double values[METER_BUFFER_LEN];
 } GraphData;
 
+
+#define GRAPH_HEIGHT 4 /* Unit: rows (lines) */
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))

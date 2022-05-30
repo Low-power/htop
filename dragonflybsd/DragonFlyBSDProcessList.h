@@ -10,31 +10,23 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
-#include <kvm.h>
-#include <sys/param.h>
-#include <osreldate.h>
-#include <sys/kinfo.h>
-#include <kinfo.h>
-#include <sys/jail.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
+#include "ProcessList.h"
 #include "Hashtable.h"
-#include "DragonFlyBSDProcess.h"
+#include <sys/types.h>
+#include <kvm.h>
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct DragonFlyBSDProcessList_ {
    ProcessList super;
+
    kvm_t* kd;
 
    unsigned long long int memWire;
@@ -52,7 +44,6 @@ typedef struct DragonFlyBSDProcessList_ {
 
    Hashtable *jails;
 } DragonFlyBSDProcessList;
-
 
 #define _UNUSED_ __attribute__((unused))
 

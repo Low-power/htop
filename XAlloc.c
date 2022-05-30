@@ -1,15 +1,19 @@
+/*
+htop - XAlloc.c
+(C) 2004-2017 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
+
+/*{
+#include <stdlib.h>
+}*/
 
 #include "config.h"
 #include "XAlloc.h"
 #include "RichString.h"
 #include <unistd.h>
-#include <stdlib.h>
 #include <string.h>
-
-/*{
-#include <assert.h>
-#include <stdlib.h>
-}*/
 
 #if !defined __GNUC__ && !defined __attribute__
 #define __attribute__(A)

@@ -5,17 +5,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
-#include <sys/types.h>
-#include <sys/sysctl.h>
 #include <sys/mman.h>
-#include <libproc.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -54,7 +49,10 @@ static int CompareKernelVersion(short int major, short int minor, short int comp
 /*{
 #include "ProcessList.h"
 #include <mach/mach_host.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
+#include <stdbool.h>
+#include <stdint.h>
 
 typedef struct DarwinProcessList_ {
    ProcessList super;

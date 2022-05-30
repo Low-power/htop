@@ -9,6 +9,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <string.h>
 #include <stdio.h>
 
 #define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)

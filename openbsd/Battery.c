@@ -12,7 +12,6 @@ in the source distribution for its full text.
 #include <sys/sensors.h>
 #include <string.h>
 #include <errno.h>
-#include <string.h>
 
 static bool findDevice(const char* name, int* mib, struct sensordev* snsrdev, size_t* sdlen) {
    for (int devn = 0;; devn++) {
@@ -37,7 +36,6 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
    size_t sdlen = sizeof(struct sensordev);
 
    bool found = findDevice("acpibat0", mib, &snsrdev, &sdlen);
-   
    *level = -1;
    if (found) {
       /* last full capacity */
@@ -60,9 +58,7 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
          }
       }
    }
-   
    found = findDevice("acpiac0", mib, &snsrdev, &sdlen);
-   
    *isOnAC = AC_ERROR;
    if (found) {
       mib[3] = 9;

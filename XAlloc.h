@@ -2,8 +2,13 @@
 
 #ifndef HEADER_XAlloc
 #define HEADER_XAlloc
+/*
+htop - XAlloc.h
+(C) 2004-2017 Hisham H. Muhammad
+Released under the GNU GPL, see the COPYING file
+in the source distribution for its full text.
+*/
 
-#include <assert.h>
 #include <stdlib.h>
 
 #if !defined __GNUC__ && !defined __attribute__

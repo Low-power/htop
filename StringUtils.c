@@ -5,19 +5,19 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "StringUtils.h"
-#include "XAlloc.h"
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
-
 /*{
+#include <string.h>
 #include <stdio.h>
 
 #define String_startsWith(s, match) (strncmp((s),(match),strlen(match)) == 0)
 #define String_contains_i(s1, s2) (strcasestr(s1, s2) != NULL)
 }*/
+
+#include "config.h"
+#include "StringUtils.h"
+#include "XAlloc.h"
+#include <strings.h>
+#include <stdlib.h>
 
 /*
  * String_startsWith gives better performance if strlen(match) can be computed
@@ -162,9 +162,7 @@ char* String_getToken(const char* line, const unsigned int numMatch) {
       char lastState = inWord;
       inWord = line[i] == ' ' ? 0:1;
 
-      if (lastState == 0 && inWord == 1)
-         count++;
-    
+      if (lastState == 0 && inWord == 1) count++;
       if(inWord == 1){
          if (count == numMatch && line[i] != ' ' && line[i] != '\0' && line[i] != '\n') {
             match[foundCount] = line[i];

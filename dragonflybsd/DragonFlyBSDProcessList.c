@@ -6,47 +6,24 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "ProcessList.h"
-#include "DragonFlyBSDProcessList.h"
-#include "DragonFlyBSDProcess.h"
-#include "CRT.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <sys/user.h>
-#include <err.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <string.h>
-#include <sys/param.h>
-
 /*{
-
-#include <kvm.h>
-#include <sys/param.h>
-#include <osreldate.h>
-#include <sys/kinfo.h>
-#include <kinfo.h>
-#include <sys/jail.h>
-#include <sys/uio.h>
-#include <sys/resource.h>
+#include "ProcessList.h"
 #include "Hashtable.h"
-#include "DragonFlyBSDProcess.h"
+#include <sys/types.h>
+#include <kvm.h>
 
 typedef struct CPUData_ {
-
    double userPercent;
    double nicePercent;
    double systemPercent;
    double irqPercent;
    double idlePercent;
    double systemAllPercent;
-
 } CPUData;
 
 typedef struct DragonFlyBSDProcessList_ {
    ProcessList super;
+
    kvm_t* kd;
 
    unsigned long long int memWire;
@@ -64,8 +41,23 @@ typedef struct DragonFlyBSDProcessList_ {
 
    Hashtable *jails;
 } DragonFlyBSDProcessList;
-
 }*/
+
+#include "DragonFlyBSDProcessList.h"
+#include "DragonFlyBSDProcess.h"
+#include "CRT.h"
+#include <sys/sysctl.h>
+#include <sys/kinfo.h>
+#include <sys/jail.h>
+#include <sys/uio.h>
+#include <sys/resource.h>
+#include <sys/user.h>
+#include <kinfo.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <err.h>
 
 #define _UNUSED_ __attribute__((unused))
 

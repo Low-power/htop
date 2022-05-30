@@ -46,7 +46,6 @@ struct InfoScreen_ {
 };
 }*/
 
-#include "config.h"
 #include "InfoScreen.h"
 #include "Object.h"
 #include "CRT.h"
@@ -54,9 +53,8 @@ struct InfoScreen_ {
 #include "Platform.h"
 #include "StringUtils.h"
 #include "local-curses.h"
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #if defined ERR && ERR > 0

@@ -1,16 +1,3 @@
-#include "EnvScreen.h"
-
-#include "config.h"
-#include "CRT.h"
-#include "IncSet.h"
-#include "ListItem.h"
-#include "Platform.h"
-#include "StringUtils.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 /*{
 #include "InfoScreen.h"
 
@@ -18,6 +5,13 @@ typedef struct EnvScreen_ {
    InfoScreen super;
 } EnvScreen;
 }*/
+
+#include "EnvScreen.h"
+#include "CRT.h"
+#include "ListItem.h"
+#include "Platform.h"
+#include <stdlib.h>
+#include <unistd.h>
 
 InfoScreenClass EnvScreen_class = {
    .super = {
