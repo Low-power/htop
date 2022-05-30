@@ -22,6 +22,8 @@ negative value if more than the installed version
 typedef struct DarwinProcessList_ {
    ProcessList super;
 
+   struct kinfo_proc *kip_buffer;
+   size_t kip_buffer_size;
    host_basic_info_data_t host_info;
    vm_statistics_data_t vm_stats;
    processor_cpu_load_info_t prev_load;

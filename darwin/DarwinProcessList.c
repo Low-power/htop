@@ -9,17 +9,16 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
-
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <libproc.h>
-#include <sys/mman.h>
-#include <utmpx.h>
-#include <err.h>
+#include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/mman.h>
+#include <libproc.h>
+#include <unistd.h>
+#include <string.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
 
 struct kern {
     short int version[3];
@@ -60,6 +59,8 @@ static int CompareKernelVersion(short int major, short int minor, short int comp
 typedef struct DarwinProcessList_ {
    ProcessList super;
 
+   struct kinfo_proc *kip_buffer;
+   size_t kip_buffer_size;
    host_basic_info_data_t host_info;
    vm_statistics_data_t vm_stats;
    processor_cpu_load_info_t prev_load;
@@ -106,41 +107,45 @@ static void ProcessList_getVMStats(vm_statistics_t p) {
        CRT_fatalError("Unable to retrieve VM statistics\n");
 }
 
-static struct kinfo_proc *ProcessList_getKInfoProcs(size_t *count) {
-   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
-   struct kinfo_proc *processes;
-
-   /* Note the two calls to sysctl(). One to get length and one to get the
-    * data. This -does- mean that the second call could end up with a missing
-    * process entry or two.
+static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
+   /* Note the two calls to sysctl(3). One to get length and one to get
+    * the data. This -does- mean that the second call could end up with
+    * a missing process entry or two; if this happens sysctl(3) will
+    * apparently fail with ENOMEM, therefore we must ignore it.
     */
-   *count = 0;
-   if (sysctl(mib, 3, NULL, count, NULL, 0) < 0) {
-      CRT_fatalError("Unable to get size of kproc_infos");
+   int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
+   size_t buffer_size;
+   if (sysctl(mib, 3, NULL, &buffer_size, NULL, 0) < 0) {
+      CRT_fatalError("Unable to get size of process list");
    }
-
-   processes = xMalloc(*count);
-
-   if (sysctl(mib, 3, processes, count, NULL, 0) < 0) {
-      CRT_fatalError("Unable to get kinfo_procs");
+   if(this->kip_buffer_size < buffer_size) {
+      free(this->kip_buffer);
+      this->kip_buffer = xMalloc(buffer_size);
+      this->kip_buffer_size = buffer_size;
    }
-
-   *count = *count / sizeof(struct kinfo_proc);
+   if (sysctl(mib, 3, this->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) {
+      CRT_fatalError("Unable to get process list");
+   }
+   size_t count = buffer_size / sizeof(struct kinfo_proc);
 
    // Check for process 0 (kernel_task)
-   for(unsigned int i = 0; i < *count; i++) {
-      if(processes[i].kp_proc.p_pid == 0) return processes;
+   for(size_t i = 0; i < count; i++) {
+      if(this->kip_buffer[i].kp_proc.p_pid == 0) return count;
    }
 
    mib[2] = KERN_PROC_PID;
    struct kinfo_proc proc0_info;
    size_t info_size = sizeof proc0_info;
    if(sysctl(mib, 4, &proc0_info, &info_size, NULL, 0) == 0 && info_size == sizeof proc0_info) {
-      processes = xRealloc(processes, (*count + 1) * sizeof(struct kinfo_proc));
-      memcpy(processes + *count, &proc0_info, sizeof proc0_info);
-      (*count)++;
+      buffer_size += sizeof(struct kinfo_proc);
+      if(this->kip_buffer_size < buffer_size) {
+         this->kip_buffer = xRealloc(this->kip_buffer, buffer_size);
+         this->kip_buffer_size = buffer_size;
+      }
+      memcpy(this->kip_buffer + count, &proc0_info, sizeof proc0_info);
+      count++;
    }
-   return processes;
+   return count;
 }
 
 
@@ -171,15 +176,14 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 
 void ProcessList_delete(ProcessList* this) {
    ProcessList_done(this);
+   free(((DarwinProcessList *)this)->kip_buffer);
    free(this);
 }
 
 void ProcessList_goThroughEntries(ProcessList* super) {
 	DarwinProcessList *dpl = (DarwinProcessList *)super;
-	struct kinfo_proc *ps;
-	size_t count;
-	struct timeval now;
 
+	struct timeval now;
 	gettimeofday(&now, NULL); /* Start processing time */
 
 	/* Update the global data (CPU times and VM stats) */
@@ -203,11 +207,11 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 	 *
 	 * We attempt to fill-in additional information with libproc.
 	 */
-	ps = ProcessList_getKInfoProcs(&count);
+	size_t count = ProcessList_updateProcessList(dpl);
 
-	for(size_t i = 0; i < count; ++i) {
+	for(size_t i = 0; i < count; i++) {
 		bool preExisting;
-		const struct kinfo_proc *info = ps + i;
+		const struct kinfo_proc *info = dpl->kip_buffer + i;
 		DarwinProcess *proc = (DarwinProcess *)ProcessList_getProcess(super, info->kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
 		DarwinProcess_setFromKInfoProc(&proc->super, info, now.tv_sec, preExisting);
@@ -233,6 +237,4 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			ProcessList_add(super, &proc->super);
 		}
 	}
-
-	free(ps);
 }
