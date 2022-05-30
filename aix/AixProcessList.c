@@ -57,18 +57,16 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    ProcessList_init(this, Class(AixProcess), usersTable, pidWhiteList, userId);
 
 #ifndef __PASE__
+   perfstat_cpu_total(NULL, &apl->ps_ct, sizeof apl->ps_ct, 1);
+   this->cpuCount = apl->ps_ct.ncpus;
+   apl->ps_cpus = xCalloc(this->cpuCount, sizeof(perfstat_cpu_t));
    perfstat_memory_total_t mt;
    perfstat_memory_total(NULL, &mt, sizeof(mt), 1);
-   perfstat_cpu_total(NULL, &apl->ps_ct, sizeof(perfstat_cpu_total_t), 1);
-   // most of these are in 4KB sized pages
+   // It is in 4 KiB sized pages
    this->totalMem = mt.real_total * 4;
-   this->totalSwap = mt.pgsp_total * 4;
-
-   this->cpuCount = apl->ps_ct.ncpus;
-   apl->ps_cpus = xCalloc (this->cpuCount, sizeof (perfstat_cpu_t));
 #else
-   this->cpuCount = sysconf (_SC_NPROCESSORS_CONF);
-   this->totalMem = sysconf (_SC_AIX_REALMEM); /* XXX: returns bogus value on PASE */
+   this->cpuCount = sysconf(_SC_NPROCESSORS_CONF);
+   this->totalMem = sysconf(_SC_AIX_REALMEM); /* XXX: returns bogus value on PASE */
 #endif
 
    // smp requires avg + cpus as the 0th entry is avg
