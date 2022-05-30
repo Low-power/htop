@@ -8,6 +8,7 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
+#include <mach/mach_init.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <string.h>

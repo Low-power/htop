@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
 #include "DarwinProcessList.h"
+#include <mach/mach_init.h>	/* For vm_page_size */
 #include <signal.h>
 #include <stdlib.h>
 

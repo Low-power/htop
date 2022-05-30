@@ -418,13 +418,13 @@ if test "$my_htop_platform" = "openbsd"; then
 						return size == 2 * sizeof(struct kinfo_proc) && info[0].p_pid == info[1].p_pid && info[0].p_tid == -1 && info[1].p_pid != info[1].p_tid - THREAD_PID_OFFSET ? 0 : 1;
 					]])], [
 						AC_DEFINE(PID_AND_MAIN_THREAD_ID_DIFFER, 1,
-							[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated])
+							[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated.])
 						AC_MSG_RESULT([yes])
 					], [
 						AC_MSG_RESULT([no])
 					], [
 						AC_DEFINE(PID_AND_MAIN_THREAD_ID_DIFFER, 1,
-							[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated])
+							[Define if 'struct kinfo_proc' p_pid and p_tid are unrelated.])
 						AC_MSG_RESULT([guessing yes])
 					])
 			], [
@@ -434,6 +434,27 @@ if test "$my_htop_platform" = "openbsd"; then
 			#include <sys/types.h>
 			#include <sys/param.h>
 			#include <sys/sysctl.h>
+		])
+fi
+
+if test "$my_htop_platform" = "darwin"; then
+	m4_define([CHECK_LIBPROC], [
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <libproc.h>], [
+					struct proc_taskinfo pti;
+					proc_pidinfo(1, PROC_PIDTASKINFO, 0, &pti, sizeof pti);
+				])], [
+					AC_DEFINE(HAVE_LIBPROC, 1, [Define if you have the Darwin libproc interface.])
+					$1
+				], [$2])
+		])
+	AC_MSG_CHECKING([libproc interface usability])
+	CHECK_LIBPROC([AC_MSG_RESULT([yes])], [
+			save_libs="$LIBS"
+			LIBS="$LIBS -lproc"
+			CHECK_LIBPROC([AC_MSG_RESULT([yes])], [
+					AC_MSG_RESULT([no])
+					LIBS="$save_libs"
+				])
 		])
 fi
 
@@ -543,17 +564,17 @@ fi
 
 AC_ARG_ENABLE(truss-strsize, [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])
 if test "x$enable_truss_strsize" = xyes; then
-	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size])
+	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size.])
 fi
 
 AC_ARG_WITH(bug-reporting-url,
 	[AS_HELP_STRING([--bug-reporting-url=URL], [specify where should users report bugs for distribution package])],
 	[
 		test "x$withval" = xyes && AC_MSG_ERROR([option --bug-reporting-url requires the URL to be specified])
-		AC_DEFINE(BUG_REPORTING_URL, "$withval", [Defines where should users report bugs])
+		AC_DEFINE(BUG_REPORTING_URL, "$withval", [Defines where should users report bugs.])
 	], [
 		AC_DEFINE(BUG_REPORTING_URL, "https://sourceforge.net/p/rivoreo/htop/tickets/",
-			[Defines where should users report bugs])
+			[Defines where should users report bugs.])
 	])
 
 

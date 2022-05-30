@@ -5,14 +5,17 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Process.h"
 #include "DarwinProcess.h"
 #include "bsd/BSDProcess.h"
 #include "CRT.h"
 #include <sys/sysctl.h>
-#include <stdlib.h>
+#ifdef HAVE_LIBPROC
 #include <libproc.h>
+#endif
 #include <string.h>
+#include <stdlib.h>
 #include <mach/mach.h>
 
 /*{
@@ -262,6 +265,7 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
 }
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
+#ifdef HAVE_LIBPROC
    struct proc_taskinfo pti;
    if(proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof pti) != sizeof pti) return;
 
@@ -286,6 +290,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
       dpl->super.kernel_thread_count += pti.pti_threadnum;
    }
    dpl->super.running_thread_count += pti.pti_numrunning;
+#endif
 }
 
 /*
