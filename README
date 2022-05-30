@@ -48,3 +48,78 @@ Changes from original version
 platforms
 
 See the commit log for more.
+
+Building environment requirements
+---------------------------------
+
+* GNU Make or BSD make.
+* A C99 compiler. Some platform-specific codes may use GNU C extensions; in
+  that case, GCC 3.3+ or a compatible C compiler will be required.
+
+Supported target platforms
+--------------------------
+
+### Linux-based operating systems
+
+A minimal of **Linux 2.0** is required; while version 2.6 or later is
+recommended.
+
+For **GNU/Linux**, **GNU C Library 2.0** and later versions are supported.
+
+For **uC/Linux**, only the **uClibc 0.9.33.2** is supported.
+
+For **Android/Linux**, **Android 4.0** and later versions are supported.
+
+Linux with other C library will likely work, but not tested.
+
+### kFreeBSD-based operating systems
+
+A minimal of **kFreeBSD 5.0** is required.
+
+**FreeBSD 5** and later releases are supported.
+
+For **GNU/kFreeBSD**, only the **GNU C Library 2.13** is tested and therefore
+supported.
+
+### DragonFly BSD
+
+**DragonFly BSD 5.0** and later releases are supported.
+
+### macOS (Mac OS X)
+
+**Mac OS X 10.4** and later releases are supported.
+
+### OpenBSD
+
+**OpenBSD 5.0** and later releases are supported.
+
+### Solaris
+
+**Solaris 9** and later releases are supported.
+
+Currently only tested with GCC, therefore building with Sun C compiler is not
+supported.
+
+Other Solars-kernel-based operating systems such as **GNU/kOpenSolaris** are
+currently not supported.
+
+### GNU/Hurd
+
+Currently only tested with **GNU C Library 2.19**, **GNU HURD 0.5** and
+**GNU Mach 1.4**. Although unsupported, it is expected to work with newer
+versions of operating system components.
+
+### AIX
+
+Currently only tested on **AIX 7.1**. Although unsupported, it is expected to
+work on newer versions of the operating system.
+
+### Cygwin
+
+Currently only tested on **Cygwin 1.7.18**.
+
+### Interix
+
+Support is incomplete, many features won't work.
+
+**Interix 3.5** and later versions are supported.
