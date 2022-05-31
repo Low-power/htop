@@ -313,9 +313,8 @@ static Htop_Reaction actionQuit() {
 }
 
 static Htop_Reaction actionSetAffinity(State* st) {
-   if (st->pl->cpuCount == 1)
-      return HTOP_OK;
-#if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
+   if (st->pl->cpuCount == 1) return HTOP_OK;
+#if defined HAVE_LIBHWLOC || defined HAVE_LINUX_AFFINITY || defined HAVE_KFREEBSD_CPUSET
    Panel* panel = st->panel;
    Process* p = (Process*) Panel_getSelected(panel);
    if (!p) return HTOP_OK;

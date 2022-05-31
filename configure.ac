@@ -532,6 +532,38 @@ if test "x$enable_linux_affinity" = xyes; then
    AC_DEFINE(HAVE_LINUX_AFFINITY, 1, [Define if Linux sched_setaffinity and sched_getaffinity are to be used.])
 fi
 
+AC_ARG_ENABLE([kfreebsd-cpuset],
+	[AS_HELP_STRING([--enable-kfreebsd-cpuset],
+		[[enable use of kFreeBSD cpuset_getaffinity(2) and cpuset_setaffinity(2) system calls for CPU affinity support [auto detect]]])],
+	[], [AS_IF([test "x$enable_linux_affinity" = xyes], [enable_kfreebsd_cpuset=no], [enable_kfreebsd_cpuset=check])])
+if test "x$enable_kfreebsd_cpuset" != xno; then
+	if test "x$enable_kfreebsd_cpuset" != xyes && test "x$enable_kfreebsd_cpuset" != xcheck; then
+		AC_MSG_ERROR([Invalid argument for --enable-kfreebsd-cpuset])
+	fi
+	if test "x$enable_linux_affinity" = xyes && test "x$enable_kfreebsd_cpuset" = xyes; then
+		AC_MSG_ERROR([Cannot specify both --enable-linux-affinity and --enable-kfreebsd-cpuset])
+	fi
+	AC_MSG_CHECKING([for cpuset_getaffinity and cpuset_setaffinity])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([
+			#include <sys/param.h>
+			#include <sys/cpuset.h>
+		], [
+			cpuset_t cpuset;
+			CPU_ZERO(&cpuset);
+			cpuset_getaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof cpuset, &cpuset);
+			cpuset_setaffinity(CPU_LEVEL_WHICH, CPU_WHICH_PID, -1, sizeof cpuset, &cpuset);
+		])], [
+			AC_MSG_RESULT([yes])
+			enable_kfreebsd_cpuset=yes
+			AC_DEFINE(HAVE_KFREEBSD_CPUSET, 1,
+				[Define if kFreeBSD cpuset_getaffinity and cpuset_setaffinity are avilable and to be used.])
+		], [
+			AC_MSG_RESULT([no])
+			test "x$enable_kfreebsd_cpuset" != xcheck && AC_MSG_ERROR([kFreeBSD cpuset support not available])
+			enable_kfreebsd_cpuset=no
+		])
+fi
+
 AC_ARG_ENABLE(hwloc, [AS_HELP_STRING([--enable-hwloc], [enable hwloc support for CPU affinity])],, enable_hwloc="no")
 if test "x$enable_hwloc" = xyes
 then
