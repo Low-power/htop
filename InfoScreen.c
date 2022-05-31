@@ -169,6 +169,7 @@ void InfoScreen_run(InfoScreen* this) {
             continue;
          case KEY_F(3):
          case '/':
+            IncSet_reset(this->inc, INC_SEARCH);
             IncSet_activate(this->inc, INC_SEARCH, panel);
             break;
          case KEY_F(4):
