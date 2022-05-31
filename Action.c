@@ -263,13 +263,13 @@ static Htop_Reaction actionIncSearch(State* st) {
 }
 
 static Htop_Reaction actionIncNext(State* st) {
-   IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
+   return IncSet_next(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat) ?
+      (HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st)) : HTOP_OK;
 }
 
 static Htop_Reaction actionIncPrev(State* st) {
-   IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat);
-   return HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st);
+   return IncSet_prev(((MainPanel*)st->panel)->inc, INC_SEARCH, st->panel, (IncMode_GetPanelValue)MainPanel_getValue, st->repeat) ?
+      (HTOP_REFRESH | HTOP_KEEP_FOLLOWING | Action_follow(st)) : HTOP_OK;
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {

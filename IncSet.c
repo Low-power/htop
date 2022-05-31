@@ -143,6 +143,7 @@ static bool search(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelVa
 }
 
 static bool IncMode_find(IncMode* mode, Panel* panel, IncMode_GetPanelValue getPanelValue, int step) {
+   if(!*mode->buffer) return false;
    int size = Panel_size(panel);
    int here = Panel_getSelectedIndex(panel);
    int i = here;
