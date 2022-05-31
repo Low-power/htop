@@ -384,6 +384,7 @@ void ProcessList_scan(ProcessList* this) {
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
       Process* p = (Process*) Vector_get(this->processes, i);
+      p->created = false;
       p->updated = false;
       p->show = true;
    }

@@ -88,6 +88,7 @@ typedef struct Process_ {
 
    struct Settings_* settings;
 
+   bool created;
    bool updated;
 
    bool tag;
@@ -604,6 +605,8 @@ void Process_display(Object* cast, RichString* out) {
    }
    if (this->tag) {
       RichString_setAttr(out, CRT_colors[HTOP_PROCESS_TAG_COLOR]);
+   } else if(this->created && this->settings->highlight_new_processes) {
+      RichString_setAttr(out, CRT_colors[HTOP_PROCESS_CREATED_COLOR]);
    }
    assert(out->chlen > 0);
 }
@@ -642,6 +645,7 @@ void Process_init(Process* this, struct Settings_* settings) {
    this->tag = false;
    this->showChildren = true;
    this->show = true;
+   this->created = true;
    this->updated = false;
    this->argv0_length = -1;
    this->processor = -1;

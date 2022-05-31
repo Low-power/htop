@@ -64,6 +64,7 @@ typedef struct Settings_ {
    bool accountGuestInCPUMeter;
    bool headerMargin;
    bool explicit_delay;
+   bool highlight_new_processes;
    bool vi_mode;
    bool use_mouse;
    int (*sort_strcmp)(const char *, const char *);
@@ -231,6 +232,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->sort_strcmp = atoi(option[1]) ? strcasecmp : strcmp;
       } else if(String_eq(option[0], "explicit_delay")) {
          this->explicit_delay = atoi(option[1]);
+      } else if(String_eq(option[0], "highlight_new_processes")) {
+         this->highlight_new_processes = atoi(option[1]);
       } else if(String_eq(option[0], "vi_mode")) {
          this->vi_mode = atoi(option[1]);
       } else if(String_eq(option[0], "use_mouse")) {
@@ -325,6 +328,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "update_process_names=%d\n", (int) this->updateProcessNames);
    fprintf(f, "case_insensitive_sort=%d\n", (int)(this->sort_strcmp == strcasecmp));
    fprintf(f, "explicit_delay=%d\n", (int)this->explicit_delay);
+   fprintf(f, "highlight_new_processes=%d\n", (int)this->highlight_new_processes);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
@@ -399,6 +403,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    }
    this->sort_strcmp = strcmp;
    this->explicit_delay = false;
+   this->highlight_new_processes = false;
    this->vi_mode = false;
    this->use_mouse = true;
 

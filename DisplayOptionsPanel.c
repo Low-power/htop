@@ -109,5 +109,6 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    this->case_insensitive_sort_check_item = CheckItem_newByVal(xStrdup("Case-insensitive sort"), settings->sort_strcmp == strcasecmp);
    Panel_add(super, (Object *)this->case_insensitive_sort_check_item);
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Explicitly delay between updates to workaroud a ncurses issue"), &settings->explicit_delay));
+   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Highlight newly created processes"), &settings->highlight_new_processes));
    return this;
 }

@@ -68,6 +68,7 @@ typedef struct Process_ {
 
    struct Settings_* settings;
 
+   bool created;
    bool updated;
 
    bool tag;
