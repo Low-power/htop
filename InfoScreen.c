@@ -165,40 +165,46 @@ void InfoScreen_run(InfoScreen* this) {
       }
 
       switch(ch) {
-      case ERR:
-         continue;
-      case KEY_F(3):
-      case '/':
-         IncSet_activate(this->inc, INC_SEARCH, panel);
-         break;
-      case KEY_F(4):
-      case '\\':
-         IncSet_activate(this->inc, INC_FILTER, panel);
-         break;
-      case KEY_F(5):
-         clear();
-         if (As_InfoScreen(this)->scan) InfoScreen_scan(this);
-         InfoScreen_draw(this);
-         break;
-      case '\014': // Ctrl+L
-         clear();
-         InfoScreen_draw(this);
-         break;
-      case 'q':
-      case 27:
-      case KEY_F(10):
-         looping = false;
-         break;
-      case KEY_RESIZE:
-         Panel_resize(panel, COLS, LINES-2);
-         InfoScreen_draw(this);
-         break;
-      default:
-         if (As_InfoScreen(this)->onKey && InfoScreen_onKey(this, ch)) {
+         case ERR:
             continue;
-         }
-         Panel_onKey(panel, ch, repeat);
-         break;
+         case KEY_F(3):
+         case '/':
+            IncSet_activate(this->inc, INC_SEARCH, panel);
+            break;
+         case KEY_F(4):
+         case '\\':
+            IncSet_activate(this->inc, INC_FILTER, panel);
+            break;
+         case 'n':
+            IncSet_next(this->inc, INC_SEARCH, panel, IncSet_getListItemValue, repeat);
+            break;
+         case 'N':
+            IncSet_prev(this->inc, INC_SEARCH, panel, IncSet_getListItemValue, repeat);
+            break;
+         case KEY_F(5):
+            clear();
+            if (As_InfoScreen(this)->scan) InfoScreen_scan(this);
+            InfoScreen_draw(this);
+            break;
+         case '\014': // Ctrl+L
+            clear();
+            InfoScreen_draw(this);
+            break;
+         case 'q':
+         case 27:
+         case KEY_F(10):
+            looping = false;
+            break;
+         case KEY_RESIZE:
+            Panel_resize(panel, COLS, LINES-2);
+            InfoScreen_draw(this);
+            break;
+         default:
+            if (As_InfoScreen(this)->onKey && InfoScreen_onKey(this, ch)) {
+               continue;
+            }
+            Panel_onKey(panel, ch, repeat);
+            break;
       }
    }
 }
