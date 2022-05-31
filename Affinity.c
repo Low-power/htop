@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #elif defined HAVE_LINUX_AFFINITY
 #include <sched.h>
 #elif defined HAVE_KFREEBSD_CPUSET
+#include <sys/param.h>
 #include <sys/cpuset.h>
 #endif
 
