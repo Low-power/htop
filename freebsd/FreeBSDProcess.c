@@ -11,6 +11,7 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "Platform.h"
 #include "CRT.h"
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/user.h>
