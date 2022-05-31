@@ -262,10 +262,13 @@ void ProcessList_goThroughEntries(ProcessList* super) {
        proc->percent_mem = (pe->pi_drss + pe->pi_trss * PAGE_SIZE_KB) / (double)(super->totalMem) * 100.0;
        proc->nlwp = pe->pi_thcount;
        proc->nice = pe->pi_nice - NZERO;
-       ap->utime = pe->pi_ru.ru_utime.tv_sec;
-       ap->stime = pe->pi_ru.ru_stime.tv_sec;
+       /* WARNING: Despite their name, 'ru_utime.tv_usec' and
+        * 'ru_stime.tv_usec' here are actually in nanoseconds!
+        */
+       ap->utime = pe->pi_ru.ru_utime.tv_sec * 100 + pe->pi_ru.ru_utime.tv_usec / 10000000;
+       ap->stime = pe->pi_ru.ru_stime.tv_sec * 100 + pe->pi_ru.ru_stime.tv_usec / 10000000;
        proc->time = ap->utime + ap->stime;
-       proc->percent_cpu = (((double)proc->time / (t - proc->starttime_ctime)) * 100.0) / super->cpuCount;
+       proc->percent_cpu = (double)proc->time / (t - proc->starttime_ctime);
        // sometimes this happens with freshly spawned in procs
        if (isnan(proc->percent_cpu))
            proc->percent_cpu = 0.0;
