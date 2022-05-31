@@ -42,6 +42,7 @@ typedef struct CPUData_ {
 typedef struct SolarisProcessList_ {
    ProcessList super;
    kstat_ctl_t* kd;
+   int online_cpu_count;
    CPUData* cpus;
 #ifndef HAVE_LIBPROC
    DIR *proc_dir;

@@ -61,6 +61,7 @@ typedef struct CPUData_ {
 typedef struct SolarisProcessList_ {
    ProcessList super;
    kstat_ctl_t* kd;
+   int online_cpu_count;
    CPUData* cpus;
 #ifndef HAVE_LIBPROC
    DIR *proc_dir;
@@ -87,37 +88,36 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    SolarisProcessList* spl = xCalloc(1, sizeof(SolarisProcessList));
    ProcessList* pl = (ProcessList*) spl;
    ProcessList_init(pl, Class(SolarisProcess), usersTable, pidWhiteList, userId);
-
    spl->kd = kstat_open();
-
+   spl->online_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
    pl->cpuCount = sysconf(_SC_NPROCESSORS_CONF);
    if (pl->cpuCount > 1) {
       spl->cpus = xMalloc((pl->cpuCount + 1) * sizeof(CPUData));
    } else {
       spl->cpus = xMalloc(sizeof(CPUData));
    }
-
    return pl;
 }
 
 static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
-   const SolarisProcessList* spl = (SolarisProcessList*) pl;
+   SolarisProcessList *spl = (SolarisProcessList *)pl;
+
    int cpus = pl->cpuCount;
-   kstat_t *cpuinfo = NULL;
-   int kchain = -1;
-   kstat_named_t *idletime = NULL;
-   kstat_named_t *intrtime = NULL;
-   kstat_named_t *krnltime = NULL;
-   kstat_named_t *usertime = NULL;
    double idlebuf = 0;
    double intrbuf = 0;
    double krnlbuf = 0;
    double userbuf = 0;
-   uint64_t totaltime = 0;
    int arrskip = 0;
 
-   assert(cpus > 0);
+   assert(spl->kd != NULL);
 
+   int online_cpu_count = sysconf(_SC_NPROCESSORS_ONLN);
+   if(online_cpu_count != spl->online_cpu_count) {
+      kstat_chain_update(spl->kd);
+      spl->online_cpu_count = online_cpu_count;
+   }
+
+   assert(cpus > 0);
    if (cpus > 1) {
        // Store values for the stats loop one extra element up in the array
        // to leave room for the average to be calculated afterwards
@@ -126,39 +126,45 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
 
    // Calculate per-CPU statistics first
    for (int i = 0; i < cpus; i++) {
-      assert(spl->kd != NULL);
-      cpuinfo = kstat_lookup(spl->kd,"cpu",i,"sys");
-      if(!cpuinfo) return;
-      kchain = kstat_read(spl->kd,cpuinfo,NULL);
-      if(kchain == -1) return;
-      idletime = kstat_data_lookup(cpuinfo,"cpu_nsec_idle");
-      intrtime = kstat_data_lookup(cpuinfo,"cpu_nsec_intr");
-      krnltime = kstat_data_lookup(cpuinfo,"cpu_nsec_kernel");
-      usertime = kstat_data_lookup(cpuinfo,"cpu_nsec_user");
-
       CPUData *cpuData = spl->cpus + i + arrskip;
-      totaltime = (idletime->value.ui64 - cpuData->lidle) +
-                  (intrtime->value.ui64 - cpuData->lintr) +
-                  (krnltime->value.ui64 - cpuData->lkrnl) +
-                  (usertime->value.ui64 - cpuData->luser);
-      // Calculate percentages of deltas since last reading
-      cpuData->userPercent      = ((usertime->value.ui64 - cpuData->luser) / (double)totaltime) * 100.0;
-      cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
-      cpuData->systemPercent    = ((krnltime->value.ui64 - cpuData->lkrnl) / (double)totaltime) * 100.0;
-      cpuData->irqPercent       = ((intrtime->value.ui64 - cpuData->lintr) / (double)totaltime) * 100.0;
-      cpuData->systemAllPercent = cpuData->systemPercent + cpuData->irqPercent;
-      cpuData->idlePercent      = ((idletime->value.ui64 - cpuData->lidle) / (double)totaltime) * 100.0;
-      // Store current values to use for the next round of deltas
-      cpuData->luser            = usertime->value.ui64;
-      cpuData->lkrnl            = krnltime->value.ui64;
-      cpuData->lintr            = intrtime->value.ui64;
-      cpuData->lidle            = idletime->value.ui64;
-      // Accumulate the current percentages into buffers for later average calculation
-      if (cpus > 1) {
-         userbuf               += cpuData->userPercent;
-         krnlbuf               += cpuData->systemPercent;
-         intrbuf               += cpuData->irqPercent;
-         idlebuf               += cpuData->idlePercent;
+      kstat_t *cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys");
+      if(cpuinfo && kstat_read(spl->kd, cpuinfo, NULL) != -1) {
+         kstat_named_t *idletime = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
+         kstat_named_t *intrtime = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
+         kstat_named_t *krnltime = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
+         kstat_named_t *usertime = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+         uint64_t totaltime =
+            (idletime->value.ui64 - cpuData->lidle) +
+            (intrtime->value.ui64 - cpuData->lintr) +
+            (krnltime->value.ui64 - cpuData->lkrnl) +
+            (usertime->value.ui64 - cpuData->luser);
+         // Calculate percentages of deltas since last reading
+         cpuData->userPercent      = ((usertime->value.ui64 - cpuData->luser) / (double)totaltime) * 100.0;
+         cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
+         cpuData->systemPercent    = ((krnltime->value.ui64 - cpuData->lkrnl) / (double)totaltime) * 100.0;
+         cpuData->irqPercent       = ((intrtime->value.ui64 - cpuData->lintr) / (double)totaltime) * 100.0;
+         cpuData->systemAllPercent = cpuData->systemPercent + cpuData->irqPercent;
+         cpuData->idlePercent      = ((idletime->value.ui64 - cpuData->lidle) / (double)totaltime) * 100.0;
+         // Store current values to use for the next round of deltas
+         cpuData->luser            = usertime->value.ui64;
+         cpuData->lkrnl            = krnltime->value.ui64;
+         cpuData->lintr            = intrtime->value.ui64;
+         cpuData->lidle            = idletime->value.ui64;
+         // Accumulate the current percentages into buffers for later average calculation
+         if (cpus > 1) {
+            userbuf               += cpuData->userPercent;
+            krnlbuf               += cpuData->systemPercent;
+            intrbuf               += cpuData->irqPercent;
+            idlebuf               += cpuData->idlePercent;
+         }
+      } else {
+         // An off-line processor
+         cpuData->userPercent = 0;
+         cpuData->nicePercent = 0;
+         cpuData->systemPercent = 0;
+         cpuData->irqPercent = 0;
+         cpuData->systemAllPercent = 0;
+         cpuData->idlePercent = 100;
       }
    }
    if (cpus > 1) {
@@ -342,7 +348,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       proc->tgid            = (_psinfo->pr_ppid * 1024);
       sproc->realppid       = _psinfo->pr_ppid;
       // See note above (in common section) about this BINARY FRACTION
-      proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu/(double)32768) * pl->cpuCount * 100;
+      proc->percent_cpu     = ((uint16_t)_psinfo->pr_pctcpu/(double)32768) * spl->online_cpu_count * 100;
       proc->time            = _psinfo->pr_time.tv_sec * 100 + _psinfo->pr_time.tv_nsec / 10000000;
       if(!preExisting) { // Tasks done only for NEW processes
          sproc->is_lwp = false;
@@ -359,7 +365,7 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       if (proc->state == 'O') pl->running_process_count++;
       proc->show = !(pl->settings->hide_kernel_processes && sproc->kernel);
    } else { // We are not in the master LWP, so jump to the LWP handling code
-      proc->percent_cpu     = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768) * pl->cpuCount * 100;
+      proc->percent_cpu     = ((uint16_t)_lwpsinfo->pr_pctcpu/(double)32768) * spl->online_cpu_count * 100;
       proc->time            = _lwpsinfo->pr_time.tv_sec * 100 + _lwpsinfo->pr_time.tv_nsec / 10000000;
       if (!preExisting) { // Tasks done only for NEW LWPs
          sproc->is_lwp         = true;
@@ -460,7 +466,7 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 		}
 		proc->ppid = info.pr_ppid;
 		sol_proc->realppid = info.pr_ppid;
-		proc->percent_cpu = ((uint16_t)info.pr_pctcpu/(double)32768) * super->cpuCount * 100;
+		proc->percent_cpu = ((uint16_t)info.pr_pctcpu/(double)32768) * this->online_cpu_count * 100;
 		proc->time = info.pr_time.tv_sec * 100 + info.pr_time.tv_nsec / 10000000;
 		proc->nlwp = info.pr_nlwp;
 		proc->state = info.pr_lwp.pr_sname;
