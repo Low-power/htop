@@ -23,6 +23,9 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include <stdbool.h>
 
+#define PROCESS_FLAG_JAIL 0x100
+#define PROCESS_FLAG_EMULATION 0x200
+
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
    HTOP_JID_FIELD = 100,
@@ -80,8 +83,8 @@ ProcessFieldData Process_fields[] = {
    [HTOP_NLWP_FIELD] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
    [HTOP_TGID_FIELD] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [HTOP_JID_FIELD] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
-   [HTOP_JAIL_FIELD] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = 0, },
-   [HTOP_EMULATION_FIELD] = { .name = "EMULATION", .title = "EMULATION        ", .description = "Binary format emulation type", .flags = 0 },
+   [HTOP_JAIL_FIELD] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = PROCESS_FLAG_JAIL },
+   [HTOP_EMULATION_FIELD] = { .name = "EMULATION", .title = "EMULATION        ", .description = "Binary format emulation type", .flags = PROCESS_FLAG_EMULATION },
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 

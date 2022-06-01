@@ -517,9 +517,6 @@ void ProcessList_goThroughEntries(ProcessList* this) {
       proc->pgrp = kproc->ki_pgid;
 
       if (!is_existing) {
-#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
-         fp->jid = kproc->ki_jid;
-#endif
          fp->kernel = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
          proc->ruid = kproc->ki_ruid;
          proc->euid = kproc->ki_uid;
@@ -528,15 +525,12 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          proc->starttime_ctime = kproc->ki_start.tv_sec;
          ProcessList_add((ProcessList*)this, proc);
          FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
-         fp->jname = FreeBSDProcessList_readJailName(kproc);
-         fp->emulation = xStrdup(kproc->ki_emul);
       } else {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
          if(fp->jid != kproc->ki_jid) {
             // process can enter jail anytime
-            fp->jid = kproc->ki_jid;
             free(fp->jname);
-            fp->jname = FreeBSDProcessList_readJailName(kproc);
+            fp->jname = NULL;
          }
 #endif
          // some processes change users (eg. to lower privs)
@@ -552,8 +546,10 @@ void ProcessList_goThroughEntries(ProcessList* this) {
             free(proc->name);
             free(proc->comm);
             FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);
-            free(fp->emulation);
-            fp->emulation = xStrdup(kproc->ki_emul);
+            if(this->settings->flags & PROCESS_FLAG_EMULATION) {
+               free(fp->emulation);
+               fp->emulation = xStrdup(kproc->ki_emul);
+            }
          }
       }
 
@@ -611,6 +607,17 @@ void ProcessList_goThroughEntries(ProcessList* this) {
          if(kproc->ki_lastcpu != NOCPU) proc->processor = kproc->ki_lastcpu;
       } else {
          proc->processor = on_processor;
+      }
+
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
+      fp->jid = kproc->ki_jid;
+#endif
+      if((this->settings->flags & PROCESS_FLAG_JAIL) && !fp->jname) {
+         fp->jname = FreeBSDProcessList_readJailName(kproc);
+      }
+
+      if((this->settings->flags & PROCESS_FLAG_EMULATION) && !fp->emulation) {
+         fp->emulation = xStrdup(kproc->ki_emul);
       }
 
       this->totalTasks++;

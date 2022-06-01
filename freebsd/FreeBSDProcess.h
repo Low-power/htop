@@ -12,6 +12,9 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include <stdbool.h>
 
+#define PROCESS_FLAG_JAIL 0x100
+#define PROCESS_FLAG_EMULATION 0x200
+
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
    HTOP_JID_FIELD = 100,
