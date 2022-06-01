@@ -46,6 +46,8 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <stdbool.h>
 
+#define uintcmp(n1,n2) ((n1)>(n2)?1:((n1)<(n2)?-1:0))
+
 #define PROCESS_FLAG_IO 0x0001
 
 typedef enum {
@@ -97,7 +99,7 @@ typedef struct Process_ {
    bool seen_in_tree_loop;
    int indent;
 
-   char state;
+   int state;
    pid_t pid;
    pid_t ppid;
    pid_t tgid;
@@ -702,11 +704,11 @@ long Process_compare(const void* v1, const void* v2) {
       case HTOP_NAME_FIELD:
          return settings->sort_strcmp(p1->name, p2->name);
       case HTOP_COMM_FIELD:
-            return settings->sort_strcmp(p1->comm, p2->comm);
+         return settings->sort_strcmp(p1->comm, p2->comm);
       case HTOP_MAJFLT_FIELD:
-            return (p2->majflt - p1->majflt);
+         return uintcmp(p2->majflt, p1->majflt);
       case HTOP_MINFLT_FIELD:
-         return (p2->minflt - p1->minflt);
+         return uintcmp(p2->minflt, p1->minflt);
       case HTOP_M_RESIDENT_FIELD:
          return (p2->m_resident - p1->m_resident);
       case HTOP_M_SIZE_FIELD:
@@ -716,7 +718,7 @@ long Process_compare(const void* v1, const void* v2) {
       case HTOP_NLWP_FIELD:
          return (p1->nlwp - p2->nlwp);
       case HTOP_PGRP_FIELD:
-         return (p1->pgrp - p2->pgrp);
+         return uintcmp(p1->pgrp, p2->pgrp);
       case HTOP_PID_FIELD:
          return (p1->pid - p2->pid);
       case HTOP_PPID_FIELD:
@@ -724,31 +726,33 @@ long Process_compare(const void* v1, const void* v2) {
       case HTOP_PRIORITY_FIELD:
          return (p1->priority - p2->priority);
       case HTOP_PROCESSOR_FIELD:
-            return (p1->processor - p2->processor);
+         return (p1->processor - p2->processor);
       case HTOP_SESSION_FIELD:
-         return (p1->session - p2->session);
+         return uintcmp(p1->session, p2->session);
       case HTOP_STARTTIME_FIELD:
          return p1->starttime_ctime == p2->starttime_ctime ?
             p1->pid - p2->pid : p1->starttime_ctime - p2->starttime_ctime;
       case HTOP_STATE_FIELD:
          return (Process_sortState(p1->state) - Process_sortState(p2->state));
       case HTOP_REAL_UID_FIELD:
-         return (p1->ruid - p2->ruid);
+      compare_ruid:
+         return uintcmp(p1->ruid, p2->ruid);
       case HTOP_EFFECTIVE_UID_FIELD:
-         return (p1->euid - p2->euid);
+      compare_euid:
+         return uintcmp(p1->euid, p2->euid);
       case HTOP_TIME_FIELD:
-         return p2->time - p1->time;
+         return uintcmp(p2->time, p1->time);
       case HTOP_TGID_FIELD:
          return (p1->tgid - p2->tgid);
       case HTOP_TPGID_FIELD:
          return (p1->tpgid - p2->tpgid);
       case HTOP_TTY_FIELD:
-         return (p1->tty_nr - p2->tty_nr);
+         return uintcmp(p1->tty_nr, p2->tty_nr);
       case HTOP_REAL_USER_FIELD:
-         if(!p1->real_user && !p2->real_user) return p1->ruid - p2->ruid;
+         if(!p1->real_user && !p2->real_user) goto compare_ruid;
          return settings->sort_strcmp(p1->real_user ? p1->real_user : "", p2->real_user ? p2->real_user : "");
       case HTOP_EFFECTIVE_USER_FIELD:
-         if(!p1->effective_user && !p2->effective_user) return p1->euid - p2->euid;
+         if(!p1->effective_user && !p2->effective_user) goto compare_euid;
          return settings->sort_strcmp(p1->effective_user ? p1->effective_user : "", p2->effective_user ? p2->effective_user : "");
       default:
          return (p1->pid - p2->pid);

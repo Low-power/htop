@@ -225,7 +225,7 @@ long AixProcess_compare(const void* v1, const void* v2) {
    switch ((int) settings->sortKey) {
       // add Aix-specific fields here
       case HTOP_WPAR_ID_FIELD:
-         return (p1->cid - p2->cid);
+         return uintcmp(p1->cid, p2->cid);
       default:
          return Process_compare(v1, v2);
    }

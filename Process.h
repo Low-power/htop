@@ -26,6 +26,8 @@ in the source distribution for its full text.
 #include <sys/types.h>
 #include <stdbool.h>
 
+#define uintcmp(n1,n2) ((n1)>(n2)?1:((n1)<(n2)?-1:0))
+
 #define PROCESS_FLAG_IO 0x0001
 
 typedef enum {
@@ -77,7 +79,7 @@ typedef struct Process_ {
    bool seen_in_tree_loop;
    int indent;
 
-   char state;
+   int state;
    pid_t pid;
    pid_t ppid;
    pid_t tgid;

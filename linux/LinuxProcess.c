@@ -492,42 +492,31 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
       case HTOP_M_SHARE_FIELD:
          return (p2->m_share - p1->m_share);
       case HTOP_UTIME_FIELD:
-         diff = p2->utime - p1->utime;
-         goto test_diff;
+         return uintcmp(p2->utime, p1->utime);
       case HTOP_CUTIME_FIELD:
-         diff = p2->cutime - p1->cutime;
-         goto test_diff;
+         return uintcmp(p2->cutime, p1->cutime);
       case HTOP_STIME_FIELD:
-         diff = p2->stime - p1->stime;
-         goto test_diff;
+         return uintcmp(p2->stime, p1->stime);
       case HTOP_CSTIME_FIELD:
-         diff = p2->cstime - p1->cstime;
-         goto test_diff;
+         return uintcmp(p2->cstime, p1->cstime);
       case HTOP_STARTTIME_FIELD:
          return p1->starttime == p2->starttime ?
-            p1->super.pid - p2->super.pid : (long long int)p1->starttime - (long long int)p2->starttime;
+            p1->super.pid - p2->super.pid : uintcmp(p1->starttime, p2->starttime);
    #ifdef HAVE_TASKSTATS
       case HTOP_RCHAR_FIELD:
-         diff = p2->io_rchar - p1->io_rchar;
-         goto test_diff;
+         return uintcmp(p2->io_rchar, p1->io_rchar);
       case HTOP_WCHAR_FIELD:
-         diff = p2->io_wchar - p1->io_wchar;
-         goto test_diff;
+         return uintcmp(p2->io_wchar, p1->io_wchar);
       case HTOP_SYSCR_FIELD:
-         diff = p2->io_syscr - p1->io_syscr;
-         goto test_diff;
+         return uintcmp(p2->io_syscr, p1->io_syscr);
       case HTOP_SYSCW_FIELD:
-         diff = p2->io_syscw - p1->io_syscw;
-         goto test_diff;
+         return uintcmp(p2->io_syscw, p1->io_syscw);
       case HTOP_RBYTES_FIELD:
-         diff = p2->io_read_bytes - p1->io_read_bytes;
-         goto test_diff;
+         return uintcmp(p2->io_read_bytes, p1->io_read_bytes);
       case HTOP_WBYTES_FIELD:
-         diff = p2->io_write_bytes - p1->io_write_bytes;
-         goto test_diff;
+         return uintcmp(p2->io_write_bytes, p1->io_write_bytes);
       case HTOP_CNCLWB_FIELD:
-         diff = p2->io_cancelled_write_bytes - p1->io_cancelled_write_bytes;
-         goto test_diff;
+         return uintcmp(p2->io_cancelled_write_bytes, p1->io_cancelled_write_bytes);
       case HTOP_IO_READ_RATE_FIELD:
          diff = p2->io_rate_read_bps - p1->io_rate_read_bps;
          goto test_diff;
@@ -539,21 +528,21 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
          goto test_diff;
    #endif
    #ifdef HAVE_OPENVZ
-         case HTOP_CTID_FIELD:
-      return (p2->ctid - p1->ctid);
+      case HTOP_CTID_FIELD:
+         return uintcmp(p2->ctid, p1->ctid);
       case HTOP_VPID_FIELD:
-         return (p2->vpid - p1->vpid);
+         return uintcmp(p2->vpid, p1->vpid);
    #endif
    #ifdef HAVE_VSERVER
       case HTOP_VXID_FIELD:
-         return (p2->vxid - p1->vxid);
+         return uintcmp(p2->vxid, p1->vxid);
    #endif
    #ifdef HAVE_CGROUP
       case HTOP_CGROUP_FIELD:
          return settings->sort_strcmp(p1->cgroup ? p1->cgroup : "", p2->cgroup ? p2->cgroup : "");
    #endif
-         case HTOP_OOM_FIELD:
-      return (p2->oom - p1->oom);
+      case HTOP_OOM_FIELD:
+         return uintcmp(p2->oom, p1->oom);
    #ifdef HAVE_DELAYACCT
       case HTOP_PERCENT_CPU_DELAY_FIELD:
          return (p2->cpu_delay_percent > p1->cpu_delay_percent ? 1 : -1);
