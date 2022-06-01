@@ -590,6 +590,7 @@ char* CRT_termType;
 int CRT_color_scheme_index;
 
 void CRT_setMouse(bool enabled) {
+#ifdef HAVE_MOUSEMASK
 	mmask_t mask = enabled ?
 #if NCURSES_MOUSE_VERSION > 1
 		BUTTON1_RELEASED | BUTTON4_PRESSED | BUTTON5_PRESSED
@@ -598,6 +599,7 @@ void CRT_setMouse(bool enabled) {
 #endif
 		: 0;
 	mousemask(mask, NULL);
+#endif
 }
 
 static void CRT_handleAbnormalSignal(int sgn) {
@@ -841,6 +843,25 @@ static int get_color_by_name(const char *name, unsigned int len) {
 	return -1;
 }
 
+#ifndef A_HORIZONTAL
+#define A_HORIZONTAL 0
+#endif
+#ifndef A_LEFT
+#define A_LEFT 0
+#endif
+#ifndef A_LOW
+#define A_LOW 0
+#endif
+#ifndef A_RIGHT
+#define A_RIGHT 0
+#endif
+#ifndef A_TOP
+#define A_TOP 0
+#endif
+#ifndef A_VERTICAL
+#define A_VERTICAL 0
+#endif
+
 static int get_attribute_by_name(const char *name, unsigned int len) {
 #define CHECK_ATTRIBUTE_NAME(A) if(len == sizeof #A - 1 && memcmp(name, #A, sizeof #A - 1) == 0) return A_##A
 	CHECK_ATTRIBUTE_NAME(STANDOUT);
@@ -1043,11 +1064,14 @@ void CRT_init(const Settings *settings) {
    nonl();
    intrflush(stdscr, false);
    keypad(stdscr, true);
+#ifdef HAVE_MOUSEINTERVAL
    mouseinterval(0);
+#endif
    curs_set(0);
    if(has_colors()) start_color();
    CRT_termType = getenv("TERM");
    CRT_scrollHAmount = String_eq(CRT_termType, "linux") ? 20 : 5;
+#ifdef HAVE_DEFINE_KEY
    if (String_startsWith(CRT_termType, "xterm") || String_eq(CRT_termType, "vt220")) {
       define_key("\033[H", KEY_HOME);
       define_key("\033[F", KEY_END);
@@ -1068,6 +1092,7 @@ void CRT_init(const Settings *settings) {
          define_key(sequence, KEY_ALT('A' + (c - 'a')));
       }
    }
+#endif
 #ifdef HAVE_SET_ESCDELAY
    set_escdelay(25);
 #endif
@@ -1079,7 +1104,9 @@ void CRT_init(const Settings *settings) {
 #endif
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
+#ifdef HAVE_USE_DEFAULT_COLORS
    use_default_colors();
+#endif
    CRT_setColors(settings->colorScheme);
 
    /* initialize locale */

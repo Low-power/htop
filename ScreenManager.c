@@ -200,6 +200,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
       HandlerResult result = IGNORED;
       if (ch == KEY_MOUSE) {
          ch = ERR;
+#ifdef HAVE_NCURSES_GETMOUSE
          MEVENT mevent;
          if (getmouse(&mevent) == OK) {
             if (mevent.bstate & BUTTON1_RELEASED) {
@@ -237,6 +238,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
             #endif
             }
          }
+#endif
       }
       if (ch == ERR) {
          sortTimeout--;
@@ -283,9 +285,11 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
          continue;
       }
       switch (ch) {
+#ifdef KEY_RESIZE
          case KEY_RESIZE:
             ScreenManager_resize(this, this->x1, this->y1, this->x2, this->y2);
             continue;
+#endif
          case KEY_LEFT:
          case KEY_CTRL('B'):
             if (this->panelCount < 2) goto defaultHandler;

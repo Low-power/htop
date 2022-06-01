@@ -209,11 +209,13 @@ static Htop_Reaction sortBy(State* st) {
 
 // ----------------------------------------
 
+#ifdef KEY_RESIZE
 static Htop_Reaction actionResize(State* st) {
    clear();
    Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
    return HTOP_REDRAW_BAR;
 }
+#endif
 
 static Htop_Reaction actionSortByMemory(State* st) {
    return Action_setSortKey(st->settings, HTOP_PERCENT_MEM_FIELD);
@@ -421,8 +423,11 @@ static Htop_Reaction actionTag(State* st) {
    return HTOP_OK;
 }
 
-static Htop_Reaction actionRedraw() {
+static Htop_Reaction actionRedraw(State *st) {
    clear();
+#ifndef KEY_RESIZE
+   Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
+#endif
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
@@ -645,7 +650,9 @@ static Htop_Reaction show_kernel_stack_trace_screen(State *st) {
 
 
 void Action_setBindings(Htop_Action* keys) {
+#ifdef KEY_RESIZE
    keys[KEY_RESIZE] = actionResize;
+#endif
    keys['M'] = actionSortByMemory;
    keys['T'] = actionSortByTime;
    keys['P'] = actionSortByCPU;

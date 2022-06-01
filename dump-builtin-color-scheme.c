@@ -42,12 +42,24 @@ static void print_font_attribute(int attr) {
 	if(attr & A_ALTCHARSET) fputs(",ALTCHARSET", stdout);
 	if(attr & A_INVIS) fputs(",INVIS", stdout);
 	if(attr & A_PROTECT) fputs(",PROTECT", stdout);
+#ifdef A_HORIZONTAL
 	if(attr & A_HORIZONTAL) fputs(",HORIZONTAL", stdout);
+#endif
+#ifdef A_LEFT
 	if(attr & A_LEFT) fputs(",LEFT", stdout);
+#endif
+#ifdef A_LOW
 	if(attr & A_LOW) fputs(",LOW", stdout);
+#endif
+#ifdef A_RIGHT
 	if(attr & A_RIGHT) fputs(",RIGHT", stdout);
+#endif
+#ifdef A_TOP
 	if(attr & A_TOP) fputs(",TOP", stdout);
+#endif
+#ifdef A_VERTICAL
 	if(attr & A_VERTICAL) fputs(",VERTICAL", stdout);
+#endif
 	putchar('\n');
 }
 #endif

@@ -206,6 +206,25 @@ extern unsigned int CRT_page_size_kib;
 
 char *CRT_getConfigDirPath(const char **home_path_p);
 
+#ifndef A_HORIZONTAL
+#define A_HORIZONTAL 0
+#endif
+#ifndef A_LEFT
+#define A_LEFT 0
+#endif
+#ifndef A_LOW
+#define A_LOW 0
+#endif
+#ifndef A_RIGHT
+#define A_RIGHT 0
+#endif
+#ifndef A_TOP
+#define A_TOP 0
+#endif
+#ifndef A_VERTICAL
+#define A_VERTICAL 0
+#endif
+
 void CRT_initColorSchemes();
 
 int CRT_getDefaultColorScheme();

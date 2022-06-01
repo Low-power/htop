@@ -202,8 +202,10 @@ bool IncSet_handleKey(IncSet* this, int ch, Panel* panel, IncMode_GetPanelValue 
       } else {
          doSearch = false;
       }
+#ifdef KEY_RESIZE
    } else if (ch == KEY_RESIZE) {
      Panel_resize(panel, COLS, LINES-panel->y-1);
+#endif
    } else {
       if (mode->isFilter) {
          filterChanged = true;

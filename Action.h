@@ -51,6 +51,9 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 
 // ----------------------------------------
 
+#ifdef KEY_RESIZE
+#endif
+
 Htop_Reaction Action_follow(State* st);
 
 

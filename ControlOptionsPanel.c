@@ -84,6 +84,8 @@ ControlOptionsPanel* ControlOptionsPanel_new(Settings* settings, ScreenManager* 
 
    Panel_setHeader(super, "Control options");
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Use vi(1)-style key-bindings"), &settings->vi_mode));
+#ifdef HAVE_MOUSEMASK
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Use mouse control"), &settings->use_mouse));
+#endif
    return this;
 }

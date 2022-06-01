@@ -46,16 +46,17 @@ struct InfoScreen_ {
 };
 }*/
 
+#include "config.h"
 #include "InfoScreen.h"
 #include "Object.h"
 #include "CRT.h"
 #include "ListItem.h"
 #include "Platform.h"
 #include "StringUtils.h"
+#include <stdarg.h>
 #include "local-curses.h"
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
 #if defined ERR && ERR > 0
 #undef ERR
@@ -143,6 +144,7 @@ void InfoScreen_run(InfoScreen* this) {
       }
 
       if (ch == KEY_MOUSE) {
+#ifdef HAVE_NCURSES_GETMOUSE
          MEVENT mevent;
          if(getmouse(&mevent) == OK) {
             if (mevent.y >= panel->y && mevent.y < LINES - 1) {
@@ -151,6 +153,7 @@ void InfoScreen_run(InfoScreen* this) {
             }
             if (mevent.y == LINES - 1) ch = IncSet_synthesizeEvent(this->inc, mevent.x);
          }
+#endif
       }
 
       if (this->inc->active) {
@@ -189,6 +192,9 @@ void InfoScreen_run(InfoScreen* this) {
             break;
          case '\014': // Ctrl+L
             clear();
+#ifndef KEY_RESIZE
+            Panel_resize(panel, COLS, LINES-2);
+#endif
             InfoScreen_draw(this);
             break;
          case 'q':
@@ -196,10 +202,12 @@ void InfoScreen_run(InfoScreen* this) {
          case KEY_F(10):
             looping = false;
             break;
+#ifdef KEY_RESIZE
          case KEY_RESIZE:
             Panel_resize(panel, COLS, LINES-2);
             InfoScreen_draw(this);
             break;
+#endif
          default:
             if (As_InfoScreen(this)->onKey && InfoScreen_onKey(this, ch)) {
                continue;

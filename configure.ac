@@ -286,7 +286,7 @@ m4_define([HTOP_CHECK_SCRIPT],
       LDFLAGS="$htop_save_LDFLAGS"
    fi
    if test "x$htop_script_success" = xno; then
-      [$5]
+      $5
    fi
 ])
 
@@ -342,20 +342,28 @@ if test "x$enable_unicode" = xyes; then
 				[AC_MSG_ERROR([libncursesw present but development headers didn't work properly. You may want to use --disable-unicode])])
 		])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], "ncurses6-config",
-    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], "ncurses5-config",
-     HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
-      HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
-      missing_libraries="$missing_libraries libncurses"
-   ))))
-   
+   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], ["ncurses6-config"],
+    [HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], ["ncurses5-config"],
+     [HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
+      [HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
+       [HTOP_CHECK_LIB([curses], [refresh], [HAVE_LIBCURSES],
+        [missing_libraries="$missing_libraries libncurses/libcurses"])])])])])
    AC_CHECK_HEADERS([ncurses.h],[:],
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
             [AC_CHECK_HEADERS([curses.h],[:],[missing_headers="$missing_headers $ac_header"])])])])
 fi
 
-AC_CHECK_FUNCS([set_escdelay])
+AC_CHECK_FUNCS([set_escdelay define_key use_default_colors mousemask mouseinterval])
+AC_MSG_CHECKING([for ncurses-compatible getmouse])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([$curses_include], [
+		MEVENT mevent;
+		getmouse(&mevent);
+	])], [
+		AC_MSG_RESULT([yes])
+		AC_DEFINE(HAVE_NCURSES_GETMOUSE, 1,
+			[Define if you have a ncurses-compatible getmouse(3X) function])
+	], [AC_MSG_RESULT([no])])
 
 if test "$my_htop_platform" = "freebsd"; then
 	AC_ARG_WITH([kvm],
