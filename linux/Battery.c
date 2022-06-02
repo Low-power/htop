@@ -31,11 +31,10 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // but I think this is on the way out so I did not rewrite it.
 // The /sys implementation below does things the right way.
 
-static unsigned long int parseBatInfo(const char *fileName, const unsigned short int lineNum, const unsigned short int wordNum) {
+static long int parseBatInfo(const char *fileName, int lineNum, int wordNum) {
    const char batteryPath[] = PROCDIR "/acpi/battery/";
    DIR* batteryDir = opendir(batteryPath);
-   if (!batteryDir)
-      return 0;
+   if (!batteryDir) return -1;
 
    #define MAX_BATTERIES 64
    char* batteries[MAX_BATTERIES];
@@ -54,7 +53,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
    }
    closedir(batteryDir);
 
-   unsigned long int total = 0;
+   long int total = -1;
    for (unsigned int i = 0; i < nBatteries; i++) {
       char infoPath[30];
       xSnprintf(infoPath, sizeof infoPath, "%s%s/%s", batteryPath, batteries[i], fileName);
@@ -65,7 +64,7 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       }
 
       char* line = NULL;
-      for (unsigned short int i = 0; i < lineNum; i++) {
+      for (int i = 0; i < lineNum; i++) {
          free(line);
          line = String_readLine(file);
          if (!line) break;
@@ -79,8 +78,8 @@ static unsigned long int parseBatInfo(const char *fileName, const unsigned short
       const unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
       free(line);
-      
-      total += foundNum;
+      if(total < 0) total = foundNum;
+      else total += foundNum;
    }
 
    for (unsigned int i = 0; i < nBatteries; i++) {
@@ -119,15 +118,10 @@ static ACPresence procAcpiCheck() {
       fclose(file);
       if (!line) continue;
 
-      const char *isOnline = String_getToken(line, 2);
+      char *isOnline = String_getToken(line, 2);
       free(line);
-
-      if (strcmp(isOnline, "on-line") == 0) {
-         isOn = AC_PRESENT;
-      } else {
-         isOn = AC_ABSENT;
-      }
-      free((char *) isOnline);
+      isOn = strcmp(isOnline, "on-line") == 0 ? AC_PRESENT : AC_ABSENT;
+      free(isOnline);
       if (isOn == AC_PRESENT) {
          break;
       }
@@ -139,15 +133,13 @@ static ACPresence procAcpiCheck() {
 }
 
 static double Battery_getProcBatData() {
-   const unsigned long int totalFull = parseBatInfo("info", 3, 4);
-   if (totalFull == 0)
-      return 0;
+   long int totalFull = parseBatInfo("info", 3, 4);
+   if (totalFull < 0) return -1;
 
-   const unsigned long int totalRemain = parseBatInfo("state", 5, 3);
-   if (totalRemain == 0)
-      return 0;
+   long int totalRemain = parseBatInfo("state", 5, 3);
+   if (totalRemain < 0) return -1;
 
-   return totalRemain * 100.0 / (double) totalFull;
+   return totalRemain * 100.0 / (double)totalFull;
 }
 
 static void Battery_getProcData(double* level, ACPresence* isOnAC) {
@@ -160,8 +152,7 @@ static void Battery_getProcData(double* level, ACPresence* isOnAC) {
 // ----------------------------------------
 
 static void Battery_getSysData(double* level, ACPresence* isOnAC) {
-      
-   *level = 0;
+   *level = -1;
    *isOnAC = AC_ERROR;
 
    DIR *dir = opendir(SYS_POWERSUPPLY_DIR);
@@ -255,14 +246,14 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    } else if(battery_count > 0) {
       *level = (double)total_capacity / (double)battery_count;
    } else {
-      *level = 0;
+      *level = -1;
    }
 }
 
 static enum { BAT_PROC, BAT_SYS, BAT_ERR } Battery_method = BAT_PROC;
 
 static time_t Battery_cacheTime = 0;
-static double Battery_cacheLevel = 0;
+static double Battery_cacheLevel = -1;
 static ACPresence Battery_cacheIsOnAC = 0;
 
 void Battery_getData(double* level, ACPresence* isOnAC) {
@@ -276,13 +267,13 @@ void Battery_getData(double* level, ACPresence* isOnAC) {
 
    if (Battery_method == BAT_PROC) {
       Battery_getProcData(level, isOnAC);
-      if (*level == 0) {
+      if (*level < 0) {
          Battery_method = BAT_SYS;
       }
    }
    if (Battery_method == BAT_SYS) {
       Battery_getSysData(level, isOnAC);
-      if (*level == 0) {
+      if (*level < 0) {
          Battery_method = BAT_ERR;
       }
    }

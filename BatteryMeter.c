@@ -38,7 +38,7 @@ static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
    
    Battery_getData(&percent, &isOnAC);
 
-   if (percent == -1) {
+   if (percent < 0) {
       this->values[0] = 0;
       xSnprintf(buffer, len, "n/a");
       return;

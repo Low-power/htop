@@ -311,7 +311,7 @@ bool LinuxProcess_setIOPriority(LinuxProcess* this, IOPriority ioprio) {
 
 #ifdef HAVE_DELAYACCT
 void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
-  if (delay_percent == -1LL) {
+  if (delay_percent < 0) {
     xSnprintf(buffer, n, " N/A  ");
   } else {
     xSnprintf(buffer, n, "%4.1f  ", delay_percent);
@@ -404,7 +404,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          Process_outputRate(str, buffer, n, lp->io_rate_write_bps, coloring);
          return;
       case HTOP_IO_RATE_FIELD:
-         total_rate = (lp->io_rate_read_bps != -1) ? lp->io_rate_read_bps + lp->io_rate_write_bps : -1;
+         total_rate = (lp->io_rate_read_bps >= 0) ? lp->io_rate_read_bps + lp->io_rate_write_bps : -1;
          Process_outputRate(str, buffer, n, total_rate, coloring);
          return;
    #endif

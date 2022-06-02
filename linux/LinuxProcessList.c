@@ -315,10 +315,9 @@ void ProcessList_delete(ProcessList* pl) {
    free(this);
 }
 
-static double jiffy = 0.0;
-
 static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
-   if(jiffy == 0.0) jiffy = sysconf(_SC_CLK_TCK);
+   static double jiffy = -1;
+   if(jiffy < 0) jiffy = sysconf(_SC_CLK_TCK);
    double jiffytime = 1.0 / jiffy;
    return (unsigned long long) t * jiffytime * 100;
 }
