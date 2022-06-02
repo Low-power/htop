@@ -481,7 +481,7 @@ if test "$my_htop_platform" = "solaris"; then
 						[test "x$with_solaris_libproc" != xcheck && missing_libraries="$missing_libraries libproc"])
 				], [test "x$with_solaris_libproc" != xcheck && missing_headers="$missing_headers libproc.h"])
 		])
-	AC_CHECK_HEADERS([zone.h])
+	AC_CHECK_HEADERS([zone.h sys/acpi_drv.h])
 	AC_CHECK_MEMBERS([psinfo_t.pr_poolid, psinfo_t.pr_contract], [], [], [#include <procfs.h>])
 	AC_CHECK_FUNCS([dirfd strnlen])
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
