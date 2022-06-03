@@ -22,7 +22,7 @@ in the source distribution for its full text.
 #include <sys/sysctl.h>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <sys/proc.h>
+#include <sys/user.h>
 #include <sys/blist.h>
 #include <vm/vm_param.h>
 #include <signal.h>
