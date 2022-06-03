@@ -485,7 +485,6 @@ if test "$my_htop_platform" = "solaris"; then
 	AC_CHECK_MEMBERS([psinfo_t.pr_poolid, psinfo_t.pr_contract], [], [], [#include <procfs.h>])
 	AC_CHECK_FUNCS([dirfd strnlen])
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
-   AC_CHECK_LIB([malloc], [free], [], [missing_libraries="$missing_libraries libmalloc"])
 fi
 
 if test "$my_htop_platform" = "aix"; then
