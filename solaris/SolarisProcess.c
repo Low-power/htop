@@ -44,7 +44,9 @@ typedef enum {
 #ifdef HAVE_PSINFO_T_PR_CONTRACT
    HTOP_CONTID_FIELD = 105,
 #endif
+#ifdef HAVE_LIBPROC
    HTOP_LWPID_FIELD = 106,
+#endif
    HTOP_LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
@@ -82,7 +84,10 @@ ProcessClass SolarisProcess_class = {
       .compare = SolarisProcess_compare
    },
    .writeField = SolarisProcess_writeField,
-   .sendSignal = SolarisProcess_sendSignal
+   .sendSignal = SolarisProcess_sendSignal,
+#ifdef HAVE_LIBPROC
+   .isSelf = SolarisProcess_isSelf,
+#endif
 };
 
 ProcessFieldData Process_fields[] = {
@@ -207,6 +212,7 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
          break;
 #endif
       case HTOP_PID_FIELD:
+         if(Process_isSelf(this)) attr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];
          xSnprintf(buffer, n, Process_pidFormat, sp->realpid);
          break;
       case HTOP_PPID_FIELD:
@@ -271,7 +277,7 @@ long SolarisProcess_compare(const void* v1, const void* v2) {
 
 bool SolarisProcess_sendSignal(const Process *this, int sig) {
 #ifdef HAVE_LIBPROC
-	pid_t pid = this->pid / 1024;
+	pid_t pid = ((const SolarisProcess *)this)->realpid;
 #else
 	pid_t pid = this->pid;
 #endif
@@ -288,6 +294,14 @@ bool SolarisProcess_sendSignal(const Process *this, int sig) {
 	}
 	return true;
 }
+
+#ifdef HAVE_LIBPROC
+bool SolarisProcess_isSelf(const Process *this) {
+	static pid_t mypid = -1;
+	if(mypid == -1) mypid = getpid();
+	return ((const SolarisProcess *)this)->realpid == mypid;
+}
+#endif
 
 bool Process_isKernelProcess(const Process *this) {
 	return ((const SolarisProcess *)this)->kernel;

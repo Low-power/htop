@@ -31,7 +31,9 @@ typedef enum {
 #ifdef HAVE_PSINFO_T_PR_CONTRACT
    HTOP_CONTID_FIELD = 105,
 #endif
+#ifdef HAVE_LIBPROC
    HTOP_LWPID_FIELD = 106,
+#endif
    HTOP_LAST_PROCESSFIELD = 107,
 } SolarisProcessField;
 
@@ -75,6 +77,10 @@ void SolarisProcess_writeField(Process* this, RichString* str, ProcessField fiel
 long SolarisProcess_compare(const void* v1, const void* v2);
 
 bool SolarisProcess_sendSignal(const Process *this, int sig);
+
+#ifdef HAVE_LIBPROC
+bool SolarisProcess_isSelf(const Process *this);
+#endif
 
 bool Process_isKernelProcess(const Process *this);
 

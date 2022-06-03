@@ -110,6 +110,7 @@ void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField
    switch ((int) field) {
       // add Platform-specific fields here
       case HTOP_PID_FIELD:
+         if(Process_isSelf(this)) attr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];
          xSnprintf(buffer, n, Process_pidFormat, fp->kernel ? this->tgid : this->pid);
          break;
       case HTOP_JID_FIELD:

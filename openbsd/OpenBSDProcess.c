@@ -13,6 +13,11 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 #include "Platform.h"
 #include "CRT.h"
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+#include <sys/param.h>
+#include <sys/proc.h>
+#include <unistd.h>
+#endif
 #include <stdlib.h>
 
 /*{
@@ -39,6 +44,9 @@ ProcessClass OpenBSDProcess_class = {
       .compare = OpenBSDProcess_compare
    },
    .writeField = OpenBSDProcess_writeField,
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+   .isSelf = OpenBSDProcess_isSelf,
+#endif
 };
 
 ProcessFieldData Process_fields[] = {
@@ -208,6 +216,18 @@ long OpenBSDProcess_compare(const void* v1, const void* v2) {
          return Process_compare(v1, v2);
    }
 }
+
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+bool OpenBSDProcess_isSelf(const Process *this) {
+	static pid_t mypid = -1, mytid = -1;
+	if(mypid == -1 || mytid == -1) {
+		mypid = getpid();
+		mytid = getthrid() - THREAD_PID_OFFSET;
+	}
+	return this->pid == this->tgid ?
+		this->pid == mypid : this->pid == mytid;
+}
+#endif
 
 bool Process_isKernelProcess(const Process *this) {
 	return ((const OpenBSDProcess *)this)->is_kernel_process;

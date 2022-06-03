@@ -139,11 +139,13 @@ extern char Process_pidFormat[20];
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
 typedef bool (*ProcessSendSignalFunction)(const Process *, int);
+typedef bool (*ProcessGetBooleanFunction)(const Process *);
 
 typedef struct ProcessClass_ {
    ObjectClass super;
    Process_WriteField writeField;
    ProcessSendSignalFunction sendSignal;
+   ProcessGetBooleanFunction isSelf;
 } ProcessClass;
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
@@ -155,7 +157,7 @@ typedef struct ProcessClass_ {
 #define Process_getParentPid(process_) ((process_)->tgid == (process_)->pid ? (process_)->ppid : (process_)->tgid)
 #define Process_isChildOf(process_, pid_) ((process_)->tgid == (pid_) || ((process_)->tgid == (process_)->pid && (process_)->ppid == (pid_)))
 #endif
-
+#define Process_isSelf(this_) (As_Process(this_)->isSelf(this_))
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
 

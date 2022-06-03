@@ -159,11 +159,13 @@ extern char Process_pidFormat[20];
 typedef Process*(*Process_New)(struct Settings_*);
 typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
 typedef bool (*ProcessSendSignalFunction)(const Process *, int);
+typedef bool (*ProcessGetBooleanFunction)(const Process *);
 
 typedef struct ProcessClass_ {
    ObjectClass super;
    Process_WriteField writeField;
    ProcessSendSignalFunction sendSignal;
+   ProcessGetBooleanFunction isSelf;
 } ProcessClass;
 
 #define As_Process(this_)              ((ProcessClass*)((this_)->super.klass))
@@ -175,7 +177,7 @@ typedef struct ProcessClass_ {
 #define Process_getParentPid(process_) ((process_)->tgid == (process_)->pid ? (process_)->ppid : (process_)->tgid)
 #define Process_isChildOf(process_, pid_) ((process_)->tgid == (pid_) || ((process_)->tgid == (process_)->pid && (process_)->ppid == (pid_)))
 #endif
-
+#define Process_isSelf(this_) (As_Process(this_)->isSelf(this_))
 #define Process_sortState(state) ((state) == 'I' ? 0x100 : (state))
 
 }*/
@@ -505,6 +507,7 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
          xSnprintf(buffer, n, Process_pidFormat, this->pgrp);
          break;
       case HTOP_PID_FIELD:
+         if(Process_isSelf(this)) attr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];
          xSnprintf(buffer, n, Process_pidFormat, this->pid);
          break;
       case HTOP_PPID_FIELD:
@@ -623,12 +626,19 @@ static bool base_Process_sendSignal(const Process *this, int sig) {
 	return kill(this->pid, sig) == 0;
 }
 
+static bool base_Process_isSelf(const Process *this) {
+	static pid_t mypid = -1;
+	if(mypid == -1) mypid = getpid();
+	return this->pid == mypid;
+}
+
 static void Process_inherit(ObjectClass *super_class) {
 	if(!super_class->display) super_class->display = Process_display;
 	if(!super_class->compare) super_class->compare = Process_compare;
 	ProcessClass *class = (ProcessClass *)super_class;
 	if(!class->writeField) class->writeField = Process_writeField;
 	if(!class->sendSignal) class->sendSignal = base_Process_sendSignal;
+	if(!class->isSelf) class->isSelf = base_Process_isSelf;
 }
 
 ProcessClass Process_class = {
@@ -639,7 +649,8 @@ ProcessClass Process_class = {
       .compare = Process_compare
    },
    .writeField = Process_writeField,
-   .sendSignal = base_Process_sendSignal
+   .sendSignal = base_Process_sendSignal,
+   .isSelf = base_Process_isSelf
 };
 
 void Process_init(Process* this, struct Settings_* settings) {

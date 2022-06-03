@@ -10,6 +10,9 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+#endif
+
 #include "Settings.h"
 #include <stdbool.h>
 
@@ -37,6 +40,10 @@ void Process_delete(Object* cast);
 void OpenBSDProcess_writeField(Process* this, RichString* str, ProcessField field);
 
 long OpenBSDProcess_compare(const void* v1, const void* v2);
+
+#ifdef PID_AND_MAIN_THREAD_ID_DIFFER
+bool OpenBSDProcess_isSelf(const Process *this);
+#endif
 
 bool Process_isKernelProcess(const Process *this);
 
