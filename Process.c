@@ -13,6 +13,7 @@ in the source distribution for its full text.
 #include "RichString.h"
 #include "Platform.h"
 #include <sys/param.h>
+#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -26,8 +27,7 @@ in the source distribution for its full text.
 #include <assert.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
-#elif defined(MAJOR_IN_SYSMACROS) || \
-   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#elif defined MAJOR_IN_SYSMACROS
 #include <sys/sysmacros.h>
 #endif
 #ifdef HAVE_LIBNCURSESW
@@ -567,7 +567,11 @@ void Process_writeField(Process* this, RichString* str, ProcessField field) {
             xSnprintf(buffer, n, "      ? ");
             attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
          } else {
+#if defined MAJOR_IN_MKDEV || defined MAJOR_IN_SYSMACROS || (defined major && defined minor)
             xSnprintf(buffer, n, "%3u:%3u ", (unsigned int)major(this->tty_nr), (unsigned int)minor(this->tty_nr));
+#else
+            xSnprintf(buffer, n, "%7u ", (unsigned int)this->tty_nr);
+#endif
          }
          break;
       case HTOP_REAL_USER_FIELD:

@@ -55,14 +55,13 @@ cygwin)
 gnu*)
    my_htop_platform=hurd
    ;;
+haiku*)
+   my_htop_platform=haiku
+   ;;
 *)
    my_htop_platform=unsupported
    ;;
 esac
-
-# Checks for libraries.
-# ----------------------------------------------------------------------
-AC_CHECK_LIB([m], [ceil], [], [missing_libraries="$missing_libraries libm"])
 
 # Checks for header files.
 # ----------------------------------------------------------------------
@@ -94,13 +93,6 @@ AC_CHECK_TYPE([struct utmpx],
 	[AC_DEFINE(HAVE_UTMPX, 1, Define if 'struct utmpx' is available from utmpx.h)],
 	[], [#include <utmpx.h>])
 
-# Checks for library functions and compiler features.
-# ----------------------------------------------------------------------
-AC_FUNC_CLOSEDIR_VOID
-AC_TYPE_SIGNAL
-AC_FUNC_STAT
-AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup nanosleep lround getopt_long clock_gettime])
-
 # CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
 m4_define([CHECK_CFLAGS_DEPENDED], [
 		for o in $1; do
@@ -129,6 +121,21 @@ else
 			CHECK_CFLAGS_DEPENDED([-Wall -Wextra -Wno-unused-parameter])
 		])
 fi
+
+AC_FUNC_CLOSEDIR_VOID
+AC_TYPE_SIGNAL
+AC_FUNC_STAT
+AC_CHECK_FUNCS([memmove strncasecmp strcasestr strstr strdup ceil nanosleep getopt_long clock_gettime])
+
+if test "x$ac_cv_func_ceil" = xno; then
+	AC_CHECK_LIB([m], [ceil], [
+			ac_cv_func_ceil=yes
+			AC_DEFINE([HAVE_CEIL])
+			LIBS="$LIBS -lm"
+		])
+fi
+
+AC_CHECK_FUNCS([lround])
 
 if test "x$ac_cv_func_clock_gettime" = xno; then
 	# Some versions of GNU C Library puts clock_gettime(2) in librt
@@ -502,6 +509,10 @@ if test "$my_htop_platform" = hurd; then
 	CPPFLAGS="$CPPFLAGS -D _GNU_SOURCE=1"
 fi
 
+if test "$my_htop_platform" = haiku; then
+	AC_CHECK_FUNCS([getpriority setpriority])
+fi
+
 AC_ARG_ENABLE(linux_affinity,
 	[AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])],
 	[], [enable_linux_affinity=check])
@@ -641,6 +652,7 @@ AM_CONDITIONAL([HTOP_AIX], [test "$my_htop_platform" = aix])
 AM_CONDITIONAL([HTOP_INTERIX], [test "$my_htop_platform" = interix])
 AM_CONDITIONAL([HTOP_CYGWIN], [test "$my_htop_platform" = cygwin])
 AM_CONDITIONAL([HTOP_HURD], [test "$my_htop_platform" = hurd])
+AM_CONDITIONAL([HTOP_HAIKU], [test "$my_htop_platform" = haiku])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1])

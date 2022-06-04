@@ -266,6 +266,25 @@ myhtopplatsources = \
 myhtopplatheaders = $(hurd_platform_headers)
 endif
 
+# Haiku
+# -----
+
+haiku_platform_headers = \
+	haiku/Platform.h \
+	haiku/HaikuProcess.h \
+	haiku/HaikuProcessList.h \
+	haiku/Battery.h
+all_platform_headers += $(haiku_platform_headers)
+
+if HTOP_HAIKU
+myhtopplatsources = \
+	haiku/Platform.c \
+	haiku/HaikuProcess.c \
+	haiku/HaikuProcessList.c \
+	haiku/Battery.c
+myhtopplatheaders = $(haiku_platform_headers)
+endif
+
 # Unsupported
 # -----------
 
