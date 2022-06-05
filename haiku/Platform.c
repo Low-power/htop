@@ -30,6 +30,7 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+#include <stdint.h>
 #include <dlfcn.h>
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE

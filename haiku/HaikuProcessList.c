@@ -6,18 +6,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "HaikuProcessList.h"
-#include "HaikuProcess.h"
-#include "StringUtils.h"
-#include "Settings.h"
-#include "Platform.h"
-#include "CRT.h"
-#include <OS.h>
-#include <dlfcn.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <string.h>
-
 /*{
 #include "ProcessList.h"
 #include <SupportDefs.h>
@@ -37,6 +25,46 @@ typedef struct {
 } HaikuProcessList;
 }*/
 
+#include "HaikuProcessList.h"
+#include "HaikuProcess.h"
+#include "StringUtils.h"
+#include "Settings.h"
+#include "Platform.h"
+#include "CRT.h"
+#include <OS.h>
+#include <dlfcn.h>
+#include <limits.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define KMESSAGE_BUFFER_ALIGNMENT 4
+#define KMESSAGE_HEADER_MAGIC 0x6b4d7347
+
+#define KMESSAGE_ALIGN(P,O) ((void *)(((uintptr_t)(P)+(O)+KMESSAGE_BUFFER_ALIGNMENT-1) & ~(KMESSAGE_BUFFER_ALIGNMENT-1)))
+
+struct field_header {
+	type_code type;
+	int32_t element_size;
+	int32_t element_count;
+	int32_t field_size;
+	int16_t header_size;
+	char name[0];
+};
+
+struct field_value_header {
+	int32_t size;
+};
+
+struct kmessage_header {
+	uint32_t magic;
+	int32_t size;
+	uint32_t what;
+	team_id sender;
+	int32_t target_token;
+	port_id reply_port;
+	int32_t reply_token;
+};
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    HaikuProcessList *this = xCalloc(1, sizeof(HaikuProcessList));
@@ -65,11 +93,58 @@ static const char state_name_map[] = {
 };
 
 static void get_extended_team_info(pid_t team_id, uid_t *ruid, uid_t *euid, pid_t *pgrp, pid_t *session) {
-	// TODO
 	*ruid = -1;
 	*euid = -1;
 	*pgrp = -1;
 	*session = -1;
+
+	static bool is_available = true;
+	if(!is_available) return;
+	static status_t (*get_extended_team_info_p)(int32_t, uint32_t, void *, size_t, size_t *);
+	if(!get_extended_team_info_p) {
+		void *libroot = get_libroot();
+		if(!libroot) {
+			is_available = false;
+			return;
+		}
+		*(void **)&get_extended_team_info_p = dlsym(libroot, "_kern_get_extended_team_info");
+		if(!get_extended_team_info_p) {
+			is_available = false;
+			return;
+		}
+	}
+	size_t size;
+	status_t status = get_extended_team_info_p(team_id, 1, NULL, 0, &size);
+	if(status != B_OK && status != B_BUFFER_OVERFLOW) return;
+	if(size < sizeof(struct kmessage_header)) return;
+	char buffer[size];
+	status = get_extended_team_info_p(team_id, 1, buffer, size, &size);
+	if(status != B_OK) return;
+	if(size < sizeof(struct kmessage_header)) return;
+	const struct kmessage_header *header = (const struct kmessage_header *)buffer;
+	if(header->magic != KMESSAGE_HEADER_MAGIC) return;
+	if((size_t)header->size != size) return;
+	struct field_header *field_header = KMESSAGE_ALIGN(buffer, sizeof(struct kmessage_header));
+	while((char *)field_header < buffer + size) {
+		if(field_header->element_size == 4) {
+			char *value_p = (char *)field_header + field_header->header_size;
+			int32_t value;
+			if(strcmp(field_header->name, "process group") == 0) {
+				memcpy(&value, value_p, 4);
+				*pgrp = value;
+			} else if(strcmp(field_header->name, "session") == 0) {
+				memcpy(&value, value_p, 4);
+				*session = value;
+			} else if(strcmp(field_header->name, "uid") == 0) {
+				memcpy(&value, value_p, 4);
+				*ruid = value;
+			} else if(strcmp(field_header->name, "euid") == 0) {
+				memcpy(&value, value_p, 4);
+				*euid = value;
+			}
+		}
+		field_header = KMESSAGE_ALIGN(field_header, field_header->field_size);
+	}
 }
 
 static pid_t get_parent_team_id(pid_t team_id) {
