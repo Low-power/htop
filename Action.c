@@ -325,11 +325,11 @@ static Htop_Reaction actionSetAffinity(State* st) {
    Panel* affinityPanel = AffinityPanel_new(st->pl, affinity);
    Affinity_delete(affinity);
 
-   void* set = Action_pickFromVector(st, affinityPanel, 15, true);
-   if (set) {
-      Affinity* affinity = AffinityPanel_getAffinity(affinityPanel, st->pl);
-      bool ok = MainPanel_foreachProcess((MainPanel*)panel, (MainPanel_ForeachProcessFn) Affinity_set, (Arg){ .v = affinity }, NULL);
-      if (!ok) beep();
+   if(Action_pickFromVector(st, affinityPanel, 15, true)) {
+      affinity = AffinityPanel_getAffinity(affinityPanel, st->pl);
+      if(!MainPanel_foreachProcess((MainPanel *)panel, (MainPanel_ForeachProcessFn)Affinity_set, (Arg){ .v = affinity }, NULL)) {
+         beep();
+      }
       Affinity_delete(affinity);
    }
    Panel_delete((Object*)affinityPanel);
@@ -467,7 +467,7 @@ static const struct key_help_entry helpRight[] = {
    { "     F9: ", "kill process/tagged processes", KEY_VI_MODE_ONLY },
    { "   F7 ]: ", "higher priority (root only)", KEY_VI_MODE_COMPATIBLE },
    { "   F8 [: ", "lower priority (+ nice)", KEY_VI_MODE_COMPATIBLE },
-#if (HAVE_LIBHWLOC || HAVE_LINUX_AFFINITY)
+#if defined HAVE_LIBHWLOC || defined HAVE_LINUX_AFFINITY || defined HAVE_KFREEBSD_CPUSET
    { "      a: ", "set CPU affinity", KEY_VI_MODE_COMPATIBLE },
 #endif
    { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },

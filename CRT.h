@@ -182,7 +182,7 @@ extern int CRT_color_scheme_index;
 
 void CRT_setMouse(bool enabled);
 
-#if HAVE_SETUID_ENABLED
+#ifdef HAVE_SETUID_ENABLED
 
 #define DIE(msg) do { CRT_done(); fputs((msg), stderr); exit(1); } while(0)
 

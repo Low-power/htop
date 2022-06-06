@@ -630,10 +630,9 @@ static void CRT_handleSIGTERM(int sgn) {
    exit(0);
 }
 
-#if HAVE_SETUID_ENABLED
+#ifdef HAVE_SETUID_ENABLED
 
 static int CRT_euid = -1;
-
 static int CRT_egid = -1;
 
 #define DIE(msg) do { CRT_done(); fputs((msg), stderr); exit(1); } while(0)
