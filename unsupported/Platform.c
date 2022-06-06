@@ -93,8 +93,6 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_numberOfFields = 100;
 
-extern char Process_pidFormat[20];
-
 ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };

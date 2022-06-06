@@ -128,9 +128,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_numberOfFields = 101;
-
-extern char Process_pidFormat[20];
+int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
 int Platform_getUptime() {
 	// Fallback to utmpx

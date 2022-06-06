@@ -149,8 +149,6 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-extern char Process_pidFormat[20];
-
 int Platform_getUptime() {
 	return system_time() / 1000000;
 }
