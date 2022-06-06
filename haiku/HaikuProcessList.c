@@ -25,6 +25,7 @@ typedef struct {
 } HaikuProcessList;
 }*/
 
+#include "config.h"
 #include "HaikuProcessList.h"
 #include "HaikuProcess.h"
 #include "StringUtils.h"
@@ -177,10 +178,22 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 	system_info si;
 	get_system_info(&si);
 
+#ifdef HAVE_SYSTEM_INFO_CPU_INFOS
+#define CPU_INFOS si.cpu_infos
+#elif defined HAVE_GET_CPU_INFO
+	cpu_info cpu_infos[si.cpu_count];
+	get_cpu_info(0, si.cpu_count, cpu_infos);
+#define CPU_INFOS cpu_infos
+#endif
+
 	for(int i = 0; i < super->cpuCount; i++) {
 		struct cpu_data *data = this->cpu_data + i;
-		if(i < si.cpu_count) {
-			bigtime_t current_time = si.cpu_infos[i].active_time;
+		if(
+#ifdef HAVE_CPU_INFO_ENABLED
+		  CPU_INFOS[i].enabled &&
+#endif
+		  i < (int)si.cpu_count) {
+			bigtime_t current_time = CPU_INFOS[i].active_time;
 			data->period = current_time > data->time ? current_time - data->time : 0;
 			data->time = current_time;
 		} else {

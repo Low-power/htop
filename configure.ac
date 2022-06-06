@@ -510,7 +510,8 @@ if test "$my_htop_platform" = hurd; then
 fi
 
 if test "$my_htop_platform" = haiku; then
-	AC_CHECK_FUNCS([getpriority setpriority])
+	AC_CHECK_FUNCS([getpriority setpriority get_cpu_info])
+	AC_CHECK_MEMBERS([system_info.cpu_infos, cpu_info.enabled], [], [], [#include <OS.h>])
 fi
 
 AC_ARG_ENABLE(linux_affinity,
