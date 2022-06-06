@@ -19,6 +19,7 @@ in the source distribution for its full text.
 Process* UnsupportedProcess_new(Settings* settings) {
    Process* this = xCalloc(1, sizeof(Process));
    Object_setClass(this, Class(Process));
+   Object_getClass(this)->delete = UnsupportedProcess_delete;
    Process_init(this, settings);
    return this;
 }
