@@ -25,6 +25,7 @@ typedef struct {
 } HaikuProcessList;
 }*/
 
+#define _XOPEN_SOURCE 600
 #include "config.h"
 #include "HaikuProcessList.h"
 #include "HaikuProcess.h"
@@ -203,6 +204,7 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 
 	super->usedMem = si.used_pages * CRT_page_size_kib;
 
+#if !defined HAVE_SYSTEM_INFO_CACHED_PAGES || !defined HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
 	struct vm_stat vm_stat;
 	if(Platform_getVMStat(&vm_stat, sizeof vm_stat)) {
 		// Is this correct?
@@ -214,6 +216,14 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 	} else {
 		super->cachedMem = 0;
 	}
+#endif
+#ifdef HAVE_SYSTEM_INFO_CACHED_PAGES
+	super->cachedMem = si.cached_pages * CRT_page_size_kib;
+#endif
+#ifdef HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
+	super->totalSwap = si.max_swap_pages * CRT_page_size_kib;
+	super->usedSwap = (si.max_swap_pages - si.free_swap_pages) * CRT_page_size_kib;
+#endif
 
 	this->team_count = 0;
 
@@ -246,7 +256,17 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 			proc->pgrp = pgrp;
 			proc->session = session;
 			proc->priority = thread_info.priority;
+#if defined NZERO && defined HAVE_SETPRIORITY
+			// From Haiku src/system/libroot/posix/sys/priority.c
+#define BZERO B_NORMAL_PRIORITY
+#define BMAX (B_REAL_TIME_DISPLAY_PRIORITY - 1)
+#define BMIN 1
+			proc->nice = thread_info.priority < BZERO ?
+				((BZERO - thread_info.priority) * (NZERO - 1)) / (BZERO - BMIN) + 1 :
+				-(((thread_info.priority - BZERO) * NZERO + (BMAX - BZERO) / 2) / (BMAX - BZERO));
+#else
 			proc->nice = B_NORMAL_PRIORITY - thread_info.priority;
+#endif
 			bigtime_t time = thread_info.user_time + thread_info.kernel_time;
 			proc->time = time / 10000;
 			double delta = time > haiku_proc->time_usec ?

@@ -7,7 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
 #include "Platform.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -27,6 +26,7 @@ in the source distribution for its full text.
 #include <errno.h>
 
 /*{
+#include "config.h"
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
@@ -39,6 +39,7 @@ in the source distribution for its full text.
 #define PRIO_PROCESS 0
 #endif
 
+#if !defined HAVE_SYSTEM_INFO_CACHED_PAGES || !defined HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
 #ifndef B_MEMORY_INFO
 #define B_MEMORY_INFO 0x6d656d6f
 #endif
@@ -52,6 +53,7 @@ struct vm_stat {
 	uint64_t block_cache_memory;
 	uint32_t page_faults;
 };
+#endif
 
 static inline void *get_libroot() {
 	static void *libroot;
@@ -97,7 +99,7 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
-ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_M_SIZE_FIELD, HTOP_M_RESIDENT_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_PERCENT_MEM_FIELD, HTOP_TIME_FIELD, HTOP_COMM_FIELD, 0 };
+ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_TIME_FIELD, HTOP_NAME_FIELD, HTOP_COMM_FIELD, 0 };
 
 int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
@@ -122,6 +124,7 @@ MeterClass* Platform_meterTypes[] = {
    NULL
 };
 
+#if !defined HAVE_SYSTEM_INFO_CACHED_PAGES || !defined HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
 bool Platform_getVMStat(struct vm_stat *buffer, size_t size) {
 	static bool is_available = true;
 	if(!is_available) return false;
@@ -140,6 +143,7 @@ bool Platform_getVMStat(struct vm_stat *buffer, size_t size) {
 	}
 	return get_system_info_etc(B_MEMORY_INFO, buffer, size) == B_OK;
 }
+#endif
 
 void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
@@ -198,9 +202,15 @@ char **Platform_getProcessEnvv(const Process *proc) {
 }
 
 bool Platform_haveSwap() {
+#ifdef HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
+	system_info si;
+	get_system_info(&si);
+	return si.max_swap_pages > 0;
+#else
 	struct vm_stat st;
 	if(!Platform_getVMStat(&st, sizeof st)) return false;
 	return st.max_swap_space > 0;
+#endif
 }
 
 #ifndef HAVE_GETPRIORITY
