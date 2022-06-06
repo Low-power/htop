@@ -41,7 +41,8 @@ void KernelStackTraceScreen_delete(Object* this) {
 }
 
 void KernelStackTraceScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Kernel stack trace of process %d - %s", this->process->pid, this->process->comm);
+   InfoScreen_drawTitled(this, "Kernel stack trace of process %d - %s",
+      (int)this->process->pid, this->process->comm);
 }
 
 void KernelStackTraceScreen_scan(InfoScreen* this) {

@@ -61,7 +61,8 @@ void OpenFilesScreen_delete(Object* this) {
 }
 
 void OpenFilesScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Snapshot of files open in process %d - %s", ((OpenFilesScreen*)this)->pid, this->process->comm);
+   InfoScreen_drawTitled(this, "Snapshot of files open in process %d - %s",
+      (int)((OpenFilesScreen *)this)->pid, this->process->comm);
 }
 
 static OpenFiles_ProcessData* OpenFilesScreen_getProcessData(pid_t pid) {

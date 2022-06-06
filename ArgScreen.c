@@ -41,7 +41,8 @@ void ArgScreen_delete(Object* this) {
 }
 
 void ArgScreen_draw(InfoScreen* this) {
-   InfoScreen_drawTitled(this, "Command line arguments of process %d - %s", this->process->pid, this->process->name);
+   InfoScreen_drawTitled(this, "Command line arguments of process %d - %s",
+      (int)this->process->pid, this->process->name);
 }
 
 void ArgScreen_scan(InfoScreen* this) {
