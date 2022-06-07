@@ -1,3 +1,134 @@
+What's new in version 2.3.0
+
+* System call tracing support via truss(1)
+* Process name column
+* AIX support
+  (contributed by Calvin Buckley)
+* BUGFIX: correctly show command line of processes on Solaris
+* BUGFIX: fix process time scaling error on Solaris
+* BUGFIX: fix nice value of processes on Solaris
+* Build system: translate / rewrite MakeHeaders.py into MakeHeaders.sh
+* BUGFIX: fix defining variables in headers
+* ZFS ARC size display in existing memory meter
+* BUGFIX: fix file descriptor leaks in OpenFilesScreen
+* BUGFIX: fix hard coded names for reading battery information from Linux
+  sysfs
+* Android/Linux support
+* BUGFIX: null pointer dereference and memory corruption fixes for OpenBSD
+* CPU hot-plugging support on Linux-based platforms and Solaris
+* Remove dependency to the BSD-specific err(3)
+* Distinguishable effective user and real user of processes
+* Fix incorrect buffer sizes for snprintf(3) and strftime(3) calls; make more
+  efficient use of stack space
+* Basic Interix support
+* Cygwin support
+* Thread processes support for OpenBSD
+* OpenBSD support down to release 5.0
+* Optinally display kernel processes in a different color
+* Solaris support without libproc(3LIB)
+* BUGFIX: fix some sysctl(3) data type mismatches
+* BUGFIX: enanbling hide kernel processes no longer hiding everything if the
+  root process is a kernel process
+* BUGFIX: properly update modifiable information for existing processes
+* Colorize process state characters in help screen
+* BUGFIX: fix pressing PPAGE or NPAGE when moving a selected meter or column
+  selects another item instead of move the original item
+* Change a tree-drawing character to make the process tree more readable in
+  ASCII mode
+* Try to enable backtrace(3) support for all platforms
+* Detect and workaround curses(3) macro ERR being incorrectly redefined by
+  other system headers (such as sys/regset.h on Solaris x86)
+* BUGFIX: make function Header_addMeterByName no longer modifying the passed
+  in string buffer
+* Process environment support for DragonFly BSD, and kFreeBSD-based platforms
+* kFreeBSD-based platforms support without kvm(3)
+* FreeBSD support down to release 5
+* BUGFIX: correctly detect kernel processes on Linux-based platforms
+* Build-time detection of available signals
+* Widen UID column to 6-character space for showing values
+* Support pressing n or N to search next or previous in MainPanel and
+  InfoScreen
+  (thanks to syrrim for the initial implementation for MainPanel)
+* BUGFIX: fix bad coding style and the caused error of using uninitialized
+  data in function 'InfoScreen_run'
+* BUGFIX: fix 'break' without a dedicated line in switch block caused
+  incorrect 'break' statements
+* Add ArgScreen to list command line arguments of a process
+* BUGFIX: don't follow process when selecting non-process-specific options
+  (thanks to wangqr)
+* Processor times meter improvements for OpenBSD
+  (thanks to Antoine Motet)
+* BUGFIX: rename many enumeration constants to avoid identifier pollution
+* BUGFIX: don't unfollow process on LEFT or RIGHT key
+* BUGFIX: fix incorrect maximum PID value assumption for Solaris
+* Honour setting of counting CPUs from 0/1 when presenting CPU meters
+  (thanks to Ricardo Nabinger Sanchez)
+* Exit on invalid command line usage
+* vi(1)-style key bindings support
+* Add danish translation to htop.desktop
+  (thanks to scootergrisen)
+* BUGFIX: always reformat process start time on display
+* Mouse support can now be disabled in setup
+* BUGFIX: handle circularized process tree(s) that may happening with some
+  kernels
+* BUGFIX: fix "Broken Gray" didn't change the color of cpu-iowait
+  (thanks to fo40225)
+* Support loading user-defined color schemes, with 2 user-defined color
+  schemes added in source tree as examples
+  (thanks to ajdiaz and Alan Jenkins for contributing the color schemes)
+* BUGFIX: place cursor in appropriate location during incremental searching
+  in MainPanel
+* BUGFIX: consistent process state names
+* Use actual null pointer instead of null pointer constant for execlp(3)
+  (thanks to Kang-Che Sung for pointing out)
+* BUGFIX: fix passing negative value other than -1 to ctype function leading
+  to undefined behavior
+* Add HTOP_PROCESS_Z_STATE_COLOR
+* BUGFIX: fix mishandling mouse clicking Y position in InfoScreen
+* BUGFIX: handle potentially too-large numbers when formatting them
+* Optional case-insensitive sorting
+* Support calling select(2) to wait stdin explicitly before getch(3X) to
+  avoid long delay when real time clock is changed during getch(3X)
+* BUGFIX: update Panel selection color and draw FunctionBar when changing
+  color scheme
+* BUGFIX: fix horizontal scrolling offset can be negative on panels, causing
+  memory corruption
+* Consider vm.stats.vm.v_laundry_count if present on kFreeBSD-based platforms
+  (thanks to asherct for pointing out)
+* Consider multi-byte string display width when formatting process name
+* BUGFIX: fallback to ASCII if mbstowcs(3) failed in function
+  'RichString_writeFrom'
+* Solaris support down to release 9
+* GNU/Hurd support without Linux procfs
+* BUGFIX: calculate 'percent_cpu' relative to a single processor on Solaris
+* Support getting processor ID of processes on kFreeBSD-based platforms and
+  OpenBSD
+* Add 'EMULATION' column for kFreeBSD process listing
+* Support showing terminal device name of processes on BSD platforms
+* BUGFIX: fix possible null pointer dereferencings in function
+  'Battery_getData' of Darwin-specific code
+* Get information of all available batteries rather than the first battery on
+  Darwin
+* Use per terminal-type configuration file
+* Allow the htop be configured without any meter
+* Make slightly more efficient use of screen space when drawing meters
+* Will not adding the swap meter by default if no swap is configured
+* Kernel stack tracing of processes for Linux-based and kFreeBSD-based
+  platforms
+* BUGFIX: Ignore error ENOMEM from sysctl(3) when getting process list on
+  Darwin
+* Mac OS X 10.4 support
+* BUGFIX: fix DragonFly-specific code insanely used 'kp_swtime' to calculate
+  processor time of processes
+* Add CPU affinity support via kFreeBSD cpuset_getaffinity(2) and
+  cpuset_setaffinity(2)
+* Optional highlighting newly created processes
+* BUGFIX: fix incorrect result of sorting based on unsigned values
+* Support reading battery information on Solaris with ACPI driver
+* Highlight PID of the current htop process
+* Remove libmalloc(3LIB) dependency for Solaris
+* Haiku support
+
 What's new in version 2.2.0
 
 * Solaris/Illumos/OpenIndiana support
