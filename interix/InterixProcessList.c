@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "InterixProcess.h"
 #include "StringUtils.h"
 #include "Settings.h"
+#include "CRT.h"
 #include <sys/procfs.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -21,9 +22,6 @@ in the source distribution for its full text.
 /*{
 
 }*/
-
-static long int page_size;
-static long int page_size_ki;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    ProcessList* this = xCalloc(1, sizeof(ProcessList));
@@ -51,12 +49,6 @@ static char state_name_map[] = {
 
 void ProcessList_goThroughEntries(ProcessList *this) {
 	unsigned long long int total_time_delta = 0;
-
-	if(!page_size) {
-		page_size = sysconf(_SC_PAGESIZE);
-		if(page_size < 0) abort();
-		page_size_ki = page_size / 1024;
-	}
 
 	DIR *dir = opendir("/proc");
 	if(!dir) return;
@@ -108,10 +100,9 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 			i_proc->native_sid = info.pr_natsid;
 			ruid = info.pr_uid;
 			euid = info.pr_euid;
-			proc->m_size = info.pr_size / page_size_ki;
-			proc->m_resident = info.pr_rssize / page_size_ki;
+			proc->m_size = info.pr_size / CRT_page_size_kib;
+			proc->m_resident = info.pr_rssize / CRT_page_size_kib;
 			proc->tty_nr = info.pr_ttydev;
-			//t = info.pr_time * 100;
 			t = info.pr_time;
 #if 0
 			proc->nice = info.pr_lwp.pr_nice - NZERO;
@@ -159,7 +150,7 @@ try_stat:
 							state < sizeof state_name_map && state >= 0 ?
 								state_name_map[state] : '?';
 					} else if(strcmp(line, "vsize") == 0) {
-						proc->m_size = atol(v) / page_size;
+						proc->m_size = atol(v) / CRT_page_size;
 					} else if(strcmp(line, "sid") == 0) proc->session = atol(v);
 					else if(strcmp(line, "inpsx") == 0) {
 						i_proc->is_posix_process = atoi(v);
@@ -175,7 +166,7 @@ try_stat:
 				free(line);
 			}
 			fclose(f);
-			t = utime + stime;	// XXX: Need verify
+			t = utime + stime;
 			if(!proc->name || this->settings->updateProcessNames) {
 				free(proc->name);
 				proc->name = comm;
@@ -217,11 +208,14 @@ try_stat:
 			proc->euid = euid;
 			proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
 		}
-		if(t > proc->time) {
-			i_proc->time_delta = t - proc->time;
+		proc->time = t / 10;
+		if(t > i_proc->time_msec) {
+			i_proc->time_delta = t - i_proc->time_msec;
 			total_time_delta += i_proc->time_delta;
+		} else {
+			i_proc->time_delta = 0;
 		}
-		proc->time = t;
+		i_proc->time_msec = t;
 		proc->show = !this->settings->hide_kernel_processes || !Process_isKernelProcess(proc);
 		proc->updated = true;
 		if(!is_existing) ProcessList_add(this, proc);

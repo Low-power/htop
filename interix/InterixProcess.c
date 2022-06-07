@@ -28,6 +28,7 @@ typedef struct {
 	pid_t native_pid;
 	pid_t native_sid;
 	bool is_posix_process;
+	unsigned long long int time_msec;
 	unsigned int time_delta;
 } InterixProcess;
 }*/
