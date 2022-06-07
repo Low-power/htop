@@ -45,7 +45,7 @@ typedef struct {
 
 #define KMESSAGE_ALIGN(P,O) ((void *)(((uintptr_t)(P)+(O)+KMESSAGE_BUFFER_ALIGNMENT-1) & ~(KMESSAGE_BUFFER_ALIGNMENT-1)))
 
-struct field_header {
+struct kmessage_field_header {
 	type_code type;
 	int32_t element_size;
 	int32_t element_count;
@@ -54,7 +54,7 @@ struct field_header {
 	char name[0];
 };
 
-struct field_value_header {
+struct kmessage_field_value_header {
 	int32_t size;
 };
 
@@ -126,7 +126,8 @@ static void get_extended_team_info(pid_t team_id, uid_t *ruid, uid_t *euid, pid_
 	const struct kmessage_header *header = (const struct kmessage_header *)buffer;
 	if(header->magic != KMESSAGE_HEADER_MAGIC) return;
 	if((size_t)header->size != size) return;
-	struct field_header *field_header = KMESSAGE_ALIGN(buffer, sizeof(struct kmessage_header));
+	struct kmessage_field_header *field_header =
+		KMESSAGE_ALIGN(buffer, sizeof(struct kmessage_header));
 	while((char *)field_header < buffer + size) {
 		if(field_header->element_size == 4) {
 			char *value_p = (char *)field_header + field_header->header_size;
