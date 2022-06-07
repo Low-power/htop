@@ -93,10 +93,6 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_numberOfFields = 100;
 
-ProcessPidColumn Process_pidColumns[] = {
-   { .id = 0, .label = NULL },
-};
-
 int Platform_getUptime() {
    // Will fallback to utmpx if available
    return -1;

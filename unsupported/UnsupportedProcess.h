@@ -13,6 +13,7 @@ in the source distribution for its full text.
 
 #define Process_delete UnsupportedProcess_delete
 
+extern ProcessPidColumn Process_pidColumns[];
 
 Process* UnsupportedProcess_new(Settings* settings);
 
