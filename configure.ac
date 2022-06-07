@@ -113,7 +113,7 @@ m4_define([CHECK_CFLAGS_DEPENDED], [
 	])
 
 if test "x$ac_cv_c_compiler_gnu" = xyes; then
-	CHECK_CFLAGS_DEPENDED([-Wall -Wextra -Wno-unused-parameter])
+	CHECK_CFLAGS_DEPENDED([-Wall -Wextra -Wno-unused-parameter -Wno-switch])
 else
 	# Try xlc(1) options first
 	CHECK_CFLAGS_DEPENDED(["-q info=c99:cmp:cns:eff:gnr:lan:ord:ret:tru:trx:upg"], [

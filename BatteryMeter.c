@@ -32,40 +32,27 @@ int BatteryMeter_attributes[] = {
    HTOP_BATTERY_COLOR
 };
 
-static void BatteryMeter_updateValues(Meter * this, char *buffer, int len) {
-   ACPresence isOnAC;
+static void BatteryMeter_updateValues(Meter *this, char *buffer, int buffer_size) {
    double percent;
-   
-   Battery_getData(&percent, &isOnAC);
-
+   ACPresence is_on_ac;
+   Battery_getData(&percent, &is_on_ac);
    if (percent < 0) {
       this->values[0] = 0;
-      xSnprintf(buffer, len, "n/a");
+      xSnprintf(buffer, buffer_size, "n/a");
       return;
    }
-
    this->values[0] = percent;
-
-   const char *onAcText, *onBatteryText, *unknownText;
-
-   unknownText = "%.1f%%";
-   if (this->mode == TEXT_METERMODE) {
-      onAcText = "%.1f%% (Running on A/C)";
-      onBatteryText = "%.1f%% (Running on battery)";
-   } else {
-      onAcText = "%.1f%%(A/C)";
-      onBatteryText = "%.1f%%(bat)";
+   int len = snprintf(buffer, buffer_size, "%.1f%%", percent);
+   assert(len > 0);
+   assert(len < buffer_size - 21);
+   switch(is_on_ac) {
+      case AC_PRESENT:
+         strcpy(buffer + len, this->mode == TEXT_METERMODE ? " (Running on A/C)" : "(A/C)");
+         break;
+      case AC_ABSENT:
+         strcpy(buffer + len, this->mode == TEXT_METERMODE ? " (Running on battery)" : "(bat)");
+         break;
    }
-
-   if (isOnAC == AC_PRESENT) {
-      xSnprintf(buffer, len, onAcText, percent);
-   } else if (isOnAC == AC_ABSENT) {
-      xSnprintf(buffer, len, onBatteryText, percent);
-   } else {
-      xSnprintf(buffer, len, unknownText, percent);
-   }
-
-   return;
 }
 
 MeterClass BatteryMeter_class = {
