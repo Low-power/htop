@@ -37,7 +37,7 @@ Changes from original version
 * Processor times meter improvements for OpenBSD, by Antoine Motet
   <antoine.motet@gmail.com>
 * (hopefully bug-free) **vi(1)**-style key bindings support
-* Support showing process start time for all platforms
+* Support showing process start time for all supported platforms except Haiku
 * Mouse support can now be disabled in setup
 * Handle circularized process tree(s) that may happening with some kernels
 * User-defined color schemes
@@ -45,7 +45,7 @@ Changes from original version
 * Optional case-insensitive sorting
 * GNU/Hurd support
 * Kernel stack tracing of processes for Linux-based and kFreeBSD-based
-platforms
+  platforms
 * Haiku support
 
 See the commit log for more.
