@@ -236,6 +236,14 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 		get_extended_team_info(team_info.team, &ruid, &euid, &pgrp, &session);
 		if(ruid == (uid_t)-1) ruid = team_info.uid;
 		if(euid == (uid_t)-1) euid = team_info.uid;
+		unsigned long int vsize = 0, rssize = 0;
+		ssize_t area_cookie = 0;
+		area_info area_info;
+		while(get_next_area_info(team_info.team, &area_cookie, &area_info) == B_OK) {
+			vsize += area_info.size / CRT_page_size;
+			rssize += area_info.ram_size / CRT_page_size;
+		}
+		float pmem = (float)rssize / (float)si.max_pages * 100;
 		int32 thread_cookie = 0;
 		thread_info thread_info;
 		while(get_next_thread_info(team_info.team, &thread_cookie, &thread_info) == B_OK) {
@@ -273,6 +281,9 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 				time - haiku_proc->time_usec : 0;
 			proc->percent_cpu = delta / (double)this->interval * 100;
 			haiku_proc->time_usec = time;
+			proc->m_size = vsize;
+			proc->m_resident = rssize;
+			proc->percent_mem = pmem;
 			if(!proc->real_user) {
 				proc->real_user = UsersTable_getRef(super->usersTable, proc->ruid);
 			}
