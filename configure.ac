@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop],[2.3.0],[msl0000023508@gmail.com])
+AC_INIT([htop], [2.3.1], [https://sourceforge.net/p/rivoreo/htop/tickets/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
@@ -625,9 +625,10 @@ AC_ARG_WITH(bug-reporting-url,
 	[AS_HELP_STRING([--bug-reporting-url=URL], [specify where should users report bugs for distribution package])],
 	[
 		test "x$withval" = xyes && AC_MSG_ERROR([option --bug-reporting-url requires the URL to be specified])
-		AC_DEFINE(BUG_REPORTING_URL, "$withval", [Defines where should users report bugs.])
+		AC_DEFINE_UNQUOTED(BUG_REPORTING_URL, ["$withval"],
+			[Defines where should users report bugs.])
 	], [
-		AC_DEFINE(BUG_REPORTING_URL, "https://sourceforge.net/p/rivoreo/htop/tickets/",
+		AC_DEFINE_UNQUOTED(BUG_REPORTING_URL, ["$PACKAGE_BUGREPORT"],
 			[Defines where should users report bugs.])
 	])
 
