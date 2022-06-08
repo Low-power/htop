@@ -29,8 +29,7 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #ifdef MAJOR_IN_MKDEV
 #include <sys/mkdev.h>
-#elif defined(MAJOR_IN_SYSMACROS) || \
-   (defined(HAVE_SYS_SYSMACROS_H) && HAVE_SYS_SYSMACROS_H)
+#elif defined MAJOR_IN_SYSMACROS
 #include <sys/sysmacros.h>
 #endif
 
@@ -987,7 +986,6 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    }
    char buffer[128];
    while (fgets(buffer, 128, file)) {
-
       #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu ", variable)) { break; } } while(0)
       switch (buffer[0]) {
       case 'M':
@@ -1002,26 +1000,26 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
          break;
       case 'S':
          switch (buffer[1]) {
-         case 'w':
-            tryRead("SwapTotal:", &this->totalSwap);
-            tryRead("SwapFree:", &swapFree);
-            break;
-         case 'h':
-            tryRead("Shmem:", &shmem);
-            break;
-         case 'R':
-            tryRead("SReclaimable:", &sreclaimable);
-            break;
+            case 'w':
+               tryRead("SwapTotal:", &this->totalSwap);
+               tryRead("SwapFree:", &swapFree);
+               break;
+            case 'h':
+               tryRead("Shmem:", &shmem);
+               break;
+            case 'R':
+               tryRead("SReclaimable:", &sreclaimable);
+               break;
          }
          break;
       }
       #undef tryRead
    }
-
-   this->usedMem = this->totalMem - this->freeMem;
-   this->cachedMem = this->cachedMem + sreclaimable - shmem;
-   this->usedSwap = this->totalSwap - swapFree;
    fclose(file);
+   this->usedMem = this->totalMem - this->freeMem;
+   if(this->cachedMem > shmem) this->cachedMem -= shmem;
+   this->cachedMem += sreclaimable;
+   this->usedSwap = this->totalSwap - swapFree;
 }
 
 static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
