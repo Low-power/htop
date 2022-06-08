@@ -19,8 +19,9 @@ in the source distribution for its full text.
 
 typedef enum {
 	HTOP_NATIVE_PID_FIELD = 100,
-	HTOP_NATIVE_SID_FIELD = 101,
-	HTOP_LAST_PROCESSFIELD = 102
+	HTOP_NATIVE_SID_FIELD,
+	HTOP_OPEN_FILE_COUNT_FIELD,
+	HTOP_LAST_PROCESSFIELD
 } InterixProcessField;
 
 typedef struct {
@@ -30,6 +31,7 @@ typedef struct {
 	bool is_posix_process;
 	unsigned long long int time_msec;
 	unsigned int time_delta;
+	unsigned int open_file_count;
 } InterixProcess;
 }*/
 
@@ -73,7 +75,8 @@ ProcessFieldData Process_fields[] = {
    [HTOP_TGID_FIELD] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [HTOP_NATIVE_PID_FIELD] = { .name = "NATIVE_PID", .title = " NATPID ", .description = "Windows NT process ID", .flags = 0, },
    [HTOP_NATIVE_SID_FIELD] = { .name = "NATIVE_SID", .title = " NATSID ", .description = "Windows NT session ID", .flags = 0, },
-   [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
+   [HTOP_OPEN_FILE_COUNT_FIELD] = { .name = "OPEN_FILE_COUNT", .title = "FDESCS ", .description = "Number of file descriptors the process holds", .flags = 0, },
+   [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, }
 };
 
 ProcessPidColumn Process_pidColumns[] = {
@@ -117,6 +120,8 @@ long int InterixProcess_compare(const void *o1, const void *o2) {
 			return p1->native_pid - p2->native_pid;
 		case HTOP_NATIVE_SID_FIELD:
 			return p1->native_sid - p2->native_sid;
+		case HTOP_OPEN_FILE_COUNT_FIELD:
+			return uintcmp(p1->open_file_count, p2->open_file_count);
 		default:
 			return Process_compare(o1, o2);
 	}
@@ -129,23 +134,27 @@ void InterixProcess_writeField(Process *super, RichString *str, ProcessField fie
 	switch((int)field) {
 		case HTOP_NATIVE_PID_FIELD:
 			len = snprintf(buffer, sizeof buffer, Process_pidFormat, this->native_pid);
-			break;
+			goto check_pid_pad;
 		case HTOP_NATIVE_SID_FIELD:
 			len = snprintf(buffer, sizeof buffer, Process_pidFormat, this->native_sid);
+		check_pid_pad:
+			if(len < 7) {
+#if 1
+				int space_len = 7 - len;
+				memmove(buffer + space_len, buffer, len + 1);
+				memset(buffer, ' ', space_len);
+#else
+				memset(buffer + len, ' ', 7 - len);
+				buffer[7] = 0;
+#endif
+			}
+			break;
+		case HTOP_OPEN_FILE_COUNT_FIELD:
+			xSnprintf(buffer, sizeof buffer, "%6u ", this->open_file_count);
 			break;
 		default:
 			Process_writeField(super, str, field);
 			return;
-	}
-	if(len < 7) {
-#if 1
-		int space_len = 7 - len;
-		memmove(buffer + space_len, buffer, len + 1);
-		memset(buffer, ' ', space_len);
-#else
-		memset(buffer + len, ' ', 7 - len);
-		buffer[7] = 0;
-#endif
 	}
 	RichString_append(str, CRT_colors[HTOP_DEFAULT_COLOR], buffer);
 }

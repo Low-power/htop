@@ -109,6 +109,7 @@ void ProcessList_goThroughEntries(ProcessList *this) {
 #else
 			proc->nice = info.pr_lwp.pr_nice;
 #endif
+			i_proc->open_file_count = info.pr_openfdcount;
 		} else {
 try_stat:
 			strcpy(path + 6 + len, "/stat");
@@ -161,6 +162,8 @@ try_stat:
 					} else if(strcmp(line, "nice") == 0) proc->nice = atol(v);
 					else if(strcmp(line, "sttime") == 0) {
 						proc->starttime_ctime = atol(v);
+					} else if(strcmp(line, "openfdcount") == 0) {
+						i_proc->open_file_count = atoi(v);
 					}
 				}
 				free(line);
