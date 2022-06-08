@@ -375,7 +375,8 @@ static void read_zfs_arc_size(ProcessList *this) {
 		this->zfs_arc_size = 0;
 	} else {
 		this->zfs_arc_size /= 1024;
-		this->usedMem -= this->zfs_arc_size;
+		if(this->usedMem < this->zfs_arc_size) this->zfs_arc_size = 0;
+		else this->usedMem -= this->zfs_arc_size;
 	}
 }
 
