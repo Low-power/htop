@@ -230,7 +230,7 @@ ProcessFieldData Process_fields[] = {
 #ifdef HAVE_CGROUP
    [HTOP_CGROUP_FIELD] = { .name = "CGROUP", .title = "    CGROUP ", .description = "Which cgroup the process is in", .flags = PROCESS_FLAG_LINUX_CGROUP, },
 #endif
-   [HTOP_OOM_FIELD] = { .name = "OOM", .title = "    OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
+   [HTOP_OOM_FIELD] = { .name = "OOM", .title = "  OOM ", .description = "OOM (Out-of-Memory) killer score", .flags = PROCESS_FLAG_LINUX_OOM, },
    [HTOP_IO_PRIORITY_FIELD] = { .name = "IO_PRIORITY", .title = "IO ", .description = "I/O priority", .flags = PROCESS_FLAG_LINUX_IOPRIO, },
 #ifdef HAVE_DELAYACCT
    [HTOP_PERCENT_CPU_DELAY_FIELD] = { .name = "PERCENT_CPU_DELAY", .title = "CPUD% ", .description = "CPU delay %", .flags = 0, },
@@ -250,8 +250,7 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = HTOP_TGID_FIELD, .label = "TGID" },
    { .id = HTOP_PGRP_FIELD, .label = "PGRP" },
    { .id = HTOP_SESSION_FIELD, .label = "SID" },
-   { .id = HTOP_OOM_FIELD, .label = "OOM" },
-   { .id = 0, .label = NULL },
+   { .id = 0, .label = NULL }
 };
 
 ProcessClass LinuxProcess_class = {
@@ -427,7 +426,7 @@ void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field)
          break;
    #endif
       case HTOP_OOM_FIELD:
-         xSnprintf(buffer, n, Process_pidFormat, lp->oom);
+         xSnprintf(buffer, n, "%5u ", lp->oom);
          break;
       case HTOP_IO_PRIORITY_FIELD:
          switch(IOPriority_class(lp->ioPriority)) {
