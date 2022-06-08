@@ -1,6 +1,7 @@
 /*
 htop - linux/Battery.c
 (C) 2004-2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 
@@ -21,6 +22,8 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #include "StringUtils.h"
 #include "IOUtils.h"
 
+#define PROC_ACPI_BATTERY_PATH (PROCDIR "/acpi/battery/")
+#define PROC_ACPI_AC_ADAPTER_PATH (PROCDIR "/acpi/ac_adapter/")
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 
 // ----------------------------------------
@@ -32,8 +35,7 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 // The /sys implementation below does things the right way.
 
 static long int parseBatInfo(const char *fileName, int lineNum, int wordNum) {
-   const char batteryPath[] = PROCDIR "/acpi/battery/";
-   DIR* batteryDir = opendir(batteryPath);
+   DIR *batteryDir = opendir(PROC_ACPI_BATTERY_PATH);
    if (!batteryDir) return -1;
 
    #define MAX_BATTERIES 64
@@ -42,29 +44,31 @@ static long int parseBatInfo(const char *fileName, int lineNum, int wordNum) {
    memset(batteries, 0, MAX_BATTERIES * sizeof(char*));
 
    while (nBatteries < MAX_BATTERIES) {
-      struct dirent* dirEntry = readdir(batteryDir);
-      if (!dirEntry)
-         break;
-      char* entryName = dirEntry->d_name;
-      if (strncmp(entryName, "BAT", 3))
-         continue;
-      batteries[nBatteries] = xStrdup(entryName);
+      struct dirent *e = readdir(batteryDir);
+      if (!e) break;
+      if(strncmp(e->d_name, "BAT", 3)) continue;
+      batteries[nBatteries] = xStrdup(e->d_name);
       nBatteries++;
    }
    closedir(batteryDir);
 
+   size_t file_name_len = strlen(fileName);
    long int total = -1;
    for (unsigned int i = 0; i < nBatteries; i++) {
-      char infoPath[30];
-      xSnprintf(infoPath, sizeof infoPath, "%s%s/%s", batteryPath, batteries[i], fileName);
+      size_t bat_name_len = strlen(batteries[i]);
+      char path[sizeof PROC_ACPI_BATTERY_PATH + bat_name_len + 1 + file_name_len];
+      memcpy(path, PROC_ACPI_BATTERY_PATH, sizeof PROC_ACPI_BATTERY_PATH - 1);
+      memcpy(path + sizeof PROC_ACPI_BATTERY_PATH - 1, batteries[i], bat_name_len);
+      path[sizeof PROC_ACPI_BATTERY_PATH - 1 + bat_name_len] = '/';
+      memcpy(path + sizeof PROC_ACPI_BATTERY_PATH + bat_name_len, fileName, file_name_len + 1);
 
-      FILE* file = fopen(infoPath, "r");
+      FILE* file = fopen(path, "r");
       if (!file) {
          break;
       }
 
       char* line = NULL;
-      for (int i = 0; i < lineNum; i++) {
+      for (int j = 0; j < lineNum; j++) {
          free(line);
          line = String_readLine(file);
          if (!line) break;
@@ -75,7 +79,7 @@ static long int parseBatInfo(const char *fileName, int lineNum, int wordNum) {
       if (!line) break;
 
       char *foundNumStr = String_getToken(line, wordNum);
-      const unsigned long int foundNum = atoi(foundNumStr);
+      unsigned long int foundNum = atoi(foundNumStr);
       free(foundNumStr);
       free(line);
       if(total < 0) total = foundNum;
@@ -91,25 +95,22 @@ static long int parseBatInfo(const char *fileName, int lineNum, int wordNum) {
 
 static ACPresence procAcpiCheck() {
    ACPresence isOn = AC_ERROR;
-   const char *power_supplyPath = PROCDIR "/acpi/ac_adapter";
-   DIR *dir = opendir(power_supplyPath);
+   DIR *dir = opendir(PROC_ACPI_AC_ADAPTER_PATH);
    if (!dir) {
       return AC_ERROR;
    }
 
-   for (;;) {
-      struct dirent* dirEntry = readdir((DIR *) dir);
-      if (!dirEntry)
-         break;
+   struct dirent *e;
+   while((e = readdir(dir))) {
+      if(e->d_name[0] != 'A') continue;
 
-      char* entryName = (char *) dirEntry->d_name;
+      size_t len = strlen(e->d_name);
+      char path[sizeof PROC_ACPI_AC_ADAPTER_PATH + len + 6];
+      memcpy(path, PROC_ACPI_AC_ADAPTER_PATH, sizeof PROC_ACPI_AC_ADAPTER_PATH - 1);
+      memcpy(path + sizeof PROC_ACPI_AC_ADAPTER_PATH - 1, e->d_name, len);
+      strcpy(path + sizeof PROC_ACPI_AC_ADAPTER_PATH - 1 + len, "/state");
 
-      if (entryName[0] != 'A')
-         continue;
-
-      char statePath[50];
-      xSnprintf((char *) statePath, sizeof statePath, "%s/%s/state", power_supplyPath, entryName);
-      FILE* file = fopen(statePath, "r");
+      FILE* file = fopen(path, "r");
       if (!file) {
          isOn = AC_ERROR;
          continue;
@@ -127,8 +128,8 @@ static ACPresence procAcpiCheck() {
       }
    }
 
-   if (dir)
-      closedir(dir);
+   closedir(dir);
+
    return isOn;
 }
 
@@ -164,13 +165,12 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
    unsigned int total_capacity = 0;
    unsigned int battery_count = 0;
 
-   for (;;) {
-      struct dirent* dirEntry = readdir(dir);
-      if (!dirEntry) break;
-      const char *entryName = dirEntry->d_name;
+   struct dirent *e;
+   while((e = readdir(dir))) {
+      const char *entryName = e->d_name;
       if(*entryName == '.') continue;
-      const char filePath[50];
-      xSnprintf((char *)filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
+      char filePath[50];
+      xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/type", entryName);
       FILE *f = fopen(filePath, "r");
       if(!f) continue;
       char *line = String_readLine(f);
@@ -178,7 +178,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       if(!line) continue;
       if(strcmp(line, "Battery") == 0) {
          free(line);
-         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
+         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/uevent", entryName);
          int fd = open(filePath, O_RDONLY);
          if (fd == -1) continue;
          char buffer[1024];
@@ -227,7 +227,7 @@ static void Battery_getSysData(double* level, ACPresence* isOnAC) {
       } else if((strcmp(line, "Mains") == 0 || strcmp(line, "USB") == 0) && *isOnAC != AC_PRESENT) {
          free(line);
          line = NULL;
-         xSnprintf((char *) filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
+         xSnprintf(filePath, sizeof filePath, SYS_POWERSUPPLY_DIR "/%s/online", entryName);
          int fd = open(filePath, O_RDONLY);
          if (fd == -1) continue;
          char b = 0;

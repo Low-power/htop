@@ -5,6 +5,7 @@
 /*
 htop - linux/Battery.h
 (C) 2004-2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 
@@ -15,6 +16,8 @@ Linux battery readings written by Ian P. Hands (iphands@gmail.com, ihands@redhat
 #define _GNU_SOURCE
 #endif
 
+#define PROC_ACPI_BATTERY_PATH (PROCDIR "/acpi/battery/")
+#define PROC_ACPI_AC_ADAPTER_PATH (PROCDIR "/acpi/ac_adapter/")
 #define SYS_POWERSUPPLY_DIR "/sys/class/power_supply"
 
 // ----------------------------------------
