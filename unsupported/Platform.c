@@ -108,18 +108,14 @@ int Platform_getMaxPid() {
    return 1;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-   (void) this;
-   (void) cpu;
-   return 0.0;
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   return 0;
 }
 
-void Platform_setMemoryValues(Meter* this) {
-   (void) this;
+void Platform_updateMemoryValues(Meter *meter) {
 }
 
-void Platform_setSwapValues(Meter* this) {
-   (void) this;
+void Platform_updateSwapValues(Meter *meter) {
 }
 
 char **Platform_getProcessArgv(const Process *proc) {

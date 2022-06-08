@@ -163,10 +163,10 @@ int Platform_getMaxPid() {
 	return INT32_MAX;
 }
 
-double Platform_setCPUValues(Meter *meter, int cpu) {
+double Platform_updateCPUValues(Meter *meter, int cpu) {
 	const HaikuProcessList *pl = (const HaikuProcessList *)meter->pl;
 	if(cpu || pl->super.cpuCount == 1) {
-		struct cpu_data *data = pl->cpu_data + (cpu ? cpu - 1 : 0);
+		const struct cpu_data *data = pl->cpu_data + (cpu ? cpu - 1 : 0);
 		meter->values[CPU_METER_NORMAL] = data->period / (double)pl->interval * 100;
 	} else {
 		double total_cpu_time = 0;
@@ -179,14 +179,14 @@ double Platform_setCPUValues(Meter *meter, int cpu) {
 	return meter->values[CPU_METER_NORMAL];
 }
 
-void Platform_setMemoryValues(Meter *meter) {
+void Platform_updateMemoryValues(Meter *meter) {
 	meter->total = meter->pl->totalMem;
 	meter->values[0] = meter->pl->usedMem;
 	meter->values[1] = meter->pl->buffersMem;
 	meter->values[2] = meter->pl->cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
+void Platform_updateSwapValues(Meter *meter) {
 	meter->total = meter->pl->totalSwap;
 	meter->values[0] = meter->pl->usedSwap;
 }

@@ -26,7 +26,7 @@ int SwapMeter_attributes[] = {
 
 static void SwapMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;
-   Platform_setSwapValues(this);
+   Platform_updateSwapValues(this);
 
    written = Meter_humanUnit(buffer, this->values[0], size);
    buffer += written;

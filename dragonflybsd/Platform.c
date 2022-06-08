@@ -1,4 +1,4 @@
-/*
+/**
 htop - dragonflybsd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
@@ -136,31 +136,21 @@ int Platform_getMaxPid() {
    return PID_MAX;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-   DragonFlyBSDProcessList* fpl = (DragonFlyBSDProcessList*) this->pl;
-   int cpus = this->pl->cpuCount;
-   CPUData* cpuData;
-
-   if (cpus == 1) {
-     // single CPU box has everything in fpl->cpus[0]
-     cpuData = &(fpl->cpus[0]);
-   } else {
-     cpuData = &(fpl->cpus[cpu]);
-   }
-
-   double  percent;
-   double* v = this->values;
-
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   const CPUData *cpuData =
+      ((DragonFlyBSDProcessList *)meter->pl)->cpus + (meter->pl->cpuCount > 1 ? cpu : 0);
+   double percent;
+   double *v = meter->values;
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
-   if (this->pl->settings->detailedCPUTime) {
+   if (meter->pl->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
-      Meter_setItems(this, 4);
+      Meter_setItems(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
-      Meter_setItems(this, 3);
+      Meter_setItems(meter, 3);
       percent = v[0]+v[1]+v[2];
    }
 
@@ -169,16 +159,16 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateMemoryValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalMem;
    meter->values[0] = pl->usedMem;
    meter->values[1] = pl->buffersMem;
    meter->values[2] = pl->cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateSwapValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalSwap;
    meter->values[0] = pl->usedSwap;
 }

@@ -2,7 +2,7 @@
 
 #ifndef HEADER_dragonflybsd_Platform
 #define HEADER_dragonflybsd_Platform
-/*
+/**
 htop - dragonflybsd/Platform.h
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
@@ -38,11 +38,11 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
 
-double Platform_setCPUValues(Meter* this, int cpu);
+double Platform_updateCPUValues(Meter *meter, int cpu);
 
-void Platform_setMemoryValues(Meter *meter);
+void Platform_updateMemoryValues(Meter *meter);
 
-void Platform_setSwapValues(Meter *meter);
+void Platform_updateSwapValues(Meter *meter);
 
 char **Platform_getProcessArgv(const Process *proc);
 

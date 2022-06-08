@@ -168,12 +168,11 @@ int Platform_getMaxPid() {
 #endif
 }
 
-double Platform_setCPUValues(Meter *meter, int cpu) {
-   SolarisProcessList* spl = (SolarisProcessList *)meter->pl;
-   CPUData *cpuData = spl->cpus + (meter->pl->cpuCount > 1 ? cpu : 0);
-   double* v = meter->values;
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   const SolarisProcessList *spl = (const SolarisProcessList *)meter->pl;
+   const CPUData *cpuData = spl->cpus + (meter->pl->cpuCount > 1 ? cpu : 0);
+   double *v = meter->values;
    double percent;
-
    v[CPU_METER_NICE]   = cpuData->nicePercent;
    v[CPU_METER_NORMAL] = cpuData->userPercent;
    if (meter->pl->settings->detailedCPUTime) {
@@ -192,16 +191,16 @@ double Platform_setCPUValues(Meter *meter, int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateMemoryValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalMem;
    meter->values[0] = pl->usedMem;
    meter->values[1] = pl->buffersMem;
    meter->values[2] = pl->cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateSwapValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalSwap;
    meter->values[0] = pl->usedSwap;
 }

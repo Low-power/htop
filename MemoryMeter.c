@@ -26,7 +26,7 @@ int MemoryMeter_attributes[] = {
 
 static void MemoryMeter_updateValues(Meter* this, char* buffer, int size) {
    int written;
-   Platform_setMemoryValues(this);
+   Platform_updateMemoryValues(this);
    this->values[3] = this->pl->zfs_arc_size;
 
    written = Meter_humanUnit(buffer, this->values[0], size);
@@ -66,7 +66,7 @@ MeterClass MemoryMeter_class = {
       .delete = Meter_delete,
       .display = MemoryMeter_display,
    },
-   .updateValues = MemoryMeter_updateValues, 
+   .updateValues = MemoryMeter_updateValues,
    .defaultMode = BAR_METERMODE,
    .maxItems = 4,
    .total = 100.0,

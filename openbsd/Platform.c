@@ -155,13 +155,12 @@ int Platform_getMaxPid() {
 #endif
 }
 
-double Platform_setCPUValues(Meter *meter, int cpu) {
-   const OpenBSDProcessList* pl = (OpenBSDProcessList* )meter->pl;
-   const CPUData* cpuData = pl->cpus + cpu;
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   const OpenBSDProcessList *pl = (const OpenBSDProcessList *)meter->pl;
+   const CPUData *cpuData = pl->cpus + cpu;
    double total = cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod;
    double totalPercent;
    double *v = meter->values;
-
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
    if (meter->pl->settings->detailedCPUTime) {
@@ -185,8 +184,8 @@ double Platform_setCPUValues(Meter *meter, int cpu) {
    return totalPercent;
 }
 
-void Platform_setMemoryValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateMemoryValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -203,12 +202,11 @@ void Platform_setMemoryValues(Meter *meter) {
  *
  * Based on OpenBSD's top(1)
  */
-void Platform_setSwapValues(Meter *meter) {
-   ProcessList* pl = meter->pl;
+void Platform_updateSwapValues(Meter *meter) {
    unsigned long long int total = 0, used = 0;
    int nswap = swapctl(SWAP_NSWAP, 0, 0);
    if (nswap > 0) {
-      struct swapent *swdev = xCalloc(nswap, sizeof(*swdev));
+      struct swapent *swdev = xCalloc(nswap, sizeof(struct swapent));
       nswap = swapctl(SWAP_STATS, swdev, nswap);
       while(nswap > 0) {
          const struct swapent *e = swdev + --nswap;
@@ -219,8 +217,8 @@ void Platform_setSwapValues(Meter *meter) {
       }
       free(swdev);
    }
-   meter->total = pl->totalSwap = total;
-   meter->values[0] = pl->usedSwap = used;
+   meter->total = total;
+   meter->values[0] = used;
 }
 
 static char **get_process_vector(const Process *proc, char **(*getv)(kvm_t *, const struct kinfo_proc *, int)) {

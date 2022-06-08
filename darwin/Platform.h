@@ -41,11 +41,11 @@ int Platform_getMaxPid();
 
 extern ProcessPidColumn Process_pidColumns[];
 
-double Platform_setCPUValues(Meter* mtr, int cpu);
+double Platform_updateCPUValues(Meter *mtr, int cpu);
 
-void Platform_setMemoryValues(Meter* mtr);
+void Platform_updateMemoryValues(Meter *mtr);
 
-void Platform_setSwapValues(Meter* mtr);
+void Platform_updateSwapValues(Meter *mtr);
 
 char **Platform_getProcessArgv(const Process *proc);
 

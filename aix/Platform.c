@@ -157,34 +157,30 @@ int Platform_getMaxPid() {
    return PIDMAX;
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-   AixProcessList* apl = (AixProcessList*) this->pl;
-   CPUData* cpuData;
-   cpuData = &(apl->cpus [cpu]);
-
-   double  percent;
-   double* v = this->values;
-
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   const AixProcessList *apl = (const AixProcessList *)meter->pl;
+   const CPUData *cpuData = apl->cpus + cpu;
+   double percent;
+   double *v = meter->values;
    v[CPU_METER_NICE]   = 0.0;
    v[CPU_METER_NORMAL] = cpuData->utime_p;
-   if (this->pl->settings->detailedCPUTime) {
+   if (meter->pl->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->stime_p;
       v[CPU_METER_IRQ]     = cpuData->wtime_p;
-      Meter_setItems(this, 4);
+      Meter_setItems(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->stime_p + cpuData->wtime_p;
-      Meter_setItems(this, 3);
+      Meter_setItems(meter, 3);
       percent = v[0]+v[1]+v[2];
    }
-
    percent = CLAMP(percent, 0.0, 100.0);
    if (isnan(percent)) percent = 0.0;
    return percent;
 }
 
-void Platform_setMemoryValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateMemoryValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -195,9 +191,9 @@ void Platform_setMemoryValues(Meter *meter) {
    meter->values[2] = cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
+void Platform_updateSwapValues(Meter *meter) {
    // the mem scan code in AixProcessList does the work
-   ProcessList *pl = meter->pl;
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalSwap;
    meter->values[0] = pl->usedSwap;
 }

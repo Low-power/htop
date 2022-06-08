@@ -145,10 +145,10 @@ int Platform_getMaxPid() {
 	return 29999;
 }
 
-double Platform_setCPUValues(Meter *meter, int cpu) {
+double Platform_updateCPUValues(Meter *meter, int cpu) {
 	assert(cpu >= 0);
 	assert(cpu < 2);
-	HurdProcessList *pl = (HurdProcessList *)meter->pl;
+	const HurdProcessList *pl = (const HurdProcessList *)meter->pl;
 	if(pl->idle_time.tv_sec == -1) return 0;
 	meter->values[CPU_METER_NORMAL] = 100 -
 		((double)pl->idle_time.tv_sec * 1000000 + pl->idle_time.tv_usec) /
@@ -156,14 +156,14 @@ double Platform_setCPUValues(Meter *meter, int cpu) {
 	return meter->values[CPU_METER_NORMAL];
 }
 
-void Platform_setMemoryValues(Meter *meter) {
+void Platform_updateMemoryValues(Meter *meter) {
 	meter->total = meter->pl->totalMem;
 	meter->values[0] = meter->pl->usedMem;
 	meter->values[1] = meter->pl->buffersMem;
 	meter->values[2] = meter->pl->cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
+void Platform_updateSwapValues(Meter *meter) {
 	meter->total = meter->pl->totalSwap;
 	meter->values[0] = meter->pl->usedSwap;
 }

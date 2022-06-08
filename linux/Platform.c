@@ -186,23 +186,23 @@ int Platform_getMaxPid() {
 #endif
 }
 
-double Platform_setCPUValues(Meter* this, int cpu) {
-   LinuxProcessList* pl = (LinuxProcessList*) this->pl;
-   CPUData* cpuData = &(pl->cpus[cpu]);
-   double total = (double) ( cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
+double Platform_updateCPUValues(Meter *meter, int cpu) {
+   const LinuxProcessList *pl = (const LinuxProcessList *)meter->pl;
+   const CPUData *cpuData = pl->cpus + cpu;
+   double total = (double)(cpuData->totalPeriod == 0 ? 1 : cpuData->totalPeriod);
    double percent;
-   double* v = this->values;
+   double *v = meter->values;
    v[CPU_METER_NICE] = cpuData->nicePeriod / total * 100.0;
    v[CPU_METER_NORMAL] = cpuData->userPeriod / total * 100.0;
-   if (this->pl->settings->detailedCPUTime) {
+   if (meter->pl->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPeriod / total * 100.0;
       v[CPU_METER_IRQ]     = cpuData->irqPeriod / total * 100.0;
       v[CPU_METER_SOFTIRQ] = cpuData->softIrqPeriod / total * 100.0;
       v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
       v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
       v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
-      Meter_setItems(this, 8);
-      if (this->pl->settings->accountGuestInCPUMeter) {
+      Meter_setItems(meter, 8);
+      if (meter->pl->settings->accountGuestInCPUMeter) {
          percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
       } else {
          percent = v[0]+v[1]+v[2]+v[3]+v[4];
@@ -210,7 +210,7 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    } else {
       v[2] = cpuData->systemAllPeriod / total * 100.0;
       v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
-      Meter_setItems(this, 4);
+      Meter_setItems(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    }
    percent = CLAMP(percent, 0.0, 100.0);
@@ -218,8 +218,8 @@ double Platform_setCPUValues(Meter* this, int cpu) {
    return percent;
 }
 
-void Platform_setMemoryValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateMemoryValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    long int usedMem = pl->usedMem;
    long int buffersMem = pl->buffersMem;
    long int cachedMem = pl->cachedMem;
@@ -230,8 +230,8 @@ void Platform_setMemoryValues(Meter *meter) {
    meter->values[2] = cachedMem;
 }
 
-void Platform_setSwapValues(Meter *meter) {
-   ProcessList *pl = meter->pl;
+void Platform_updateSwapValues(Meter *meter) {
+   const ProcessList *pl = meter->pl;
    meter->total = pl->totalSwap;
    meter->values[0] = pl->usedSwap;
 }

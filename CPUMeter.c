@@ -62,7 +62,7 @@ static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
       return;
    }
    memset(this->values, 0, sizeof(double) * CPU_METER_ITEMCOUNT);
-   double percent = Platform_setCPUValues(this, cpu);
+   double percent = Platform_updateCPUValues(this, cpu);
    xSnprintf(buffer, size, "%5.1f%%", percent);
 }
 

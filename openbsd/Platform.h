@@ -46,9 +46,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 
 int Platform_getMaxPid();
 
-double Platform_setCPUValues(Meter *meter, int cpu);
+double Platform_updateCPUValues(Meter *meter, int cpu);
 
-void Platform_setMemoryValues(Meter *meter);
+void Platform_updateMemoryValues(Meter *meter);
 
 /*
  * Copyright (c) 1994 Thorsten Lockert <tholo@sigmasoft.com>
@@ -56,7 +56,7 @@ void Platform_setMemoryValues(Meter *meter);
  *
  * Based on OpenBSD's top(1)
  */
-void Platform_setSwapValues(Meter *meter);
+void Platform_updateSwapValues(Meter *meter);
 
 char **Platform_getProcessArgv(const Process *proc);
 

@@ -163,15 +163,15 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = 0, .label = NULL },
 };
 
-static double Platform_setCPUAverageValues(Meter* mtr) {
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+static double Platform_updateAverageCPUValues(Meter *mtr) {
+   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
    int cpus = dpl->super.cpuCount;
    double sumNice = 0.0;
    double sumNormal = 0.0;
    double sumKernel = 0.0;
    double sumPercent = 0.0;
    for (int i = 1; i <= cpus; i++) {
-      sumPercent += Platform_setCPUValues(mtr, i);
+      sumPercent += Platform_updateCPUValues(mtr, i);
       sumNice    += mtr->values[CPU_METER_NICE];
       sumNormal  += mtr->values[CPU_METER_NORMAL];
       sumKernel  += mtr->values[CPU_METER_KERNEL];
@@ -182,58 +182,55 @@ static double Platform_setCPUAverageValues(Meter* mtr) {
    return sumPercent / cpus;
 }
 
-double Platform_setCPUValues(Meter* mtr, int cpu) {
-
+double Platform_updateCPUValues(Meter *mtr, int cpu) {
    if (cpu == 0) {
-      return Platform_setCPUAverageValues(mtr);
+      return Platform_updateAverageCPUValues(mtr);
    }
 
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
    processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
    processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
-   double total = 0;
 
    /* Take the sums */
+   double total = 0;
    for(size_t i = 0; i < CPU_STATE_MAX; ++i) {
       total += (double)curr->cpu_ticks[i] - (double)prev->cpu_ticks[i];
    }
 
-   mtr->values[CPU_METER_NICE]
-           = ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE])* 100.0 / total;
-   mtr->values[CPU_METER_NORMAL]
-           = ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER])* 100.0 / total;
-   mtr->values[CPU_METER_KERNEL]
-           = ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM])* 100.0 / total;
+   mtr->values[CPU_METER_NICE] =
+      ((double)curr->cpu_ticks[CPU_STATE_NICE] - (double)prev->cpu_ticks[CPU_STATE_NICE]) * 100 / total;
+   mtr->values[CPU_METER_NORMAL] =
+      ((double)curr->cpu_ticks[CPU_STATE_USER] - (double)prev->cpu_ticks[CPU_STATE_USER]) * 100 / total;
+   mtr->values[CPU_METER_KERNEL] =
+      ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM]) * 100 / total;
 
    Meter_setItems(mtr, 3);
 
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];
-
    return CLAMP(total, 0.0, 100.0);
 }
 
-void Platform_setMemoryValues(Meter* mtr) {
-   DarwinProcessList *dpl = (DarwinProcessList *)mtr->pl;
+void Platform_updateMemoryValues(Meter *mtr) {
+   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
    vm_statistics_t vm = &dpl->vm_stats;
-   double page_K = (double)vm_page_size / (double)1024;
-
+   double page_size_ki = (double)vm_page_size / (double)1024;
    mtr->total = dpl->host_info.max_mem / 1024;
-   mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_K;
-   mtr->values[1] = (double)vm->purgeable_count * page_K;
-   mtr->values[2] = (double)vm->inactive_count * page_K;
+   mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_size_ki;
+   mtr->values[1] = (double)vm->purgeable_count * page_size_ki;
+   mtr->values[2] = (double)vm->inactive_count * page_size_ki;
 }
 
-void Platform_setSwapValues(Meter* mtr) {
-	int mib[2] = {CTL_VM, VM_SWAPUSAGE};
-	struct xsw_usage swapused;
-	size_t swlen = sizeof(swapused);
-	if(sysctl(mib, 2, &swapused, &swlen, NULL, 0) < 0) {
+void Platform_updateSwapValues(Meter *mtr) {
+	int mib[] = { CTL_VM, VM_SWAPUSAGE };
+	struct xsw_usage swap_usage;
+	size_t len = sizeof swap_usage;
+	if(sysctl(mib, 2, &swap_usage, &len, NULL, 0) < 0) {
 		mtr->total = 0;
 		mtr->values[0] = 0;
 	} else {
-		mtr->total = swapused.xsu_total / 1024;
-		mtr->values[0] = swapused.xsu_used / 1024;
+		mtr->total = swap_usage.xsu_total / 1024;
+		mtr->values[0] = swap_usage.xsu_used / 1024;
 	}
 }
 
