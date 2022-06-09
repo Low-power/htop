@@ -195,12 +195,9 @@ void Vector_insert(Vector* this, int idx, void* data_) {
    if (idx > this->items) {
       idx = this->items;
    }
-   
    Vector_checkArraySize(this);
    //assert(this->array[this->items] == NULL);
-   for (int i = this->items; i > idx; i--) {
-      this->array[i] = this->array[i-1];
-   }
+   memmove(this->array + idx + 1, this->array + idx, (this->items - idx) * sizeof(Object *));
    this->array[idx] = data;
    this->items++;
    assert(Vector_isConsistent(this));
@@ -212,8 +209,7 @@ Object* Vector_take(Vector* this, int idx) {
    Object* removed = this->array[idx];
    //assert (removed != NULL);
    this->items--;
-   for (int i = idx; i < this->items; i++)
-      this->array[i] = this->array[i+1];
+   memmove(this->array + idx, this->array + idx + 1, (this->items - idx) * sizeof(Object *));
    //this->array[this->items] = NULL;
    assert(Vector_isConsistent(this));
    return removed;
@@ -224,8 +220,8 @@ Object* Vector_remove(Vector* this, int idx) {
    if (this->owner) {
       Object_delete(removed);
       return NULL;
-   } else
-      return removed;
+   }
+   return removed;
 }
 
 void Vector_moveUp(Vector* this, int idx) {
@@ -300,11 +296,8 @@ inline int Vector_size(Vector* this) {
 /*
 
 static void Vector_merge(Vector* this, Vector* v2) {
-   int i;
    assert(Vector_isConsistent(this));
-   
-   for (i = 0; i < v2->items; i++)
-      Vector_add(this, v2->array[i]);
+   for (int i = 0; i < v2->items; i++) Vector_add(this, v2->array[i]);
    v2->items = 0;
    Vector_delete(v2);
    assert(Vector_isConsistent(this));
