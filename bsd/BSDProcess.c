@@ -11,7 +11,7 @@ in the source distribution for its full text.
 #include <stdlib.h>
 #include <stdio.h>
 
-void BSDProcess_writeField(Process *this, RichString *str, ProcessField field) {
+void BSDProcess_writeField(const Process *this, RichString *str, ProcessField field) {
 	char buffer[256];
 	int attr = CRT_colors[HTOP_DEFAULT_COLOR];
 	switch(field) {

@@ -318,8 +318,8 @@ void LinuxProcess_printDelay(float delay_percent, char* buffer, int n) {
 }
 #endif
 
-void LinuxProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   LinuxProcess* lp = (LinuxProcess*) this;
+void LinuxProcess_writeField(const Process *this, RichString* str, ProcessField field) {
+   const LinuxProcess *lp = (const LinuxProcess *)this;
    bool coloring = this->settings->highlightMegabytes;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];

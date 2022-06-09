@@ -147,23 +147,20 @@ typedef struct ProcessFieldData_ {
 } ProcessFieldData;
 
 // Implemented in platform-specific code:
-void Process_writeField(Process* this, RichString* str, ProcessField field);
-long Process_compare(const void* v1, const void* v2);
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
 char **Process_getKernelStackTrace(const Process *);
 extern ProcessFieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
-extern char Process_pidFormat[20];
 
 typedef Process*(*Process_New)(struct Settings_*);
-typedef void (*Process_WriteField)(Process*, RichString*, ProcessField);
+typedef void (*ProcessWriteFieldFunction)(const Process *, RichString *, ProcessField);
 typedef bool (*ProcessSendSignalFunction)(const Process *, int);
 typedef bool (*ProcessGetBooleanFunction)(const Process *);
 
 typedef struct ProcessClass_ {
    ObjectClass super;
-   Process_WriteField writeField;
+   ProcessWriteFieldFunction writeField;
    ProcessSendSignalFunction sendSignal;
    ProcessGetBooleanFunction isSelf;
 } ProcessClass;
@@ -322,7 +319,7 @@ void Process_printTime(RichString* str, unsigned long long totalHundredths) {
    }
 }
 
-static inline void Process_writeCommand(Process* this, int attr, int baseattr, RichString* str) {
+static inline void Process_writeCommand(const Process *this, int attr, int baseattr, RichString* str) {
    int start = RichString_size(str), finish = 0;
    char* comm = this->comm;
 
@@ -419,7 +416,7 @@ static void copy_fixed_width_field(char *buffer, size_t buffer_size, const char 
    }
 }
 
-void Process_writeField(Process* this, RichString* str, ProcessField field) {
+void Process_writeField(const Process *this, RichString* str, ProcessField field) {
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int baseattr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];

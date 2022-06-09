@@ -109,8 +109,8 @@ long int HurdProcess_compare(const void *o1, const void *o2) {
 	}
 }
 
-void HurdProcess_writeField(Process *super, RichString *str, ProcessField field) {
-	HurdProcess *this = (HurdProcess *)super;
+void HurdProcess_writeField(const Process *super, RichString *str, ProcessField field) {
+	const HurdProcess *this = (const HurdProcess *)super;
 	char buffer[256];
 	int len;
 	switch((int)field) {

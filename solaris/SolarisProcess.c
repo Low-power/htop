@@ -174,8 +174,8 @@ void Process_delete(Object* cast) {
    free(sp);
 }
 
-void SolarisProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   SolarisProcess* sp = (SolarisProcess*) this;
+void SolarisProcess_writeField(const Process *this, RichString* str, ProcessField field) {
+   const SolarisProcess *sp = (const SolarisProcess *)this;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof(buffer);

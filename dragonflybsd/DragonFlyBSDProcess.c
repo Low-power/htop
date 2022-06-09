@@ -102,29 +102,29 @@ void Process_delete(Object* cast) {
    free(this);
 }
 
-void DragonFlyBSDProcess_writeField(Process* this, RichString* str, ProcessField field) {
-   DragonFlyBSDProcess* fp = (DragonFlyBSDProcess*) this;
+void DragonFlyBSDProcess_writeField(const Process *super, RichString* str, ProcessField field) {
+   const DragonFlyBSDProcess *this = (const DragonFlyBSDProcess *)super;
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof(buffer);
    switch ((int) field) {
       // add Platform-specific fields here
       case HTOP_PID_FIELD:
-         if(Process_isSelf(this)) attr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];
-         xSnprintf(buffer, n, Process_pidFormat, fp->kernel ? this->tgid : this->pid);
+         if(Process_isSelf(super)) attr = CRT_colors[HTOP_PROCESS_BASENAME_COLOR];
+         xSnprintf(buffer, n, Process_pidFormat, this->kernel ? super->tgid : super->pid);
          break;
       case HTOP_JID_FIELD:
-         xSnprintf(buffer, n, Process_pidFormat, fp->jid);
+         xSnprintf(buffer, n, Process_pidFormat, this->jid);
          break;
       case HTOP_JAIL_FIELD:
-         xSnprintf(buffer, n, "%-11s ", fp->jname);
+         xSnprintf(buffer, n, "%-11s ", this->jname);
          if (buffer[12]) {
             buffer[11] = ' ';
             buffer[12] = '\0';
          }
          break;
       default:
-         BSDProcess_writeField(this, str, field);
+         BSDProcess_writeField(super, str, field);
          return;
    }
    RichString_append(str, attr, buffer);

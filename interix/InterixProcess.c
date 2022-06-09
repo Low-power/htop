@@ -127,8 +127,8 @@ long int InterixProcess_compare(const void *o1, const void *o2) {
 	}
 }
 
-void InterixProcess_writeField(Process *super, RichString *str, ProcessField field) {
-	InterixProcess *this = (InterixProcess *)super;
+void InterixProcess_writeField(const Process *super, RichString *str, ProcessField field) {
+	const InterixProcess *this = (const InterixProcess *)super;
 	char buffer[256];
 	int len;
 	switch((int)field) {

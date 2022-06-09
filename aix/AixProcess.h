@@ -39,7 +39,7 @@ AixProcess* AixProcess_new(Settings* settings);
 
 void AixProcess_delete(Object* cast);
 
-void AixProcess_writeField(Process *super, RichString* str, ProcessField field);
+void AixProcess_writeField(const Process *super, RichString* str, ProcessField field);
 
 long AixProcess_compare(const void* v1, const void* v2);
 

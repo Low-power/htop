@@ -109,8 +109,8 @@ long int HaikuProcess_compare(const void *o1, const void *o2) {
 	}
 }
 
-void HaikuProcess_writeField(Process *super, RichString *str, ProcessField field) {
-	HaikuProcess *this = (HaikuProcess *)super;
+void HaikuProcess_writeField(const Process *super, RichString *str, ProcessField field) {
+	const HaikuProcess *this = (const HaikuProcess *)super;
 	char buffer[256];
 	int len;
 	switch((int)field) {
