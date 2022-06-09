@@ -181,9 +181,9 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 
 void Platform_updateMemoryValues(Meter *meter) {
    const ProcessList *pl = meter->pl;
-   long int usedMem = pl->usedMem;
-   long int buffersMem = pl->buffersMem;
-   long int cachedMem = pl->cachedMem;
+   unsigned long long int usedMem = pl->usedMem;
+   unsigned long long int buffersMem = pl->buffersMem;
+   unsigned long long int cachedMem = pl->cachedMem;
    usedMem -= buffersMem + cachedMem;
    meter->total = pl->totalMem;
    meter->values[0] = usedMem;
