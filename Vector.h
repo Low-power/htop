@@ -10,8 +10,9 @@ in the source distribution for its full text.
 */
 
 #include "Object.h"
+#include <stdbool.h>
 
-#define swap(a_,x_,y_) do{ void* tmp_ = a_[x_]; a_[x_] = a_[y_]; a_[y_] = tmp_; }while(0)
+#define swap(a_,x_,y_) do { void *tmp_ = (a_)[x_]; (a_)[x_] = (a_)[y_]; (a_)[y_] = tmp_; } while(0)
 
 #ifndef DEFAULT_SIZE
 #define DEFAULT_SIZE -1
@@ -25,7 +26,6 @@ typedef struct Vector_ {
    int items;
    bool owner;
 } Vector;
-
 
 Vector* Vector_new(ObjectClass* type, bool owner, int size);
 
