@@ -381,7 +381,6 @@ static void read_zfs_arc_size(ProcessList *this) {
 }
 
 void ProcessList_scan(ProcessList* this) {
-
    // mark all process as "dirty"
    for (int i = 0; i < Vector_size(this->processes); i++) {
       Process* p = (Process*) Vector_get(this->processes, i);
@@ -401,9 +400,6 @@ void ProcessList_scan(ProcessList* this) {
    read_zfs_arc_size(this);
    for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
-      if (p->updated == false)
-         ProcessList_remove(this, p);
-      else
-         p->updated = false;
+      if(!p->updated) ProcessList_remove(this, p);
    }
 }
