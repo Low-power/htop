@@ -236,10 +236,10 @@ try_stat:
 	closedir(dir);
 
 	int i = ProcessList_size(this);
-	if(!i) return;
-	do {
+	while(i > 0) {
 		Process *proc = ProcessList_get(this, --i);
+		if(!proc->updated) continue;
 		InterixProcess *i_proc = (InterixProcess *)proc;
 		proc->percent_cpu = (float)(i_proc->time_delta * 100) / total_time_delta;
-	} while(i > 0);
+	}
 }
