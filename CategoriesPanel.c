@@ -19,19 +19,18 @@ in the source distribution for its full text.
 
 /*{
 #include "Panel.h"
-#include "Settings.h"
 #include "ScreenManager.h"
+#include "Settings.h"
+#include "Header.h"
 #include "ProcessList.h"
 
 typedef struct CategoriesPanel_ {
    Panel super;
    ScreenManager* scr;
-
    Settings* settings;
    Header* header;
-   ProcessList* pl;
+   const ProcessList *pl;
 } CategoriesPanel;
-
 }*/
 
 static const char* const CategoriesFunctions[] = {"      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "      ", "Done  ", NULL};
@@ -133,7 +132,7 @@ PanelClass CategoriesPanel_class = {
    .eventHandler = CategoriesPanel_eventHandler
 };
 
-CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl) {
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, const ProcessList *pl) {
    CategoriesPanel* this = AllocThis(CategoriesPanel);
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(CategoriesFunctions, NULL, NULL);

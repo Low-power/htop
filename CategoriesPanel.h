@@ -10,24 +10,23 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
-#include "Settings.h"
 #include "ScreenManager.h"
+#include "Settings.h"
+#include "Header.h"
 #include "ProcessList.h"
 
 typedef struct CategoriesPanel_ {
    Panel super;
    ScreenManager* scr;
-
    Settings* settings;
    Header* header;
-   ProcessList* pl;
+   const ProcessList *pl;
 } CategoriesPanel;
-
 
 void CategoriesPanel_makeMetersPage(CategoriesPanel* this);
 
 extern PanelClass CategoriesPanel_class;
 
-CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, ProcessList* pl);
+CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Header* header, const ProcessList *pl);
 
 #endif
