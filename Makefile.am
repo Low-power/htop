@@ -12,7 +12,7 @@ applications_DATA = htop.desktop
 pixmapdir = $(datadir)/pixmaps
 pixmap_DATA = htop.png
 
-AM_CPPFLAGS = $(LOCAL_CPPFLAGS) -D SYSCONFDIR=\"$(sysconfdir)\" -I "$(top_srcdir)/$(my_htop_platform)"
+AM_CPPFLAGS = $(LOCAL_CPPFLAGS) -D SYSCONFDIR=\"$(sysconfdir)\" -I "$(my_htop_platform)" -I "$(top_srcdir)/$(my_htop_platform)"
 AM_CFLAGS = $(LOCAL_CFLAGS)
 AM_LDFLAGS = $(LOCAL_LDFLAGS)
 
