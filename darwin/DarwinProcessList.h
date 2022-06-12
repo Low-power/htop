@@ -5,6 +5,7 @@
 /*
 htop - darwin/DarwinProcessList.h
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -27,10 +28,10 @@ typedef struct DarwinProcessList_ {
 
    struct kinfo_proc *kip_buffer;
    size_t kip_buffer_size;
-   host_basic_info_data_t host_info;
-   vm_statistics_data_t vm_stats;
-   processor_cpu_load_info_t prev_load;
-   processor_cpu_load_info_t curr_load;
+   struct host_basic_info host_info;
+   struct vm_statistics vm_stats;
+   struct processor_cpu_load_info *prev_load;
+   struct processor_cpu_load_info *curr_load;
    uint64_t global_diff;
    bool is_scan_thread_supported;
 } DarwinProcessList;

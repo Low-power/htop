@@ -136,8 +136,7 @@ int Platform_numberOfFields = 100;
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    double results[3];
-
-   if(3 == getloadavg(results, 3)) {
+   if(getloadavg(results, 3) == 3) {
       *one = results[0];
       *five = results[1];
       *fifteen = results[2];
@@ -187,9 +186,9 @@ double Platform_updateCPUValues(Meter *mtr, int cpu) {
       return Platform_updateAverageCPUValues(mtr);
    }
 
-   const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
-   processor_cpu_load_info_t prev = &dpl->prev_load[cpu-1];
-   processor_cpu_load_info_t curr = &dpl->curr_load[cpu-1];
+   const DarwinProcessList *pl = (const DarwinProcessList *)mtr->pl;
+   const struct processor_cpu_load_info *prev = pl->prev_load + cpu - 1;
+   const struct processor_cpu_load_info *curr = pl->curr_load + cpu - 1;
 
    /* Take the sums */
    double total = 0;
@@ -213,7 +212,7 @@ double Platform_updateCPUValues(Meter *mtr, int cpu) {
 
 void Platform_updateMemoryValues(Meter *mtr) {
    const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
-   vm_statistics_t vm = &dpl->vm_stats;
+   const struct vm_statistics *vm = &dpl->vm_stats;
    double page_size_ki = (double)vm_page_size / (double)1024;
    mtr->total = dpl->host_info.max_mem / 1024;
    mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_size_ki;

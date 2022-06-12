@@ -1,6 +1,7 @@
 /*
 htop - darwin/DarwinProcessList.c
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2022 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -17,20 +18,20 @@ in the source distribution for its full text.
 #include <errno.h>
 
 struct kern {
-    short int version[3];
+	short int version[3];
 };
 
 static void GetKernelVersion(struct kern *k) {
-   static short int version_[3] = {0};
-   if (!version_[0]) {
-      // just in case it fails someday
-      version_[0] = version_[1] = version_[2] = -1;
-      char str[256] = {0};
-      size_t size = sizeof(str);
-      int ret = sysctlbyname("kern.osrelease", str, &size, NULL, 0);
-      if (ret == 0) sscanf(str, "%hd.%hd.%hd", &version_[0], &version_[1], &version_[2]);
-    }
-    memcpy(k->version, version_, sizeof(version_));
+	static short int version_[3] = { -1, -1, -1 };
+	if (version_[0] < 0) {
+		char buffer[256];
+		size_t size = sizeof buffer;
+		*buffer = 0;
+		if(sysctlbyname("kern.osrelease", buffer, &size, NULL, 0) == 0) {
+			sscanf(buffer, "%hd.%hd.%hd", version_, version_ + 1, version_ + 2);
+		}
+	}
+	memcpy(k->version, version_, sizeof(version_));
 }
 
 /* compare the given os version with the one installed returns:
@@ -60,50 +61,43 @@ typedef struct DarwinProcessList_ {
 
    struct kinfo_proc *kip_buffer;
    size_t kip_buffer_size;
-   host_basic_info_data_t host_info;
-   vm_statistics_data_t vm_stats;
-   processor_cpu_load_info_t prev_load;
-   processor_cpu_load_info_t curr_load;
+   struct host_basic_info host_info;
+   struct vm_statistics vm_stats;
+   struct processor_cpu_load_info *prev_load;
+   struct processor_cpu_load_info *curr_load;
    uint64_t global_diff;
    bool is_scan_thread_supported;
 } DarwinProcessList;
 
 }*/
 
-static void ProcessList_getHostInfo(host_basic_info_data_t *p) {
+static void ProcessList_getHostInfo(struct host_basic_info *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
-
-   if(0 != host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size)) {
-       CRT_fatalError("Unable to retrieve host info\n");
-   }
+   int e = host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size);
+   if(e) CRT_fatalError("Unable to retrieve host info\n");
 }
 
-static void ProcessList_freeCPULoadInfo(processor_cpu_load_info_t *p) {
-   if(NULL != p && NULL != *p) {
-       if(0 != munmap(*p, vm_page_size)) {
-           CRT_fatalError("Unable to free old CPU load information\n");
-       }
-       *p = NULL;
-   }
+static void ProcessList_freeCPULoadInfo(struct processor_cpu_load_info **p) {
+	if(p && *p) {
+		if(munmap(*p, vm_page_size) < 0) {
+			CRT_fatalError("Unable to free old CPU load information\n");
+		}
+		*p = NULL;
+	}
 }
 
-static unsigned int ProcessList_allocateCPULoadInfo(processor_cpu_load_info_t *p) {
-   mach_msg_type_number_t info_size = sizeof(processor_cpu_load_info_t);
-   unsigned cpu_count;
-
-   // TODO Improving the accuracy of the load counts woule help a lot.
-   if(0 != host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size)) {
-       CRT_fatalError("Unable to retrieve CPU info\n");
-   }
-
+static unsigned int ProcessList_allocateCPULoadInfo(struct processor_cpu_load_info **p) {
+   mach_msg_type_number_t info_size = sizeof(struct processor_cpu_load_info *);
+   unsigned int cpu_count;
+   int e = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size);
+   if(e) CRT_fatalError("Unable to retrieve CPU info\n");
    return cpu_count;
 }
 
-static void ProcessList_getVMStats(vm_statistics_t p) {
-    mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
-
-    if (host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size) != 0)
-       CRT_fatalError("Unable to retrieve VM statistics\n");
+static void ProcessList_getVMStats(struct vm_statistics *p) {
+	mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
+	int e = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size);
+	if(e) CRT_fatalError("Unable to retrieve VM statistics\n");
 }
 
 static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
