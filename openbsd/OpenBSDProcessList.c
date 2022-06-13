@@ -384,9 +384,11 @@ static unsigned long long saturatingSub(unsigned long long a, unsigned long long
 static void getKernelCPUTimes(int cpuId, uint64_t *times) {
    int mib[] = { CTL_KERN, KERN_CPTIME2, cpuId };
    size_t length = sizeof(uint64_t) * CPUSTATES;
-   if (sysctl(mib, 3, times, &length, NULL, 0) == -1 ||
-         length != sizeof(uint64_t) * CPUSTATES) {
-      CRT_fatalError("sysctl kern.cp_time2 failed");
+   if (sysctl(mib, 3, times, &length, NULL, 0) == -1) {
+      CRT_fatalError("sysctl kern.cp_time2 failed", 0);
+   }
+   if(length != sizeof(uint64_t) * CPUSTATES) {
+      CRT_fatalError("kern.cp_time2 short read", 0);
    }
 }
 

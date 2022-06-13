@@ -235,7 +235,7 @@ void CRT_init(const Settings *settings);
 
 void CRT_done();
 
-void __attribute__((__noreturn__)) CRT_fatalError(const char* note);
+void __attribute__((__noreturn__)) CRT_fatalError(const char *note, int e);
 
 void CRT_setExplicitDelay(bool enabled);
 

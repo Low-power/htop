@@ -250,12 +250,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
-      CRT_fatalError("Cannot open " PROCSTATFILE);
+      CRT_fatalError("Cannot open " PROCSTATFILE, 0);
    }
    do {
       char buffer[PROC_LINE_LENGTH + 1];
       if (fgets(buffer, PROC_LINE_LENGTH + 1, file) == NULL) {
-         CRT_fatalError("No btime in " PROCSTATFILE);
+         CRT_fatalError("No btime in " PROCSTATFILE, 0);
       } else if (!dir && String_startsWith(buffer, "cpu") && buffer[3] != ' ') {
          char *end_p;
          unsigned int cpu_i = strtoul(buffer + 3, &end_p, 10);
@@ -982,7 +982,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
 
    FILE* file = fopen(PROCMEMINFOFILE, "r");
    if (file == NULL) {
-      CRT_fatalError("Cannot open " PROCMEMINFOFILE);
+      CRT_fatalError("Cannot open " PROCMEMINFOFILE, 0);
    }
    char buffer[128];
    while (fgets(buffer, 128, file)) {
@@ -1026,7 +1026,7 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
 
    FILE* file = fopen(PROCSTATFILE, "r");
    if (file == NULL) {
-      CRT_fatalError("Cannot open " PROCSTATFILE);
+      CRT_fatalError("Cannot open " PROCSTATFILE, 0);
    }
    char offline_cpu_map[this->super.cpuCount];
    memset(offline_cpu_map, 1, this->super.cpuCount);

@@ -74,13 +74,13 @@ typedef struct DarwinProcessList_ {
 static void ProcessList_getHostInfo(struct host_basic_info *p) {
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
    int e = host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size);
-   if(e) CRT_fatalError("Unable to retrieve host info\n");
+   if(e) CRT_fatalError("Unable to retrieve host info", e << 8);
 }
 
 static void ProcessList_freeCPULoadInfo(struct processor_cpu_load_info **p) {
 	if(p && *p) {
 		if(munmap(*p, vm_page_size) < 0) {
-			CRT_fatalError("Unable to free old CPU load information\n");
+			CRT_fatalError("Unable to free old CPU load information", 0);
 		}
 		*p = NULL;
 	}
@@ -90,14 +90,14 @@ static unsigned int ProcessList_allocateCPULoadInfo(struct processor_cpu_load_in
    mach_msg_type_number_t info_size = sizeof(struct processor_cpu_load_info *);
    unsigned int cpu_count;
    int e = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &cpu_count, (processor_info_array_t *)p, &info_size);
-   if(e) CRT_fatalError("Unable to retrieve CPU info\n");
+   if(e) CRT_fatalError("Unable to retrieve CPU info", e << 8);
    return cpu_count;
 }
 
 static void ProcessList_getVMStats(struct vm_statistics *p) {
 	mach_msg_type_number_t info_size = HOST_VM_INFO_COUNT;
 	int e = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)p, &info_size);
-	if(e) CRT_fatalError("Unable to retrieve VM statistics\n");
+	if(e) CRT_fatalError("Unable to retrieve VM statistics", e << 8);
 }
 
 static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
@@ -109,7 +109,7 @@ static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0 };
    size_t buffer_size;
    if (sysctl(mib, 3, NULL, &buffer_size, NULL, 0) < 0) {
-      CRT_fatalError("Unable to get size of process list");
+      CRT_fatalError("Unable to get size of process list", 0);
    }
    if(this->kip_buffer_size < buffer_size) {
       free(this->kip_buffer);
@@ -117,7 +117,7 @@ static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
       this->kip_buffer_size = buffer_size;
    }
    if (sysctl(mib, 3, this->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) {
-      CRT_fatalError("Unable to get process list");
+      CRT_fatalError("Unable to get process list", 0);
    }
    size_t count = buffer_size / sizeof(struct kinfo_proc);
 

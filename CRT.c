@@ -1130,8 +1130,8 @@ void CRT_done() {
    endwin();
 }
 
-void __attribute__((__noreturn__)) CRT_fatalError(const char* note) {
-   char* sysMsg = strerror(errno);
+void __attribute__((__noreturn__)) CRT_fatalError(const char *note, int e) {
+   char* sysMsg = strerror(e ? e : errno);
    CRT_done();
    fprintf(stderr, "%s: %s\n", note, sysMsg);
    exit(2);
