@@ -58,13 +58,11 @@ ObjectClass Object_class = {
 
 #ifndef NDEBUG
 
-bool Object_isA(Object* o, const ObjectClass* klass) {
-   if (!o)
-      return false;
+bool Object_isA(const Object *o, const ObjectClass* klass) {
+   if (!o) return false;
    const ObjectClass* type = o->klass;
    while (type) {
-      if (type == klass)
-         return true;
+      if (type == klass) return true;
       type = type->extends;
    }
    return false;
