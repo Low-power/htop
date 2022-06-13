@@ -259,11 +259,11 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			.tv_usec = (pe->pi_ru.ru_utime.tv_usec + pe->pi_ru.ru_stime.tv_usec) / 1000
 		};
 		proc->time = tv.tv_sec * 100 + tv.tv_usec / 10000;
-		double last_tenths_time =
+		double last_hundredths_time =
 			(double)ap->tv.tv_sec * 100 + (double)ap->tv.tv_usec / 10000;
-		double tenths_time = (double)tv.tv_sec * 100 + (double)tv.tv_usec / 10000;
-		proc->percent_cpu = tenths_time > last_tenths_time ?
-			(tenths_time - last_tenths_time) / interval : 0;
+		double hundredths_time = (double)tv.tv_sec * 100 + (double)tv.tv_usec / 10000;
+		proc->percent_cpu = hundredths_time > last_hundredths_time ?
+			(hundredths_time - last_hundredths_time) / interval : 0;
 		ap->tv = tv;
 
 		proc->priority = pe->pi_ppri;
