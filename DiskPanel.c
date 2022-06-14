@@ -112,6 +112,14 @@ static HandlerResult DiskPanel_eventHandler(Panel *super, int ch, int repeat) {
       case 'N':
          IncSet_prev(this->inc, INC_SEARCH, super, (IncMode_GetPanelValue)DiskPanel_getValue, repeat);
          return HANDLED;
+      case 'I':
+         Settings_invertSortOrder(this->settings);
+         this->settings->changed = true;
+         return HANDLED | REDRAW | RESCAN;
+      case '':
+         clear();
+         IncSet_drawBar(this->inc);
+         return HANDLED | REDRAW;
       case KEY_F(2):
       case 'C':
          Header_runSetup(this->header, this->settings, NULL);
