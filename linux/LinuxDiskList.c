@@ -236,7 +236,8 @@ void DiskList_internalScan(DiskList *super, double interval) {
 		disk->percent_busy = (operation_time - linux_disk->oper_time_msec) / interval / 10;
 		linux_disk->oper_time_msec = operation_time;
 		disk->oper_time = operation_time / 10;
-		disk->busy_time = disk->oper_time;
+		disk->busy_time = queue_time > operation_time ?
+			(queue_time - operation_time) / 10 : 0;
 		disk->updated = true;
 	}
 }
