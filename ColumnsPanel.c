@@ -163,15 +163,18 @@ int ColumnsPanel_fieldNameToIndex(const FieldData *field_data, unsigned int nfie
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
+   const FieldData *field_data;
    unsigned int **fields;
    int *flags;
 #ifdef DISK_STATS
    if(this->settings->disk_mode) {
+      field_data = Disk_fields;
       fields = &this->settings->disk_fields;
       flags = &this->settings->disk_flags;
    } else
 #endif
    {
+      field_data = Process_fields;
       fields = &this->settings->fields;
       flags = &this->settings->flags;
    }
@@ -181,7 +184,7 @@ void ColumnsPanel_update(Panel* super) {
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
       (*fields)[i] = key;
-      *flags |= Process_fields[key].flags;
+      *flags |= field_data[key].flags;
    }
    (*fields)[size] = 0;
    this->settings->changed = true;
