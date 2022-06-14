@@ -20,6 +20,7 @@ typedef struct {
 #include "FreeBSDDisk.h"
 #include "CRT.h"
 #include "XAlloc.h"
+#include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/devicestat.h>
 #include <devstat.h>
@@ -31,7 +32,7 @@ DiskList *DiskList_new(const Settings *settings) {
 	int e = geom_stats_open();
 	if(e && e != EBUSY) CRT_fatalError("geom_stats_open", e);
 	FreeBSDDiskList *disk_list = xMalloc(sizeof(FreeBSDDiskList));
-	DiskList_init(&disk_list->super, Class(Disk), settings);
+	DiskList_init(&disk_list->super, Class(FreeBSDDisk), settings);
 	disk_list->previous_stats = geom_stats_snapshot_get();
 	if(!disk_list->previous_stats) CRT_fatalError("geom_stats_snapshot_get", 0);
 	e = geom_gettree(&disk_list->tree);
@@ -68,6 +69,7 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 
 		bool is_existing;
 		Disk *disk = DiskList_getOrCreate(super, p->lg_name, &is_existing, (DiskConstructor)FreeBSDDisk_new);
+		FreeBSDDisk *fbsd_disk = (FreeBSDDisk *)disk;
 		if(!is_existing) {
 			//disk->block_size = lg_sectorsize;
 			disk->block_size = devstat->block_size ? : 512;
@@ -83,6 +85,7 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 			}
 			DiskList_add(super, disk);
 		}
+		struct timeval duration_tv;
 #ifdef DSM_TOTAL_DURATION
 		long double total_duration;
 #endif
@@ -104,19 +107,36 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 #endif
 			DSM_NONE);
 #ifdef DSM_TOTAL_DURATION
+		duration_tv.tv_sec = total_duration;
+		duration_tv.tv_usec = (int)(total_duration * 1000000) % 1000000;
 		disk->oper_time = total_duration * 100;
 #else
-		disk->oper_time =
-			BINTIME_TO_HUNDREDTHSEC(devstat->duration + DEVSTAT_READ) +
-			BINTIME_TO_HUNDREDTHSEC(devstat->duration + DEVSTAT_WRITE) +
-			BINTIME_TO_HUNDREDTHSEC(devstat->duration + DEVSTAT_FREE) +
-			BINTIME_TO_HUNDREDTHSEC(devstat->duration + DEVSTAT_NO_DATA);
+		struct bintime duration = devstat->duration[DEVSTAT_READ];
+		bintime_add(&duration, devstat->duration + DEVSTAT_WRITE);
+		bintime_add(&duration, devstat->duration + DEVSTAT_FREE);
+		bintime_add(&duration, devstat->duration + DEVSTAT_NO_DATA);
+		bintime2timeval(&duration, &duration_tv);
+		disk->oper_time = BINTIME_TO_HUNDREDTHSEC(&duration);
 #endif
 #ifdef DSM_TOTAL_BUSY_TIME
-		disk->busy_time = total_busy_time * 100;
+		fbsd_disk->busy_time = total_busy_time * 100;
 #else
-		disk->busy_time = BINTIME_TO_HUNDREDTHSEC(&devstat->busy_time);
+		fbsd_disk->busy_time = BINTIME_TO_HUNDREDTHSEC(&devstat->busy_time);
 #endif
+		if(super->settings->disk_flags & HTOP_DISK_PERCENT_UTIL_FLAG) {
+			struct timeval delta;
+			if(timercmp(&duration_tv, &fbsd_disk->duration, >)) {
+				timersub(&duration_tv, &fbsd_disk->duration, &delta);
+			} else {
+				delta.tv_sec = 0;
+				delta.tv_usec = 0;
+			}
+			disk->percent_util =
+				(delta.tv_sec * 100 + (long double)delta.tv_usec / 10000) /
+					interval;
+			if(disk->percent_util > 100) disk->percent_util = 100;
+		}
+		fbsd_disk->duration = duration_tv;
 		if(prev_devstat) {
 			long double transfers_per_second;
 			long double transfers_per_second_read;
@@ -138,7 +158,7 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 			disk->write_operation_rate = transfers_per_second_write;
 			disk->read_block_rate = blocks_per_seconds_read;
 			disk->write_block_rate = blocks_per_seconds_write;
-			disk->percent_busy = busy_pct;
+			fbsd_disk->percent_busy = busy_pct;
 		}
 		disk->updated = true;
 	}

@@ -43,7 +43,7 @@ typedef struct {
 
 DiskList *DiskList_new(const Settings *settings) {
 	LinuxDiskList *disk_list = xMalloc(sizeof(LinuxDiskList));
-	DiskList_init(&disk_list->super, Class(Disk), settings);
+	DiskList_init(&disk_list->super, Class(LinuxDisk), settings);
 	disk_list->diskstats_file = fopen(PROCDIR "/diskstats", "r");
 	if(!disk_list->diskstats_file) CRT_fatalError("fopen: " PROCDIR "/diskstats", 0);
 	disk_list->disk_id_cache = NULL;
@@ -233,11 +233,12 @@ void DiskList_internalScan(DiskList *super, double interval) {
 		disk->write_operation_count = write_op_count;
 		disk->read_block_count = read_block_count;
 		disk->write_block_count = write_block_count;
-		disk->percent_busy = (operation_time - linux_disk->oper_time_msec) / interval / 10;
+		if(super->settings->disk_flags & HTOP_DISK_PERCENT_UTIL_FLAG) {
+			disk->percent_util =
+				(operation_time - linux_disk->oper_time_msec) / interval / 10;
+		}
 		linux_disk->oper_time_msec = operation_time;
 		disk->oper_time = operation_time / 10;
-		disk->busy_time = queue_time > operation_time ?
-			(queue_time - operation_time) / 10 : 0;
 		disk->updated = true;
 	}
 }

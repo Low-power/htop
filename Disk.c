@@ -17,6 +17,7 @@ in the source distribution for its full text.
 
 #define HTOP_DISK_PHYS_PATH_FLAG (1 << 0)
 #define HTOP_DISK_DEVID_FLAG (1 << 1)
+#define HTOP_DISK_PERCENT_UTIL_FLAG (1 << 2)
 
 typedef enum {
 	HTOP_DISK_NULL_FIELD = 0,
@@ -33,7 +34,6 @@ typedef enum {
 	HTOP_DISK_READ_BYTES_FIELD,
 	HTOP_DISK_WRITE_BYTES_FIELD,
 	HTOP_DISK_OPER_TIME_FIELD,
-	HTOP_DISK_BUSY_TIME_FIELD,
 	HTOP_DISK_CREATION_TIME_FIELD,
 	HTOP_DISK_OPERATION_RATE_FIELD,
 	HTOP_DISK_READ_OPERATION_RATE_FIELD,
@@ -42,7 +42,7 @@ typedef enum {
 	HTOP_DISK_WRITE_BLOCK_RATE_FIELD,
 	HTOP_DISK_READ_BYTE_RATE_FIELD,
 	HTOP_DISK_WRITE_BYTE_RATE_FIELD,
-	HTOP_DISK_PERCENT_BUSY_FIELD,
+	HTOP_DISK_PERCENT_UTIL_FIELD,
 	HTOP_BASE_DISK_FIELD_COUNT
 } DiskField;
 
@@ -61,14 +61,13 @@ typedef struct {
 	uint64_t read_block_count;
 	uint64_t write_block_count;
 	uint64_t oper_time; // In 10-millisecond
-	uint64_t busy_time; // In 10-millisecond
 	time_t creation_time;
 	uint32_t operation_rate;
 	uint32_t read_operation_rate;
 	uint32_t write_operation_rate;
 	uint32_t read_block_rate;
 	uint32_t write_block_rate;
-	float percent_busy;
+	float percent_util;
 } Disk;
 
 typedef Disk *(*DiskConstructor)(const struct Settings_ *);
@@ -192,6 +191,14 @@ static void human_readable_binary(RichString *s, uint64_t n, int unit_prefix, un
 	RichString_append(s, attr, buffer);
 }
 
+void Disk_printPercent(RichString *s, double percent) {
+	char buffer[256];
+	int attr = CRT_colors[HTOP_DEFAULT_COLOR];
+	if(percent > 80) attr = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
+	xSnprintf(buffer, sizeof buffer, "%5.1f ", percent);
+	RichString_append(s, attr, buffer);
+}
+
 void base_Disk_writeField(const Disk *this, RichString *s, DiskField field) {
 	char buffer[256];
 	int attr = CRT_colors[HTOP_DEFAULT_COLOR];
@@ -238,9 +245,6 @@ void base_Disk_writeField(const Disk *this, RichString *s, DiskField field) {
 		case HTOP_DISK_OPER_TIME_FIELD:
 			CRT_printTime(s, this->oper_time);
 			return;
-		case HTOP_DISK_BUSY_TIME_FIELD:
-			CRT_printTime(s, this->busy_time);
-			return;
 		case HTOP_DISK_CREATION_TIME_FIELD:
 			localtime_r(&this->creation_time, &tm);
 			len = strftime(buffer, sizeof buffer,
@@ -276,10 +280,9 @@ void base_Disk_writeField(const Disk *this, RichString *s, DiskField field) {
 		case HTOP_DISK_WRITE_BYTE_RATE_FIELD:
 			human_readable_binary(s, this->write_block_rate * this->block_size, 0, 10, 7, true);
 			return;
-		case HTOP_DISK_PERCENT_BUSY_FIELD:
-			if(this->percent_busy > 80) attr = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
-			xSnprintf(buffer, sizeof buffer, "%5.1f ", this->percent_busy);
-			break;
+		case HTOP_DISK_PERCENT_UTIL_FIELD:
+			Disk_printPercent(s, this->percent_util);
+			return;
 		default:
 			strcpy(buffer, "- ");
 			break;
@@ -372,8 +375,6 @@ long int Disk_compare(const void *o1, const void *o2) {
 			return uintcmp(d2->write_block_count, d1->write_block_count);
 		case HTOP_DISK_OPER_TIME_FIELD:
 			return uintcmp(d2->oper_time, d1->oper_time);
-		case HTOP_DISK_BUSY_TIME_FIELD:
-			return uintcmp(d2->busy_time, d1->busy_time);
 		case HTOP_DISK_CREATION_TIME_FIELD:
 			return d1->creation_time - d2->creation_time;
 		case HTOP_DISK_OPERATION_RATE_FIELD:
@@ -393,7 +394,7 @@ long int Disk_compare(const void *o1, const void *o2) {
 		case HTOP_DISK_WRITE_BLOCK_RATE_FIELD:
 		case HTOP_DISK_WRITE_BYTE_RATE_FIELD:
 			return uintcmp(d2->write_block_rate, d1->write_block_rate);
-		case HTOP_DISK_PERCENT_BUSY_FIELD:
-			return d2->percent_busy - d1->percent_busy;
+		case HTOP_DISK_PERCENT_UTIL_FIELD:
+			return d2->percent_util - d1->percent_util;
 	}
 }

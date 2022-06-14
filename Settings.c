@@ -409,7 +409,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
 
    this->sortKey = HTOP_PERCENT_CPU_FIELD;
 #ifdef DISK_STATS
-   this->disk_sort_key = HTOP_DISK_PERCENT_BUSY_FIELD;
+   this->disk_sort_key = HTOP_DISK_PERCENT_UTIL_FIELD;
 #endif
    this->direction = 1;
    this->shadowOtherUsers = false;
