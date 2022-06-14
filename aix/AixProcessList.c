@@ -174,7 +174,7 @@ static void AixProcessList_readProcessName(struct procentry64 *pe, char **name, 
 	}
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 	AixProcessList *this = (AixProcessList *)super;
 
 	bool hide_kernel_processes = super->settings->hide_kernel_processes;
@@ -188,6 +188,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 
 	AixProcessList_scanMemoryInfo(super);
 	AixProcessList_scanCpuInfo(this);
+
+	if(skip_processes) return;
 
 	pid_t pid = 0;
 	// 1000000 is what IBM ps uses; instead of rerunning getprocs with

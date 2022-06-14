@@ -1200,3 +1200,26 @@ void CRT_setColors(int color_scheme_i) {
       CRT_colorSchemes[color_scheme_i] :
          CRT_user_defined_color_schemes[color_scheme_i - LAST_COLORSCHEME];
 }
+
+void CRT_printTime(RichString *str, unsigned long long int totalHundredths) {
+   unsigned long long int totalSeconds = totalHundredths / 100;
+   unsigned long long int hours = totalSeconds / 3600;
+   if (hours >= 100) {
+      char buffer[23];
+      xSnprintf(buffer, sizeof buffer, "%7lluh ", hours);
+      RichString_append(str, CRT_colors[HTOP_LARGE_NUMBER_COLOR], buffer);
+   } else {
+      char buffer[10];
+      int minutes = (totalSeconds / 60) % 60;
+      int seconds = totalSeconds % 60;
+      if (hours) {
+         xSnprintf(buffer, sizeof buffer, "%2lluh", hours);
+         RichString_append(str, CRT_colors[HTOP_LARGE_NUMBER_COLOR], buffer);
+         xSnprintf(buffer, sizeof buffer, "%02d:%02d ", minutes, seconds);
+      } else {
+         int hundredths = totalHundredths - (totalSeconds * 100);
+         xSnprintf(buffer, sizeof buffer, "%2d:%02d.%02d ", minutes, seconds, hundredths);
+      }
+      RichString_append(str, CRT_colors[HTOP_DEFAULT_COLOR], buffer);
+   }
+}

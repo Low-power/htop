@@ -118,7 +118,7 @@ AvailableMetersPanel* AvailableMetersPanel_new(Settings* settings, Header* heade
    }
    // Handle (&CPUMeter_class)
    MeterClass* type = &CPUMeter_class;
-   int cpus = pl->cpuCount;
+   int cpus = pl ? pl->cpuCount : 1;
    if (cpus > 1) {
       Panel_add(super, (Object* )ListItem_new("CPU average", HTOP_DEFAULT_COLOR, 0, settings));
       for (int i = 1; i <= cpus; i++) {

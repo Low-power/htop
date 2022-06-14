@@ -49,7 +49,7 @@ ProcessClass OpenBSDProcess_class = {
 #endif
 };
 
-ProcessFieldData Process_fields[] = {
+FieldData Process_fields[] = {
    [0] = {
       .name = "",
       .title = NULL,

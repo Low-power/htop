@@ -17,7 +17,11 @@ in the source distribution for its full text.
 #include "Settings.h"
 #include "UsersTable.h"
 #include "Platform.h"
-
+#ifdef DISK_STATS
+#include "DiskPanel.h"
+#include "DiskList.h"
+#include "Disk.h"
+#endif
 #if defined HAVE_GETOPT_H && defined HAVE_GETOPT_LONG
 #include <getopt.h>
 #endif
@@ -47,6 +51,9 @@ static void print_usage(FILE *f, const char *name) {
          "   -t, --tree                  Show the tree view by default\n"
          "   -u, --user=USERNAME         Show only processes of a given user\n"
          "   -p, --pid=PID[,PID,PID...]  Show only the given PIDs\n"
+#ifdef DISK_STATS
+         "       --disk                  Show disk instead of process statistics\n"
+#endif
          "       --explicit-delay        Explicitly delay between updates\n"
          "   -v, --version               Print version info\n"
          "\n"
@@ -66,10 +73,13 @@ typedef struct CommandLineSettings_ {
    bool useColors;
    bool treeView;
    bool explicit_delay;
+#ifdef DISK_STATS
+   bool disk;
+#endif
 } CommandLineSettings;
 
 static CommandLineSettings parseArguments(int argc, char** argv) {
-
+   const char *sort_key = NULL;
    CommandLineSettings flags = {
       .pidWhiteList = NULL,
       .userId = -1, // -1 is guaranteed to be an invalid uid_t (see setreuid(2))
@@ -81,6 +91,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
    };
 
 #define HTOP_LONG_OPTION_EXPLICIT_DELAY (1 << 8)
+#define HTOP_LONG_OPTION_DISK (2 << 8)
 #ifdef HAVE_GETOPT_LONG
    static struct option long_opts[] = {
       { "help",           no_argument,       NULL, 'h' },
@@ -93,6 +104,9 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
       { "tree",           no_argument,       NULL, 't' },
       { "pid",            required_argument, NULL, 'p' },
       { "explicit-delay", no_argument,       NULL, HTOP_LONG_OPTION_EXPLICIT_DELAY },
+#ifdef DISK_STATS
+      { "disk",           no_argument,       NULL, HTOP_LONG_OPTION_DISK },
+#endif
       { NULL, 0, NULL, 0 }
    };
 #endif
@@ -109,6 +123,11 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
          case HTOP_LONG_OPTION_EXPLICIT_DELAY:
             flags.explicit_delay = true;
             break;
+#ifdef DISK_STATS
+         case HTOP_LONG_OPTION_DISK:
+            flags.disk = true;
+            break;
+#endif
          case 'h':
             print_usage(stdout, argv[0]);
             exit(0);
@@ -116,18 +135,7 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             printVersionFlag();
             exit(0);
          case 's':
-            if (strcmp(optarg, "help") == 0) {
-               for (int j = 1; j < Platform_numberOfFields; j++) {
-                  const char* name = Process_fields[j].name;
-                  if (name) puts(name);
-               }
-               exit(0);
-            }
-            flags.sortKey = ColumnsPanel_fieldNameToIndex(optarg);
-            if (flags.sortKey == -1) {
-               fprintf(stderr, "Error: invalid column \"%s\".\n", optarg);
-               exit(-1);
-            }
+            sort_key = optarg;
             break;
          case 'd':
             if (sscanf(optarg, "%16d", &(flags.delay)) == 1) {
@@ -173,6 +181,27 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             fputc('\n', stderr);
 #endif
             exit(-1);
+      }
+   }
+   if(sort_key) {
+#ifdef DISK_STATS
+      const FieldData *field_data = flags.disk ? Disk_fields : Process_fields;
+      unsigned int nfields = flags.disk ? Disk_field_count : Platform_numberOfFields;
+#else
+      const FieldData *field_data = Process_fields;
+      unsigned int nfields = Platform_numberOfFields;
+#endif
+      if (strcmp(sort_key, "help") == 0) {
+         for (unsigned int j = 1; j < nfields; j++) {
+            const char* name = field_data[j].name;
+            if (name) puts(name);
+         }
+         exit(0);
+      }
+      flags.sortKey = ColumnsPanel_fieldNameToIndex(field_data, nfields, sort_key);
+      if (flags.sortKey == -1) {
+         fprintf(stderr, "Error: invalid column \"%s\".\n", sort_key);
+         exit(-1);
       }
    }
    return flags;
@@ -231,32 +260,73 @@ int main(int argc, char** argv) {
    CRT_init(settings);
    CRT_setMouse(settings->use_mouse);
    CRT_setExplicitDelay(settings->explicit_delay);
-   MainPanel* panel = MainPanel_new();
-   ProcessList_setPanel(pl, (Panel*) panel);
 
-   MainPanel_updateTreeFunctions(panel, settings->treeView);
+   Panel *panel;
+#ifdef DISK_STATS
+   DiskList *disk_list = NULL;
+   settings->disk_mode = flags.disk;
+   if(flags.disk) {
+      disk_list = DiskList_new(settings);
+      panel = (Panel *)DiskPanel_new(settings, disk_list, header);
+      DiskList_setPanel(disk_list, panel);
+      header->disk_list = disk_list;
+   } else
+#endif
+   {
+      MainPanel *process_panel = MainPanel_new();
+      panel = (Panel *)process_panel;
+      ProcessList_setPanel(pl, panel);
+      MainPanel_updateTreeFunctions(process_panel, settings->treeView);
+   }
+
    if (flags.sortKey > 0) {
-      settings->sortKey = flags.sortKey;
-      settings->treeView = false;
+#ifdef DISK_STATS
+      if(flags.disk) settings->disk_sort_key = flags.sortKey;
+      else
+#endif
+      {
+         settings->sortKey = flags.sortKey;
+         settings->treeView = false;
+      }
       settings->direction = 1;
    }
-   ProcessList_printHeader(pl, Panel_getHeader((Panel*)panel));
+#ifdef DISK_STATS
+   if(flags.disk) DiskList_printHeader(disk_list, Panel_getHeader(panel));
+   else
+#endif
+   ProcessList_printHeader(pl, Panel_getHeader(panel));
 
-   State state = {
-      .settings = settings,
-      .ut = ut,
-      .pl = pl,
-      .panel = (Panel*) panel,
-      .header = header,
-      .repeat = 1
-   };
-   MainPanel_setState(panel, &state);
+#ifdef DISK_STATS
+   if(!flags.disk)
+#endif
+   {
+      State state = {
+         .settings = settings,
+         .ut = ut,
+         .pl = pl,
+         .panel = panel,
+         .header = header,
+         .repeat = 1
+      };
+      MainPanel_setState((MainPanel *)panel, &state);
+   }
+
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
-   ScreenManager_add(scr, (Panel*) panel, -1);
+   ScreenManager_add(scr, panel, -1);
 
-   ProcessList_scan(pl);
+#ifdef DISK_STATS
+   if(flags.disk) {
+      DiskList_scan(disk_list, 0);
+      ProcessList_scan(pl, true);
+   } else
+#endif
+   ProcessList_scan(pl, false);
    millisleep(75);
-   ProcessList_scan(pl);
+#ifdef DISK_STATS
+   ProcessList_scan(pl, flags.disk);
+#else
+   ProcessList_scan(pl, false);
+#endif
 
    ScreenManager_run(scr, NULL, NULL);
    attron(CRT_colors[HTOP_DEFAULT_COLOR]);
@@ -267,6 +337,9 @@ int main(int argc, char** argv) {
    if (settings->changed) Settings_write(settings);
    Header_delete(header);
    ProcessList_delete(pl);
+#ifdef DISK_STATS
+   if(flags.disk) DiskList_delete(disk_list);
+#endif
 
    ScreenManager_delete(scr);
    UsersTable_delete(ut);
@@ -274,5 +347,6 @@ int main(int argc, char** argv) {
    if(flags.pidWhiteList) {
       Hashtable_delete(flags.pidWhiteList);
    }
+
    return 0;
 }

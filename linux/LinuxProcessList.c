@@ -1105,11 +1105,13 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
    return period;
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
    LinuxProcessList* this = (LinuxProcessList*) super;
 
    LinuxProcessList_scanMemoryInfo(super);
    double period = LinuxProcessList_scanCPUTime(this);
+
+   if(skip_processes) return;
 
    struct timeval tv;
    gettimeofday(&tv, NULL);

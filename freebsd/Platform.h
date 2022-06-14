@@ -17,16 +17,13 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
 
-extern ProcessFieldData Process_fields[];
-
-
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
 extern ProcessField Platform_defaultFields[];
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 extern const SignalItem Platform_signals[];
 

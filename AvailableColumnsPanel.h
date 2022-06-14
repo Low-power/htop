@@ -10,15 +10,20 @@ in the source distribution for its full text.
 */
 
 #include "Panel.h"
+#include "FieldData.h"
 
 typedef struct AvailableColumnsPanel_ {
    Panel super;
    Panel* columns;
+   const FieldData *field_data;
+   unsigned int nfields;
 } AvailableColumnsPanel;
 
+#ifdef DISK_STATS
+#endif
 
 extern PanelClass AvailableColumnsPanel_class;
 
-AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns);
+AvailableColumnsPanel* AvailableColumnsPanel_new(Panel* columns, bool disk_mode);
 
 #endif

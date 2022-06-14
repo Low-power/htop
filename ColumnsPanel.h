@@ -24,9 +24,8 @@ extern PanelClass ColumnsPanel_class;
 
 ColumnsPanel* ColumnsPanel_new(Settings* settings);
 
-int ColumnsPanel_fieldNameToIndex(const char* name);
+int ColumnsPanel_fieldNameToIndex(const FieldData *field_data, unsigned int nfields, const char* name);
 
 void ColumnsPanel_update(Panel* super);
-
 
 #endif

@@ -35,6 +35,7 @@ typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 #include "CRT.h"
 #include "Settings.h"
 #include "local-curses.h"
+#include <string.h>
 #include <stdlib.h>
 
 #if defined ERR && ERR > 0
@@ -216,14 +217,15 @@ MainPanel* MainPanel_new() {
    return this;
 }
 
-void MainPanel_setState(MainPanel* this, State* state) {
-   this->state = state;
+void MainPanel_setState(MainPanel* this, const State *state) {
+   this->state = xMalloc(sizeof(State));
+   memcpy(this->state, state, sizeof(State));
 }
 
-void MainPanel_delete(Object* object) {
-   Panel* super = (Panel*) object;
-   MainPanel* this = (MainPanel*) object;
-   Panel_done(super);
+void MainPanel_delete(Object *super) {
+   MainPanel *this = (MainPanel *)super;
+   Panel_done((Panel *)super);
+   free(this->state);
    IncSet_delete(this->inc);
    free(this->keys);
    free(this);

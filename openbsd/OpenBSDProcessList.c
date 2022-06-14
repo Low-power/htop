@@ -455,8 +455,9 @@ static void OpenBSDProcessList_scanCPUTime(OpenBSDProcessList* this) {
    kernelCPUTimesToHtop(avg, this->cpus);
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    OpenBSDProcessList_scanMemoryInfo(this);
-   OpenBSDProcessList_scanProcs(this);
    OpenBSDProcessList_scanCPUTime((OpenBSDProcessList*)this);
+   if(skip_processes) return;
+   OpenBSDProcessList_scanProcs(this);
 }

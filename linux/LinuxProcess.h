@@ -141,7 +141,7 @@ typedef struct LinuxProcess_ {
 
 extern long long btime;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 

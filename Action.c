@@ -101,23 +101,6 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
 
 // ----------------------------------------
 
-static void Action_runSetup(Settings* settings, Header *header, const ProcessList *pl) {
-   ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, settings, true);
-   CategoriesPanel *categories_panel = CategoriesPanel_new(scr, settings, header, pl);
-   ScreenManager_add(scr, (Panel *)categories_panel, 16);
-   CategoriesPanel_makeMetersPage(categories_panel);
-   Panel *focused_panel;
-   int ch;
-   ScreenManager_run(scr, &focused_panel, &ch);
-   ScreenManager_delete(scr);
-   if (settings->changed) {
-      CRT_setMouse(settings->use_mouse);
-      CRT_setExplicitDelay(settings->explicit_delay);
-      if(!settings->explicit_delay) CRT_enableDelay();
-      Header_writeBackToSettings(header);
-   }
-}
-
 static bool changePriority(MainPanel* panel, int delta) {
    bool anyTagged;
    bool ok = MainPanel_foreachProcess(panel, (MainPanel_ForeachProcessFn) Process_changePriorityBy, (Arg){ .i = delta }, &anyTagged);
@@ -191,12 +174,11 @@ static Htop_Reaction sortBy(State* st) {
    Htop_Reaction reaction = HTOP_OK;
    Panel* sortPanel = Panel_new(0, 0, 0, 0, true, Class(ListItem), FunctionBar_newEnterEsc("Sort   ", "Cancel "));
    Panel_setHeader(sortPanel, "Sort by");
-   ProcessField* fields = st->settings->fields;
+   const unsigned int *fields = st->settings->fields;
    for (int i = 0; fields[i]; i++) {
       char* name = String_trim(Process_fields[fields[i]].name);
       Panel_add(sortPanel, (Object *)ListItem_new(name, HTOP_DEFAULT_COLOR, fields[i], st->settings));
-      if (fields[i] == st->settings->sortKey)
-         Panel_setSelected(sortPanel, i);
+      if (fields[i] == st->settings->sortKey) Panel_setSelected(sortPanel, i);
       free(name);
    }
    ListItem* field = (ListItem*) Action_pickFromVector(st, sortPanel, 15, false);
@@ -380,7 +362,7 @@ Htop_Reaction Action_follow(State* st) {
 }
 
 static Htop_Reaction actionSetup(State* st) {
-   Action_runSetup(st->settings, st->header, st->pl);
+   Header_runSetup(st->header, st->settings, st->pl);
    // TODO: shouldn't need this, colors should be dynamic
    int headerHeight = Header_calculateHeight(st->header);
    Panel_move(st->panel, 0, headerHeight);

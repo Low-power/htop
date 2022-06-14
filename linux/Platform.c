@@ -42,7 +42,7 @@ ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FI
 
 //static ProcessField defaultIoFields[] = { HTOP_PID_FIELD, HTOP_IO_PRIORITY_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_IO_READ_RATE_FIELD, HTOP_IO_WRITE_RATE_FIELD, HTOP_IO_RATE_FIELD, HTOP_COMM_FIELD, 0 };
 
-int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
+const unsigned int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },

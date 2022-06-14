@@ -396,21 +396,24 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
    return 0;
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    SolarisProcessList_scanCPUTime(this);
    SolarisProcessList_scanMemoryInfo(this);
    ((SolarisProcessList *)this)->last_updated = time(NULL);
+   if(skip_processes) return;
    this->kernel_process_count = 1;
    proc_walk(SolarisProcessList_walkproc, this, PR_WALK_LWP);
 }
 
 #else
 
-void ProcessList_goThroughEntries(ProcessList *super) {
+void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	SolarisProcessList *this = (SolarisProcessList *)super;
 
 	SolarisProcessList_scanCPUTime(super);
 	SolarisProcessList_scanMemoryInfo(super);
+
+	if(skip_processes) return;
 
 	if(this->proc_dir) rewinddir(this->proc_dir);
 	else {

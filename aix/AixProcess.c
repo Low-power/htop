@@ -51,7 +51,7 @@ ProcessClass AixProcess_class = {
    .sendSignal = AixProcess_sendSignal
 };
 
-ProcessFieldData Process_fields[] = {
+FieldData Process_fields[] = {
    [0] = {
       .name = "",
       .title = NULL,

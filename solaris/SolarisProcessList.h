@@ -69,11 +69,11 @@ void ProcessList_delete(ProcessList* pl);
  *       to work.  See libproc(3LIB) on a Solaris or Illumos
  *       system for more info.
  */
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes);
 
 #else
 
-void ProcessList_goThroughEntries(ProcessList *super);
+void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes);
 
 #endif
 

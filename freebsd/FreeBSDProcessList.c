@@ -479,12 +479,14 @@ static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
    return xStrdup("-");
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
    bool hide_kernel_processes = this->settings->hide_kernel_processes;
 
    FreeBSDProcessList_scanMemoryInfo(this);
    FreeBSDProcessList_scanCPUTime(this);
+
+   if(skip_processes) return;
 
 #ifdef HAVE_LIBKVM
    int count = 0;

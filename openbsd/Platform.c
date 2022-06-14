@@ -49,14 +49,11 @@ struct proc;
 #include "SignalsPanel.h"
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
-
-extern ProcessFieldData Process_fields[];
-
 }*/
 
 ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_M_SIZE_FIELD, HTOP_M_RESIDENT_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_PERCENT_MEM_FIELD, HTOP_TIME_FIELD, HTOP_COMM_FIELD, 0 };
 
-int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
+const unsigned int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
 /*
  * See /usr/include/sys/signal.h

@@ -47,7 +47,9 @@ static char state_name_map[] = {
 	[PR_Exited] = 'Z',
 };
 
-void ProcessList_goThroughEntries(ProcessList *this) {
+void ProcessList_goThroughEntries(ProcessList *this, bool skip_processes) {
+	if(skip_processes) return;
+
 	unsigned long long int total_time_delta = 0;
 
 	DIR *dir = opendir("/proc");

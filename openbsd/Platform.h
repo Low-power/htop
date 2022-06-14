@@ -24,12 +24,9 @@ in the source distribution for its full text.
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
 
-extern ProcessFieldData Process_fields[];
-
-
 extern ProcessField Platform_defaultFields[];
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 /*
  * See /usr/include/sys/signal.h

@@ -67,6 +67,6 @@ void ProcessList_delete(ProcessList* this);
 #ifdef PID_AND_MAIN_THREAD_ID_DIFFER
 #endif
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes);
 
 #endif

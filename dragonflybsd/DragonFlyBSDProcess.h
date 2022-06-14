@@ -29,7 +29,7 @@ typedef struct DragonFlyBSDProcess_ {
 
 extern ProcessClass DragonFlyBSDProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 

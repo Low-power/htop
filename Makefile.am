@@ -37,7 +37,12 @@ StringUtils.h IOUtils.h SwapMeter.h TasksMeter.h UptimeMeter.h \
 TraceScreen.h UsersTable.h Vector.h Process.h AffinityPanel.h \
 HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 ArgScreen.h EnvScreen.h InfoScreen.h XAlloc.h KStat.h \
-KernelStackTraceScreen.h
+KernelStackTraceScreen.h FieldData.h
+
+if DISK_STATS
+myhtopsources += DiskPanel.c DiskList.c Disk.c
+myhtopheaders += DiskPanel.h DiskList.h Disk.h
+endif
 
 all_platform_headers =
 
@@ -50,6 +55,8 @@ linux_platform_headers = \
 	linux/IOPriority.h \
 	linux/LinuxProcess.h \
 	linux/LinuxProcessList.h \
+	linux/LinuxDiskList.h \
+	linux/LinuxDisk.h \
 	linux/Battery.h
 
 all_platform_headers += $(linux_platform_headers)
@@ -59,6 +66,12 @@ myhtopplatsources = linux/Platform.c linux/IOPriorityPanel.c linux/IOPriority.c 
 linux/LinuxProcess.c linux/LinuxProcessList.c linux/Battery.c
 
 myhtopplatheaders = $(linux_platform_headers)
+
+if DISK_STATS
+myhtopplatsources += \
+	linux/LinuxDiskList.c \
+	linux/LinuxDisk.c
+endif
 endif
 
 # FreeBSD
@@ -70,6 +83,8 @@ freebsd_platform_headers = \
 	freebsd/Platform.h \
 	freebsd/FreeBSDProcessList.h \
 	freebsd/FreeBSDProcess.h \
+	freebsd/FreeBSDDiskList.h \
+	freebsd/FreeBSDDisk.h \
 	freebsd/Battery.h
 
 all_platform_headers += $(freebsd_platform_headers)
@@ -84,6 +99,12 @@ myhtopplatsources = \
 	freebsd/Battery.c
 
 myhtopplatheaders = $(freebsd_platform_headers)
+
+if DISK_STATS
+myhtopplatsources += \
+	freebsd/FreeBSDDiskList.c \
+	freebsd/FreeBSDDisk.c
+endif
 endif
 
 # DragonFlyBSD

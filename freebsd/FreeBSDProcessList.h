@@ -66,6 +66,6 @@ void ProcessList_delete(ProcessList* this);
 
 #define JAIL_ERRMSGLEN 1024
 
-void ProcessList_goThroughEntries(ProcessList* this);
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes);
 
 #endif

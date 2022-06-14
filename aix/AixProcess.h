@@ -31,7 +31,7 @@ typedef struct AixProcess_ {
 
 extern ProcessClass AixProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 

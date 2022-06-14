@@ -75,7 +75,7 @@ const SignalItem Platform_signals[] = {
 
 const unsigned int Platform_numberOfSignals = sizeof(Platform_signals)/sizeof(SignalItem);
 
-ProcessFieldData Process_fields[] = {
+FieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
@@ -132,7 +132,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_numberOfFields = 100;
+const unsigned int Platform_numberOfFields = 100;
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
    double results[3];

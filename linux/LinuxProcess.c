@@ -151,7 +151,7 @@ typedef struct LinuxProcess_ {
 
 long long btime; /* semi-global */
 
-ProcessFieldData Process_fields[] = {
+FieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },
@@ -358,16 +358,16 @@ void LinuxProcess_writeField(const Process *this, RichString* str, ProcessField 
          Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring);
          return;
       case HTOP_UTIME_FIELD:
-         Process_printTime(str, lp->utime);
+         CRT_printTime(str, lp->utime);
          return;
       case HTOP_STIME_FIELD:
-         Process_printTime(str, lp->stime);
+         CRT_printTime(str, lp->stime);
          return;
       case HTOP_CUTIME_FIELD:
-         Process_printTime(str, lp->cutime);
+         CRT_printTime(str, lp->cutime);
          return;
       case HTOP_CSTIME_FIELD:
-         Process_printTime(str, lp->cstime);
+         CRT_printTime(str, lp->cstime);
          return;
       case HTOP_STARTTIME_FIELD:
          start_wall_time = btime + (lp->starttime / sysconf(_SC_CLK_TCK));

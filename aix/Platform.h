@@ -40,7 +40,7 @@ extern MeterClass* Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 int Platform_getUptime();
 

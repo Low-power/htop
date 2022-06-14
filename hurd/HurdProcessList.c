@@ -175,7 +175,7 @@ static void scan_process_command_line(const HurdProcessList *this, pid_t pid, Pr
 	}
 }
 
-void ProcessList_goThroughEntries(ProcessList *super) {
+void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	HurdProcessList *this = (HurdProcessList *)super;
 
 	struct timeval now;

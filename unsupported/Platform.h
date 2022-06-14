@@ -21,13 +21,13 @@ extern const unsigned int Platform_numberOfSignals;
 
 extern ProcessField Platform_defaultFields[];
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern MeterClass* Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 int Platform_getUptime();
 

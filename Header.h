@@ -9,14 +9,22 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Meter.h"
-#include "Settings.h"
+#include "config.h"
 #include "Vector.h"
+#include "Settings.h"
+#include "ProcessList.h"
+#ifdef DISK_STATS
+#include "DiskList.h"
+#endif
+#include "Meter.h"
 
 typedef struct Header_ {
    Vector** columns;
    Settings* settings;
    ProcessList *pl;
+#ifdef DISK_STATS
+   DiskList *disk_list;
+#endif
    int nrColumns;
    int pad;
    int height;
@@ -56,5 +64,7 @@ void Header_reinit(const Header *this);
 void Header_draw(const Header* this);
 
 int Header_calculateHeight(Header* this);
+
+void Header_runSetup(Header *this, Settings *settings, const ProcessList *pl);
 
 #endif

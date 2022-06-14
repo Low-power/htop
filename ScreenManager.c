@@ -136,15 +136,34 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
       *rescan = true;
    }
    if (*rescan) {
+#ifdef DISK_STATS
+      double interval = (newTime - *oldTime) / 10;
+#endif
       *oldTime = newTime;
-      ProcessList_scan(pl);
-      if (*sortTimeout <= 0 || this->settings->treeView) {
-         ProcessList_sort(pl);
-         *sortTimeout = 1;
+#ifdef DISK_STATS
+      if(this->header->disk_list) {
+         DiskList_scan(this->header->disk_list, interval);
+         ProcessList_scan(pl, true);
+         if(*sortTimeout <= 0) {
+            DiskList_sort(this->header->disk_list);
+            *sortTimeout = 1;
+         }
+      } else
+#endif
+      {
+         ProcessList_scan(pl, false);
+         if (*sortTimeout <= 0 || this->settings->treeView) {
+            ProcessList_sort(pl);
+            *sortTimeout = 1;
+         }
       }
       *redraw = true;
    }
    if (*redraw) {
+#ifdef DISK_STATS
+      if(this->header->disk_list) DiskList_rebuildPanel(this->header->disk_list);
+      else
+#endif
       ProcessList_rebuildPanel(pl);
       Header_draw(this->header);
    }

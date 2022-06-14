@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "CategoriesPanel.h"
 #include "AvailableMetersPanel.h"
 #include "MetersPanel.h"
@@ -70,7 +71,13 @@ static void CategoriesPanel_makeColorsPage(CategoriesPanel* this) {
 
 static void CategoriesPanel_makeColumnsPage(CategoriesPanel* this) {
    Panel* columns = (Panel*) ColumnsPanel_new(this->settings);
-   Panel* availableColumns = (Panel*) AvailableColumnsPanel_new(columns);
+   Panel* availableColumns = (Panel *)AvailableColumnsPanel_new(columns,
+#ifdef DISK_STATS
+      this->settings->disk_mode
+#else
+      false
+#endif
+   );
    ScreenManager_add(this->scr, columns, 20);
    ScreenManager_add(this->scr, availableColumns, -1);
 }
@@ -137,7 +144,9 @@ CategoriesPanel* CategoriesPanel_new(ScreenManager* scr, Settings* settings, Hea
    Panel* super = (Panel*) this;
    FunctionBar* fuBar = FunctionBar_new(CategoriesFunctions, NULL, NULL);
    Panel_init(super, 1, 1, 1, 1, Class(ListItem), true, fuBar);
-
+#ifdef DISK_STATS
+   assert(!pl == settings->disk_mode);
+#endif
    this->scr = scr;
    this->settings = settings;
    this->header = header;

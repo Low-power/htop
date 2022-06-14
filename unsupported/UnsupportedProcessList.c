@@ -26,7 +26,9 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList *this) {
+void ProcessList_goThroughEntries(ProcessList *this, bool skip_processes) {
+	if(skip_processes) return;
+
 	bool is_existing;
 	Process *proc = ProcessList_getProcess(this, 1, &is_existing, UnsupportedProcess_new);
 

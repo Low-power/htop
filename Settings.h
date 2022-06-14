@@ -13,6 +13,9 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "Process.h"
+#ifdef DISK_STATS
+#include "Disk.h"
+#endif
 #include <stdbool.h>
 
 typedef struct {
@@ -27,14 +30,23 @@ typedef struct Settings_ {
 
    MeterColumnSettings columns[2];
 
-   ProcessField* fields;
+   unsigned int *fields;
+#ifdef DISK_STATS
+   unsigned int *disk_fields;
+#endif
    int flags;
+#ifdef DISK_STATS
+   int disk_flags;
+#endif
    int colorScheme;
    int delay;
 
    int cpuCount;
    int direction;
    ProcessField sortKey;
+#ifdef DISK_STATS
+   DiskField disk_sort_key;
+#endif
 
    bool countCPUsFromZero;
    bool detailedCPUTime;
@@ -61,6 +73,10 @@ typedef struct Settings_ {
    int (*sort_strcmp)(const char *, const char *);
 
    bool changed;
+
+#ifdef DISK_STATS
+   bool disk_mode;
+#endif
 } Settings;
 
 #ifndef Settings_cpuId

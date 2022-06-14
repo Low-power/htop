@@ -5,6 +5,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "ColumnsPanel.h"
 #include "Platform.h"
 
@@ -39,10 +40,14 @@ static void ColumnsPanel_delete(Object* object) {
 }
 
 static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat) {
-   ColumnsPanel* const this = (ColumnsPanel*) super;
+   ColumnsPanel *this = (ColumnsPanel *)super;
    HandlerResult result = IGNORED;
    int size = Panel_size(super);
-
+#ifdef DISK_STATS
+#define DISK_MODE (this->settings->disk_mode)
+#else
+#define DISK_MODE false
+#endif
    switch(ch) {
          int selected;
 
@@ -51,7 +56,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
-         if (Panel_getSelectedIndex(super) < size - 1) {
+         if (Panel_getSelectedIndex(super) < size - (DISK_MODE ? 0 : 1)) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, CRT_colors[this->moving ? HTOP_PANEL_SELECTION_FOLLOW_COLOR : HTOP_PANEL_SELECTION_FOCUS_COLOR]);
             ((ListItem*)Panel_getSelected(super))->moving = this->moving;
@@ -67,7 +72,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_F(7):
       case '[':
       case '-':
-         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - 1) {
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (DISK_MODE ? 0 : 1)) {
             Panel_moveSelectedUp(super);
          }
          result = HANDLED;
@@ -81,7 +86,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_F(8):
       case ']':
       case '+':
-         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - 2) {
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (DISK_MODE ? 1 : 2)) {
             Panel_moveSelectedDown(super);
          }
          result = HANDLED;
@@ -89,14 +94,14 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_F(9):
       case KEY_DC:
 #if 0
-         while(repeat-- > 0 && (selected = Panel_getSelectedIndex(super)) < size - 1) {
+         while(repeat-- > 0 && (selected = Panel_getSelectedIndex(super)) < size - (DISK_MODE ? 0 : 1)) {
             Panel_remove(super, selected);
             size--;
          }
 #else
          // Don't repeat delete operation
          selected = Panel_getSelectedIndex(super);
-         if(selected < size - 1) {
+         if(selected < size - (DISK_MODE ? 0 : 1)) {
             Panel_remove(super, selected);
          }
 #endif
@@ -107,8 +112,8 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
          if (result == BREAK_LOOP) result = IGNORED;
          break;
    }
-   if (result == HANDLED)
-      ColumnsPanel_update(super);
+#undef DISK_MODE
+   if (result == HANDLED) ColumnsPanel_update(super);
    return result;
 }
 
@@ -129,21 +134,26 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
    this->settings = settings;
    this->moving = false;
    Panel_setHeader(super, "Active Columns");
-
-   ProcessField* fields = this->settings->fields;
-   while(*fields) {
-      if (Process_fields[*fields].name) {
+#ifdef DISK_STATS
+   const unsigned int *field = settings->disk_mode ? settings->disk_fields : settings->fields;
+   const FieldData *field_data = settings->disk_mode ? Disk_fields : Process_fields;
+#else
+   const unsigned int *field = settings->fields;
+   const FieldData *field_data = Process_fields;
+#endif
+   while(*field) {
+      if (field_data[*field].name) {
          Panel_add(super,
-            (Object *)ListItem_new(Process_fields[*fields].name, HTOP_DEFAULT_COLOR, *fields, settings));
+            (Object *)ListItem_new(field_data[*field].name, HTOP_DEFAULT_COLOR, *field, settings));
       }
-      fields++;
+      field++;
    }
    return this;
 }
 
-int ColumnsPanel_fieldNameToIndex(const char* name) {
-   for (int j = 1; j <= Platform_numberOfFields; j++) {
-      if (String_eq(name, Process_fields[j].name)) {
+int ColumnsPanel_fieldNameToIndex(const FieldData *field_data, unsigned int nfields, const char* name) {
+   for (unsigned int j = 1; j <= nfields; j++) {
+      if (String_eq(name, field_data[j].name)) {
          return j;
       }
    }
@@ -153,14 +163,26 @@ int ColumnsPanel_fieldNameToIndex(const char* name) {
 void ColumnsPanel_update(Panel* super) {
    ColumnsPanel* this = (ColumnsPanel*) super;
    int size = Panel_size(super);
-   this->settings->changed = true;
-   this->settings->fields = xRealloc(this->settings->fields, sizeof(ProcessField) * (size+1));
-   this->settings->flags = 0;
+   unsigned int **fields;
+   int *flags;
+#ifdef DISK_STATS
+   if(this->settings->disk_mode) {
+      fields = &this->settings->disk_fields;
+      flags = &this->settings->disk_flags;
+   } else
+#endif
+   {
+      fields = &this->settings->fields;
+      flags = &this->settings->flags;
+   }
+   free(*fields);
+   *fields = xMalloc((size + 1) * sizeof(unsigned int));
+   *flags = 0;
    for (int i = 0; i < size; i++) {
       int key = ((ListItem*) Panel_get(super, i))->key;
-      this->settings->fields[i] = key;
-      this->settings->flags |= Process_fields[key].flags;
+      (*fields)[i] = key;
+      *flags |= Process_fields[key].flags;
    }
-   this->settings->fields[size] = 0;
+   (*fields)[size] = 0;
+   this->settings->changed = true;
 }
-

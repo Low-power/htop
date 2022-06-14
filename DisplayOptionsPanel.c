@@ -88,6 +88,9 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    this->scr = scr;
 
    Panel_setHeader(super, "Display options");
+#ifdef DISK_STATS
+   if(!settings->disk_mode) {
+#endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Tree view"), &(settings->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel processes"), &(settings->hide_kernel_processes)));
@@ -99,16 +102,19 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*)CheckItem_newByRef(xStrdup("Display kernel processes in a different color"), &(settings->highlight_kernel_processes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
+   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Highlight newly created processes"), &settings->highlight_new_processes));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight program \"basename\""), &(settings->highlightBaseName)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
+   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
+#ifdef DISK_STATS
+   }
+#endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Leave a margin around header"), &(settings->headerMargin)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Detailed CPU time (System/IO-Wait/Hard-IRQ/Soft-IRQ/Steal/Guest)"), &(settings->detailedCPUTime)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Count CPUs from 0 instead of 1"), &(settings->countCPUsFromZero)));
-   Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Add guest time in CPU meter percentage"), &(settings->accountGuestInCPUMeter)));
    this->case_insensitive_sort_check_item = CheckItem_newByVal(xStrdup("Case-insensitive sort"), settings->sort_strcmp == strcasecmp);
    Panel_add(super, (Object *)this->case_insensitive_sort_check_item);
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Explicitly delay between updates to workaroud a ncurses issue"), &settings->explicit_delay));
-   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Highlight newly created processes"), &settings->highlight_new_processes));
    return this;
 }

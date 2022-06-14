@@ -173,7 +173,7 @@ void ProcessList_delete(ProcessList* this) {
    free(this);
 }
 
-void ProcessList_goThroughEntries(ProcessList* super) {
+void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 	DarwinProcessList *dpl = (DarwinProcessList *)super;
 
 	struct timeval now;
@@ -192,6 +192,8 @@ void ProcessList_goThroughEntries(ProcessList* super) {
 			dpl->global_diff += dpl->curr_load[i].cpu_ticks[j] - dpl->prev_load[i].cpu_ticks[j];
 		}
 	}
+
+	if(skip_processes) return;
 
 	/* We use kinfo_procs for initial data since :
 	 *

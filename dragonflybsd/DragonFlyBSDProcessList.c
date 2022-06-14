@@ -414,17 +414,17 @@ static char *DragonFlyBSDProcessList_readJailName(DragonFlyBSDProcessList* dfpl,
    }
 }
 
-void ProcessList_goThroughEntries(ProcessList* this) {
+void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    DragonFlyBSDProcessList* dfpl = (DragonFlyBSDProcessList*) this;
 
    DragonFlyBSDProcessList_scanMemoryInfo(this);
    DragonFlyBSDProcessList_scanCPUTime(this);
    DragonFlyBSDProcessList_scanJails(dfpl);
 
+   if(skip_processes) return;
+
    int count = 0;
-
    struct kinfo_proc* kprocs = kvm_getprocs(dfpl->kd, KERN_PROC_ALL, 0, &count);
-
    for (int i = 0; i < count; i++) {
       struct kinfo_proc* kproc = &kprocs[i];
       bool preExisting;

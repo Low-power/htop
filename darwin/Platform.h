@@ -27,13 +27,13 @@ extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern MeterClass* Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen);
 

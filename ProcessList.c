@@ -77,8 +77,7 @@ typedef struct ProcessList_ {
 
 ProcessList* ProcessList_new(UsersTable* ut, const Hashtable *pidWhiteList, uid_t userId);
 void ProcessList_delete(ProcessList* pl);
-void ProcessList_goThroughEntries(ProcessList* pl);
-
+void ProcessList_goThroughEntries(ProcessList *, bool);
 }*/
 
 ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
@@ -125,14 +124,13 @@ void ProcessList_setPanel(ProcessList* this, Panel* panel) {
 
 void ProcessList_printHeader(ProcessList* this, RichString* header) {
    RichString_prune(header);
-   ProcessField* fields = this->settings->fields;
+   const unsigned int *fields = this->settings->fields;
    for (int i = 0; fields[i]; i++) {
-      const char* field = Process_fields[fields[i]].title;
-      if (!field) field = "- ";
-      if (!this->settings->treeView && this->settings->sortKey == fields[i])
-         RichString_append(header, CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR], field);
-      else
-         RichString_append(header, CRT_colors[HTOP_PANEL_HEADER_FOCUS_COLOR], field);
+      const char *title = Process_fields[fields[i]].title;
+      if (!title) title = "- ";
+      int attr = CRT_colors[!this->settings->treeView && this->settings->sortKey == fields[i] ?
+         HTOP_PANEL_SELECTION_FOCUS_COLOR : HTOP_PANEL_HEADER_FOCUS_COLOR];
+      RichString_append(header, attr, title);
    }
 }
 
@@ -301,7 +299,7 @@ void ProcessList_sort(ProcessList* this) {
 
 ProcessField ProcessList_keyAt(ProcessList* this, int at) {
    int x = 0;
-   ProcessField* fields = this->settings->fields;
+   const unsigned int *fields = this->settings->fields;
    ProcessField field;
    for (int i = 0; (field = fields[i]); i++) {
       const char* title = Process_fields[field].title;
@@ -380,14 +378,17 @@ static void read_zfs_arc_size(ProcessList *this) {
 	}
 }
 
-void ProcessList_scan(ProcessList* this) {
-   // mark all process as "dirty"
-   for (int i = 0; i < Vector_size(this->processes); i++) {
-      Process* p = (Process*) Vector_get(this->processes, i);
-      p->created = false;
-      p->updated = false;
-      p->show = true;
-   }
+void ProcessList_scan(ProcessList* this, bool skip_processes) {
+   //if(!skip_processes) {
+      // mark all process as "dirty"
+      int i = ProcessList_size(this);
+      while(i > 0) {
+         Process *p = ProcessList_get(this, --i);
+         p->created = false;
+         p->updated = false;
+         p->show = true;
+      }
+   //}
 
    this->totalTasks = 0;
    this->thread_count = 0;
@@ -396,9 +397,10 @@ void ProcessList_scan(ProcessList* this) {
    this->running_process_count = 0;
    this->running_thread_count = 0;
 
-   ProcessList_goThroughEntries(this);
+   ProcessList_goThroughEntries(this, skip_processes);
    read_zfs_arc_size(this);
-   for (int i = Vector_size(this->processes) - 1; i >= 0; i--) {
+
+   for (i = Vector_size(this->processes) - 1; i >= 0; i--) {
       Process* p = (Process*) Vector_get(this->processes, i);
       if(!p->updated) ProcessList_remove(this, p);
    }

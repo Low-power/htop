@@ -7,7 +7,6 @@ in the source distribution for its full text.
 
 #include "Settings.h"
 #include "Platform.h"
-
 #include "StringUtils.h"
 #include "Vector.h"
 #include "CRT.h"
@@ -22,6 +21,9 @@ in the source distribution for its full text.
 /*{
 #include "config.h"
 #include "Process.h"
+#ifdef DISK_STATS
+#include "Disk.h"
+#endif
 #include <stdbool.h>
 
 typedef struct {
@@ -36,14 +38,23 @@ typedef struct Settings_ {
 
    MeterColumnSettings columns[2];
 
-   ProcessField* fields;
+   unsigned int *fields;
+#ifdef DISK_STATS
+   unsigned int *disk_fields;
+#endif
    int flags;
+#ifdef DISK_STATS
+   int disk_flags;
+#endif
    int colorScheme;
    int delay;
 
    int cpuCount;
    int direction;
    ProcessField sortKey;
+#ifdef DISK_STATS
+   DiskField disk_sort_key;
+#endif
 
    bool countCPUsFromZero;
    bool detailedCPUTime;
@@ -70,6 +81,10 @@ typedef struct Settings_ {
    int (*sort_strcmp)(const char *, const char *);
 
    bool changed;
+
+#ifdef DISK_STATS
+   bool disk_mode;
+#endif
 } Settings;
 
 #ifndef Settings_cpuId
@@ -81,6 +96,9 @@ typedef struct Settings_ {
 void Settings_delete(Settings* this) {
    free(this->filename);
    free(this->fields);
+#ifdef DISK_STATS
+   free(this->disk_fields);
+#endif
    for (unsigned int i = 0; i < (sizeof(this->columns)/sizeof(MeterColumnSettings)); i++) {
       String_freeArray(this->columns[i].names);
       free(this->columns[i].modes);
@@ -150,21 +168,23 @@ static void Settings_defaultMeters(Settings* this, bool have_swap) {
    this->columns[1].modes[r++] = TEXT_METERMODE;
 }
 
-static void readFields(ProcessField* fields, int* flags, const char* line) {
+static void readFields(unsigned int *fields, int* flags, const FieldData *field_data, unsigned int nfields, const char* line) {
    char* trim = String_trim(line);
    int nIds;
    char** ids = String_split(trim, ' ', &nIds);
    free(trim);
-   int i, j;
+   unsigned int i = 0;
+   int j = 0;
    *flags = 0;
-   for (j = 0, i = 0; i < Platform_numberOfFields && ids[i]; i++) {
+   while(i < nfields && ids[i]) {
       // This "+1" is for compatibility with the older enum format.
-      int id = atoi(ids[i]) + 1;
-      if (id > 0 && Process_fields[id].name && id < Platform_numberOfFields) {
+      unsigned int id = atoi(ids[i]) + 1;
+      if (id > 0 && field_data[id].name && id < nfields) {
          fields[j] = id;
-         *flags |= Process_fields[id].flags;
+         *flags |= field_data[id].flags;
          j++;
       }
+      i++;
    }
    fields[j] = HTOP_NULL_PROCESSFIELD;
    String_freeArray(ids);
@@ -186,11 +206,19 @@ static bool Settings_read(Settings* this, const char* fileName) {
          continue;
       }
       if (String_eq(option[0], "fields")) {
-         readFields(this->fields, &(this->flags), option[1]);
+         readFields(this->fields, &this->flags, Process_fields, Platform_numberOfFields, option[1]);
          didReadFields = true;
+#ifdef DISK_STATS
+      } else if(String_eq(option[0], "disk_fields")) {
+         readFields(this->disk_fields, &this->disk_flags, Disk_fields, Disk_field_count, option[1]);
+#endif
       } else if (String_eq(option[0], "sort_key")) {
          // This "+1" is for compatibility with the older enum format.
          this->sortKey = atoi(option[1]) + 1;
+#ifdef DISK_STATS
+      } else if(String_eq(option[0], "disk_sort_key")) {
+         this->disk_sort_key = atoi(option[1]) + 1;
+#endif
       } else if (String_eq(option[0], "sort_direction")) {
          this->direction = atoi(option[1]);
       } else if (String_eq(option[0], "tree_view")) {
@@ -266,7 +294,7 @@ static bool Settings_read(Settings* this, const char* fileName) {
    return didReadFields;
 }
 
-static void writeFields(FILE *f, ProcessField* fields, const char* name) {
+static void writeFields(FILE *f, const unsigned int *fields, const char* name) {
    fprintf(f, "%s=", name);
    const char* sep = "";
    for (int i = 0; fields[i]; i++) {
@@ -306,8 +334,14 @@ bool Settings_write(Settings* this) {
    fprintf(f, "# Beware! This file is rewritten by htop when settings are changed in the interface.\n");
    fprintf(f, "# The parser is also very primitive, and not human-friendly.\n");
    writeFields(f, this->fields, "fields");
+#ifdef DISK_STATS
+   writeFields(f, this->disk_fields, "disk_fields");
+#endif
    // This "-1" is for compatibility with the older enum format.
    fprintf(f, "sort_key=%d\n", (int) this->sortKey-1);
+#ifdef DISK_STATS
+   fprintf(f, "disk_sort_key=%d\n", (int)this->disk_sort_key - 1);
+#endif
    fprintf(f, "sort_direction=%d\n", this->direction);
    fprintf(f, "hide_kernel_processes=%d\n", (int) this->hide_kernel_processes);
    fprintf(f, "hide_thread_processes=%d\n", (int) this->hide_thread_processes);
@@ -374,6 +408,9 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
    this->sortKey = HTOP_PERCENT_CPU_FIELD;
+#ifdef DISK_STATS
+   this->disk_sort_key = HTOP_DISK_PERCENT_BUSY_FIELD;
+#endif
    this->direction = 1;
    this->shadowOtherUsers = false;
    this->showThreadNames = false;
@@ -392,15 +429,25 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->showProgramPath = true;
    this->highlightThreads = true;
    this->highlight_kernel_processes = true;
-   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(ProcessField));
-   // TODO: turn 'fields' into a Vector,
-   // (and ProcessFields into proper objects).
+   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(unsigned int));
+   // TODO: turn 'fields' into a Vector
    this->flags = 0;
    ProcessField* defaults = Platform_defaultFields;
    for (int i = 0; defaults[i]; i++) {
       this->fields[i] = defaults[i];
       this->flags |= Process_fields[defaults[i]].flags;
    }
+#ifdef DISK_STATS
+   this->disk_fields = xCalloc(Disk_field_count + 1, sizeof(unsigned int));
+   this->disk_flags = 0;
+   const DiskField *disk_field = Disk_default_fields;
+   unsigned int i = 0;
+   while(*disk_field && i < Disk_field_count) {
+      this->disk_fields[i++] = *disk_field;
+      this->disk_flags |= Disk_fields[*disk_field].flags;
+      disk_field++;
+   }
+#endif
    this->sort_strcmp = strcmp;
    this->explicit_delay = false;
    this->highlight_new_processes = false;

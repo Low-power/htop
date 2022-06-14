@@ -6,25 +6,33 @@ in the source distribution for its full text.
 */
 
 #include "Header.h"
-
 #include "CRT.h"
 #include "StringUtils.h"
 #include "Platform.h"
-
+#include "ScreenManager.h"
+#include "CategoriesPanel.h"
 #include <assert.h>
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
 /*{
-#include "Meter.h"
-#include "Settings.h"
+#include "config.h"
 #include "Vector.h"
+#include "Settings.h"
+#include "ProcessList.h"
+#ifdef DISK_STATS
+#include "DiskList.h"
+#endif
+#include "Meter.h"
 
 typedef struct Header_ {
    Vector** columns;
    Settings* settings;
    ProcessList *pl;
+#ifdef DISK_STATS
+   DiskList *disk_list;
+#endif
    int nrColumns;
    int pad;
    int height;
@@ -206,4 +214,21 @@ int Header_calculateHeight(Header* this) {
    this->height = maxHeight;
    this->pad = pad;
    return maxHeight;
+}
+
+void Header_runSetup(Header *this, Settings *settings, const ProcessList *pl) {
+   ScreenManager *setup_scr = ScreenManager_new(0, this->height, 0, -1, HORIZONTAL, this, settings, true);
+   CategoriesPanel *categories_panel = CategoriesPanel_new(setup_scr, settings, this, pl);
+   ScreenManager_add(setup_scr, (Panel *)categories_panel, 16);
+   CategoriesPanel_makeMetersPage(categories_panel);
+   Panel *focused_panel;
+   int ch;
+   ScreenManager_run(setup_scr, &focused_panel, &ch);
+   ScreenManager_delete(setup_scr);
+   if (settings->changed) {
+      CRT_setMouse(settings->use_mouse);
+      CRT_setExplicitDelay(settings->explicit_delay);
+      if(!settings->explicit_delay) CRT_enableDelay();
+      Header_writeBackToSettings(this);
+   }
 }

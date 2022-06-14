@@ -170,7 +170,7 @@ static pid_t get_parent_team_id(pid_t team_id) {
 	return get_id(team_id, 3);
 }
 
-void ProcessList_goThroughEntries(ProcessList *super) {
+void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	HaikuProcessList *this = (HaikuProcessList *)super;
 
 	bigtime_t now = system_time();
@@ -225,6 +225,8 @@ void ProcessList_goThroughEntries(ProcessList *super) {
 	super->totalSwap = si.max_swap_pages * CRT_page_size_kib;
 	super->usedSwap = (si.max_swap_pages - si.free_swap_pages) * CRT_page_size_kib;
 #endif
+
+	if(skip_processes) return;
 
 	this->team_count = 0;
 

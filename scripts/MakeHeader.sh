@@ -55,6 +55,12 @@ while read -r line; do case "$state" in
 			*"htop - "*.c)
 				printf %s\\n "${line%c}h"
 				;;
+			"// "*)
+				printf %s\\n "$line"
+				is_blank=
+				;;
+			//*)
+				;;
 			"struct "*" "*\;)
 				is_blank=
 				printf 'extern %s\n' "$line"

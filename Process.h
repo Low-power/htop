@@ -22,6 +22,7 @@ in the source distribution for its full text.
 
 #include "config.h"
 #include "Object.h"
+#include "FieldData.h"
 #include <sys/types.h>
 #include <stdbool.h>
 
@@ -118,18 +119,11 @@ typedef struct Process_ {
    unsigned long int majflt;
 } Process;
 
-typedef struct ProcessFieldData_ {
-   const char* name;
-   const char* title;
-   const char* description;
-   int flags;
-} ProcessFieldData;
-
 // Implemented in platform-specific code:
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
 char **Process_getKernelStackTrace(const Process *);
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 
 typedef Process*(*Process_New)(struct Settings_*);
@@ -172,8 +166,6 @@ void Process_setupColumnWidths();
 void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
-
-void Process_printTime(RichString* str, unsigned long long totalHundredths);
 
 void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
 

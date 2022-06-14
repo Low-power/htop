@@ -33,7 +33,7 @@ typedef struct FreeBSDProcess_ {
 
 extern ProcessClass FreeBSDProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 

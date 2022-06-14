@@ -50,8 +50,6 @@ in the source distribution for its full text.
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
-
-extern ProcessFieldData Process_fields[];
 }*/
 
 const SignalItem Platform_signals[] = {
@@ -139,7 +137,7 @@ void Platform_setBindings(Htop_Action* keys) {
    (void) keys;
 }
 
-int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
+const unsigned int Platform_numberOfFields = HTOP_LAST_PROCESSFIELD;
 
 int Platform_getUptime() {
 	// Fallback to utmpx

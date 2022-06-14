@@ -38,7 +38,7 @@ ProcessClass HaikuProcess_class = {
    .writeField = HaikuProcess_writeField,
 };
 
-ProcessFieldData Process_fields[] = {
+FieldData Process_fields[] = {
    [0] = { .name = "", .title = NULL, .description = NULL, .flags = 0, },
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "Process/thread ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "Process (executable) name", .flags = 0, },

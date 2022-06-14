@@ -140,8 +140,6 @@ typedef enum {
 #define KEY_WHEELDOWN KEY_F(21)
 #define KEY_RECLICK KEY_F(22)
 
-//#link curses
-
 extern const char *CRT_treeStrAscii[TREE_STR_COUNT];
 
 #ifdef HAVE_LIBNCURSESW
@@ -249,5 +247,7 @@ void CRT_enableDelay();
 void CRT_explicitDelay();
 
 void CRT_setColors(int color_scheme_i);
+
+void CRT_printTime(RichString *str, unsigned long long int totalHundredths);
 
 #endif

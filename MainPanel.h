@@ -50,8 +50,8 @@ extern PanelClass MainPanel_class;
 
 MainPanel* MainPanel_new();
 
-void MainPanel_setState(MainPanel* this, State* state);
+void MainPanel_setState(MainPanel* this, const State *state);
 
-void MainPanel_delete(Object* object);
+void MainPanel_delete(Object *super);
 
 #endif

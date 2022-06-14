@@ -128,6 +128,6 @@ void ProcessList_delete(ProcessList* pl);
 
 #endif
 
-void ProcessList_goThroughEntries(ProcessList* super);
+void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes);
 
 #endif

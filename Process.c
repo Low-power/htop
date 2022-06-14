@@ -43,6 +43,7 @@ in the source distribution for its full text.
 /*{
 #include "config.h"
 #include "Object.h"
+#include "FieldData.h"
 #include <sys/types.h>
 #include <stdbool.h>
 
@@ -139,18 +140,11 @@ typedef struct Process_ {
    unsigned long int majflt;
 } Process;
 
-typedef struct ProcessFieldData_ {
-   const char* name;
-   const char* title;
-   const char* description;
-   int flags;
-} ProcessFieldData;
-
 // Implemented in platform-specific code:
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
 char **Process_getKernelStackTrace(const Process *);
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 
 typedef Process*(*Process_New)(struct Settings_*);
@@ -293,29 +287,6 @@ void Process_colorNumber(RichString* str, unsigned long long number, bool colori
       RichString_appendn(str, processMegabytesColor, buffer+2, 3);
       RichString_appendn(str, processColor, buffer+5, 3);
       RichString_appendn(str, processShadowColor, buffer+8, 4);
-   }
-}
-
-void Process_printTime(RichString* str, unsigned long long totalHundredths) {
-   unsigned long long totalSeconds = totalHundredths / 100;
-
-   unsigned long long hours = totalSeconds / 3600;
-   int minutes = (totalSeconds / 60) % 60;
-   int seconds = totalSeconds % 60;
-   int hundredths = totalHundredths - (totalSeconds * 100);
-   char buffer[23];
-   if (hours >= 100) {
-      xSnprintf(buffer, sizeof buffer, "%7lluh ", hours);
-      RichString_append(str, CRT_colors[HTOP_LARGE_NUMBER_COLOR], buffer);
-   } else {
-      if (hours) {
-         xSnprintf(buffer, sizeof buffer, "%2lluh", hours);
-         RichString_append(str, CRT_colors[HTOP_LARGE_NUMBER_COLOR], buffer);
-         xSnprintf(buffer, sizeof buffer, "%02d:%02d ", minutes, seconds);
-      } else {
-         xSnprintf(buffer, sizeof buffer, "%2d:%02d.%02d ", minutes, seconds, hundredths);
-      }
-      RichString_append(str, CRT_colors[HTOP_DEFAULT_COLOR], buffer);
    }
 }
 
@@ -551,7 +522,7 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          xSnprintf(buffer, n, "%6d ", (int)this->euid);
          break;
       case HTOP_TIME_FIELD:
-         Process_printTime(str, this->time);
+         CRT_printTime(str, this->time);
          return;
       case HTOP_TGID_FIELD:
          xSnprintf(buffer, n, Process_pidFormat, (int)this->tgid);
@@ -600,8 +571,8 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
 }
 
 void Process_display(Object* cast, RichString* out) {
-   Process* this = (Process*) cast;
-   ProcessField* fields = this->settings->fields;
+   const Process *this = (const Process *)cast;
+   const unsigned int *fields = this->settings->fields;
    RichString_prune(out);
    for (int i = 0; fields[i]; i++) {
       As_Process(this)->writeField(this, out, fields[i]);

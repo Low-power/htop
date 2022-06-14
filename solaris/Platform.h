@@ -27,8 +27,6 @@ in the source distribution for its full text.
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
 
-extern ProcessFieldData Process_fields[];
-
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;
@@ -43,7 +41,7 @@ extern MeterClass* Platform_meterTypes[];
 
 void Platform_setBindings(Htop_Action* keys);
 
-extern int Platform_numberOfFields;
+extern const unsigned int Platform_numberOfFields;
 
 int Platform_getUptime();
 

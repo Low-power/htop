@@ -64,7 +64,7 @@ typedef struct SolarisProcess_ {
 
 extern ProcessClass SolarisProcess_class;
 
-extern ProcessFieldData Process_fields[];
+extern FieldData Process_fields[];
 
 extern ProcessPidColumn Process_pidColumns[];
 

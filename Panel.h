@@ -9,8 +9,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-//#link curses
-
 #include "config.h"
 #include "Object.h"
 #include "Vector.h"

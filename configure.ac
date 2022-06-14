@@ -95,30 +95,32 @@ AC_CHECK_TYPE([struct utmpx],
 
 # CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
 m4_define([CHECK_CFLAGS_DEPENDED], [
-		for o in $1; do
+		for o in $2; do
 			save_cflags="$CFLAGS"
 			AC_MSG_CHECKING([whether $CC supports $o])
-			CFLAGS="$CFLAGS $o"
+			CFLAGS="$CFLAGS $1 $o"
 			AC_COMPILE_IFELSE([AC_LANG_SOURCE([])], [
 					eval AS_TR_SH([cc$o])=yes
+					CFLAGS="$save_cflags $o"
 					AC_MSG_RESULT([yes])
 				], [
 					eval AS_TR_SH([cc$o])=no
 					CFLAGS="$save_cflags"
 					AC_MSG_RESULT([no])
-					$2
+					$3
 					break
 				])
 		done
 	])
 
 if test "x$ac_cv_c_compiler_gnu" = xyes; then
-	CHECK_CFLAGS_DEPENDED([-Wall -Wno-switch -Wextra -Wno-unused-parameter])
+	CHECK_CFLAGS_DEPENDED([-Werror],
+		[-Wall -Wno-switch -Wextra -Wno-unused-parameter -Wno-implicit-fallthrough])
 else
 	# Try xlc(1) options first
-	CHECK_CFLAGS_DEPENDED(["-q info=c99:cmp:cns:eff:gnr:lan:ord:ret:tru:trx:upg"], [
+	CHECK_CFLAGS_DEPENDED([], ["-q info=c99:cmp:cns:eff:gnr:lan:ord:ret:tru:trx:upg"], [
 			# Fallback to gcc(1)-like options
-			CHECK_CFLAGS_DEPENDED([-Wall -Wno-switch -Wextra -Wno-unused-parameter])
+			CHECK_CFLAGS_DEPENDED([], [-Wall -Wno-switch -Wextra -Wno-unused-parameter])
 		])
 fi
 
@@ -556,7 +558,7 @@ fi
 
 AC_ARG_ENABLE([kfreebsd-cpuset],
 	[AS_HELP_STRING([--enable-kfreebsd-cpuset],
-		[[enable use of kFreeBSD cpuset_getaffinity(2) and cpuset_setaffinity(2) system calls for CPU affinity support [auto detect]]])],
+		[enable use of kFreeBSD cpuset_getaffinity(2) and cpuset_setaffinity(2) system calls for CPU affinity support [auto detect]])],
 	[], [AS_IF([test "x$enable_linux_affinity" = xyes], [enable_kfreebsd_cpuset=no], [enable_kfreebsd_cpuset=check])])
 if test "x$enable_kfreebsd_cpuset" != xno; then
 	if test "x$enable_kfreebsd_cpuset" != xyes && test "x$enable_kfreebsd_cpuset" != xcheck; then
@@ -616,12 +618,41 @@ then
    ])
 fi
 
-AC_ARG_ENABLE(truss-strsize, [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])
+AC_ARG_ENABLE([truss-strsize], [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])
 if test "x$enable_truss_strsize" = xyes; then
 	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size.])
 fi
 
-AC_ARG_WITH(bug-reporting-url,
+AC_ARG_ENABLE([disk-statistics],
+	[AS_HELP_STRING([--enable-disk-statistics], [enable disk I/O statistics support [auto detect]])],
+	[], [enable_disk_statistics=check])
+if test "x$enable_disk_statistics" != xno; then
+	have_disk_statistics_support=no
+	case "$my_htop_platform" in
+		linux)
+			have_disk_statistics_support=yes
+			;;
+		freebsd)
+			AC_CHECK_LIB([geom], [geom_gettree], [
+					AC_CHECK_LIB([devstat], [devstat_compute_statistics], [
+							have_disk_statistics_support=yes
+							LIBS="$LIBS -lgeom -ldevstat"
+						])
+				])
+			;;
+	esac
+	if test "x$have_disk_statistics_support" = xyes; then
+		AC_DEFINE(DISK_STATS, 1, [Define for disk statistics support.])
+		enable_disk_statistics=yes
+	elif test "x$enable_disk_statistics" = xcheck; then
+		enable_disk_statistics=no
+	else
+		AC_MSG_ERROR([disk statistics is not supported for the target platform])
+	fi
+fi
+AM_CONDITIONAL([DISK_STATS], [test "x$enable_disk_statistics" != xno])
+
+AC_ARG_WITH([bug-reporting-url],
 	[AS_HELP_STRING([--bug-reporting-url=URL], [specify where should users report bugs for distribution package])],
 	[
 		test "x$withval" = xyes && AC_MSG_ERROR([option --bug-reporting-url requires the URL to be specified])
