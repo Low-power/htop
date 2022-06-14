@@ -138,7 +138,7 @@ static void checkRecalculation(ScreenManager* this, double* oldTime, int* sortTi
    if (*rescan) {
       *oldTime = newTime;
       ProcessList_scan(pl);
-      if (*sortTimeout == 0 || this->settings->treeView) {
+      if (*sortTimeout <= 0 || this->settings->treeView) {
          ProcessList_sort(pl);
          *sortTimeout = 1;
       }
@@ -241,14 +241,15 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
 #endif
       }
       if (ch == ERR) {
-         sortTimeout--;
+         if(sortTimeout > 0) sortTimeout--;
          if (prevCh == ch && !timedOut) {
             closeTimeout++;
             if (closeTimeout == 100) {
                break;
             }
-         } else
+         } else {
             closeTimeout = 0;
+         }
          redraw = false;
          continue;
       }
