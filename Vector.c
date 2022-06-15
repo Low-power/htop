@@ -157,14 +157,16 @@ static void insertionSort(Object** array, int left, int right, Object_Compare co
 }
 
 void Vector_quickSort(Vector* this) {
-   assert(this->type->compare);
+   assert(this->items >= 0);
+   assert(this->type->compare || !this->items);
    assert(Vector_isConsistent(this));
    quickSort(this->array, 0, this->items - 1, this->type->compare);
    assert(Vector_isConsistent(this));
 }
 
 void Vector_insertionSort(Vector* this) {
-   assert(this->type->compare);
+   assert(this->items >= 0);
+   assert(this->type->compare || !this->items);
    assert(Vector_isConsistent(this));
    insertionSort(this->array, 0, this->items - 1, this->type->compare);
    assert(Vector_isConsistent(this));
