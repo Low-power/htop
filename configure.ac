@@ -150,6 +150,11 @@ if test "x$ac_cv_func_clock_gettime" = xno; then
 		])
 fi
 
+m4_define([CHECK_ENUM_CONSTANTS], [m4_foreach_w([symbol], [$1], [
+		AC_CHECK_DECL(symbol,
+			[AC_DEFINE_UNQUOTED(symbol, symbol, [Define if it presents.])], [], [$2])
+	])])
+
 AC_ARG_WITH([backtrace],
 	[AS_HELP_STRING([--with-backtrace], [use backtrace(3) in case of crashing [auto detect]])],
 	[with_backtrace="$withval"], [
@@ -637,6 +642,10 @@ if test "x$enable_disk_statistics" != xno; then
 					AC_CHECK_LIB([devstat], [devstat_compute_statistics], [
 							have_disk_statistics_support=yes
 							LIBS="$LIBS -lgeom -ldevstat"
+							CHECK_ENUM_CONSTANTS(
+								[DSM_TOTAL_DURATION DSM_TOTAL_BUSY_TIME],
+								[#include <devstat.h>]
+							)
 						])
 				])
 			;;

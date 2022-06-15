@@ -16,6 +16,7 @@ typedef struct {
 } FreeBSDDiskList;
 }*/
 
+#include "config.h"
 #include "FreeBSDDiskList.h"
 #include "FreeBSDDisk.h"
 #include "CRT.h"
