@@ -31,7 +31,7 @@ typedef struct {
 
 const FieldData Disk_fields[] = {
 	[0] = { .name = "", .title = NULL, .description = NULL, .flags = 0 },
-	[HTOP_DISK_NAME_FIELD] = { .name = "NAME", .title = "NAME     ", .description = "Canonical device name", .flags = 0 },
+	[HTOP_DISK_NAME_FIELD] = { .name = "NAME", .title = "NAME         ", .description = "Canonical device name", .flags = 0 },
 	[HTOP_DISK_PHYS_PATH_FIELD] = { .name = "PHYS_PATH", .title = "PHYS_PATH                                                ", .description = "Predictable device name based on phyiscal location", .flags = HTOP_DISK_PHYS_PATH_FLAG },
 	[HTOP_DISK_DEVID_FIELD] = { .name = "DEVID", .title = "DEVID                                                   ", .description = "Predictable device name based on model and serial number", .flags = HTOP_DISK_DEVID_FLAG },
 	[HTOP_DISK_BLOCK_SIZE_FIELD] = { .name = "BLOCK_SIZE", .title = " BLKSZ ", .description = "I/O block size", .flags = 0 },

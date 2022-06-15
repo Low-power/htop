@@ -206,7 +206,7 @@ void base_Disk_writeField(const Disk *this, RichString *s, DiskField field) {
 			struct tm tm;
 			size_t len;
 		case HTOP_DISK_NAME_FIELD:
-			xSnprintf(buffer, sizeof buffer, "%-8s ", this->name);
+			xSnprintf(buffer, sizeof buffer, "%-12s ", this->name);
 			break;
 		case HTOP_DISK_PHYS_PATH_FIELD:
 			xSnprintf(buffer, sizeof buffer, "%-56s ",
