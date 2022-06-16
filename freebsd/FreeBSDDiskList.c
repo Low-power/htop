@@ -21,13 +21,24 @@ typedef struct {
 #include "FreeBSDDisk.h"
 #include "CRT.h"
 #include "XAlloc.h"
+#include <sys/param.h>
+#include <sys/ioctl.h>
+#include <sys/disk.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/devicestat.h>
 #include <devstat.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <cam/cam.h>
+#include <cam/cam_ccb.h>
+#include <cam/scsi/scsi_pass.h>
+#include <assert.h>
 
 DiskList *DiskList_new(const Settings *settings) {
 	int e = geom_stats_open();
@@ -45,6 +56,76 @@ void DiskList_delete(DiskList *super) {
 	FreeBSDDiskList *this = (FreeBSDDiskList *)super;
 	geom_stats_snapshot_free(this->previous_stats);
 	free(this);
+}
+
+static void fill_from_device_ioctl(Disk *disk, int flags) {
+	size_t len = strlen(disk->name) + 1;
+	char path[5 + len];
+	memcpy(path, "/dev/", 5);
+	memcpy(path + 5, disk->name, len);
+	int fd = open(path, O_RDONLY);
+	if(fd == -1) return;
+	if(flags & HTOP_DISK_PHYS_PATH_FLAG) {
+		char phys_path[MAXPATHLEN];
+		if(ioctl(fd, DIOCGPHYSPATH, phys_path) == 0) disk->phys_path = xStrdup(phys_path);
+	}
+	close(fd);
+}
+
+static char *get_cam_path(const char *name) {
+	size_t name_len = strlen(name);
+	size_t unit_i = name_len;
+	while(isdigit(name[unit_i - 1])) if(!--unit_i) return NULL;
+	if(unit_i == name_len) return NULL;
+	int fd = open("/dev/xpt0", O_RDWR);
+	if(fd == -1) return NULL;
+	struct dev_match_pattern match_pattern = {
+		.type = DEV_MATCH_PERIPH,
+		.pattern.periph_pattern.flags = PERIPH_MATCH_NAME | PERIPH_MATCH_UNIT,
+		.pattern.periph_pattern.unit_number = atoi(name + unit_i)
+	};
+	assert(sizeof match_pattern.pattern.periph_pattern.periph_name > unit_i);
+	memcpy(match_pattern.pattern.periph_pattern.periph_name, name, unit_i);
+	struct dev_match_result match_result;
+	union ccb ccb = {
+		.cdm = {
+			.ccb_h.path_id = CAM_XPT_PATH_ID,
+			.ccb_h.target_id = CAM_TARGET_WILDCARD,
+			.ccb_h.target_lun = CAM_LUN_WILDCARD,
+			.ccb_h.func_code = XPT_DEV_MATCH,
+			.num_patterns = 1,
+			.pattern_buf_len = sizeof match_pattern,
+			.patterns = &match_pattern,
+			.num_matches = 0,
+			.match_buf_len = sizeof match_result,
+			.matches = &match_result
+		}
+	};
+	if(ioctl(fd, CAMIOCOMMAND, &ccb) < 0) {
+		close(fd);
+		return NULL;
+	}
+	close(fd);
+	if(ccb.ccb_h.status != CAM_REQ_CMP) return NULL;
+	if(ccb.cdm.status != CAM_DEV_MATCH_LAST && ccb.cdm.status != CAM_DEV_MATCH_MORE) {
+		return NULL;
+	}
+/*
+	assert(ccb.cdm.num_matches <= sizeof match_results / sizeof *match_results);
+	for(int i = 0; i < ccb.cdm.num_matches; i++) {
+		const struct dev_match_result *match = ccb.cdm.matches + i;
+		assert(match->type == DEV_MATCH_PERIPH);
+*/
+	assert(ccb.cdm.num_matches <= 1);
+	if(!ccb.cdm.num_matches) return NULL;
+	assert(ccb.cdm.matches->type == DEV_MATCH_PERIPH);
+	char *phys_path = xMalloc(57);
+	int len = snprintf(phys_path, 57, "scbus%u-target%u-lun%u",
+		(unsigned int)ccb.cdm.matches->result.periph_result.path_id,
+		(unsigned int)ccb.cdm.matches->result.periph_result.target_id,
+		(unsigned int)ccb.cdm.matches->result.periph_result.target_lun);
+	if(len < 56) phys_path = xRealloc(phys_path, len + 1);
+	return phys_path;
 }
 
 #define BINTIME_TO_HUNDREDTHSEC(BINTIME) \
@@ -75,6 +156,9 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 			//disk->block_size = lg_sectorsize;
 			disk->block_size = devstat->block_size ? : 512;
 			disk->creation_time = devstat->creation_time.sec;
+			if(super->settings->disk_flags & HTOP_DISK_PHYS_PATH_FLAG) {
+				fill_from_device_ioctl(disk, super->settings->disk_flags);
+			}
 			if(super->settings->disk_flags & HTOP_DISK_DEVID_FLAG) {
 				struct gconfig *kvp;
 				LIST_FOREACH(kvp, &p->lg_config, lg_config) {
@@ -83,6 +167,9 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 						break;
 					}
 				}
+			}
+			if(super->settings->disk_flags & HTOP_DISK_CAM_PATH_FLAG) {
+				fbsd_disk->cam_path = get_cam_path(p->lg_name);
 			}
 			DiskList_add(super, disk);
 		}

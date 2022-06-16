@@ -11,10 +11,13 @@ in the source distribution for its full text.
 #include <sys/time.h>
 #include <stdint.h>
 
+#define HTOP_DISK_CAM_PATH_FLAG (1 << 7)
+
 typedef enum {
 	// Add platform-specific fields here, with ids >= 100
 	HTOP_DISK_BUSY_TIME_FIELD = 100,
 	HTOP_DISK_PERCENT_BUSY_FIELD,
+	HTOP_DISK_CAM_PATH_FIELD,
 	HTOP_FREEBSD_DISK_FIELD_COUNT
 } FreeBSDDiskField;
 
@@ -23,11 +26,13 @@ typedef struct {
 	struct timeval duration;
 	uint64_t busy_time; // In 10-millisecond
 	float percent_busy;
+	char *cam_path;
 } FreeBSDDisk;
 }*/
 
 #include "FreeBSDDisk.h"
 #include "CRT.h"
+#include <stdio.h>
 
 const FieldData Disk_fields[] = {
 	[0] = { .name = "", .title = NULL, .description = NULL, .flags = 0 },
@@ -55,6 +60,7 @@ const FieldData Disk_fields[] = {
 	[HTOP_DISK_WRITE_BYTE_RATE_FIELD] = { .name = "WRITE_BYTE_RATE", .title = "WBYTE/S ", .description = "Write bytes per second", .flags = 0 },
 	[HTOP_DISK_PERCENT_UTIL_FIELD] = { .name = "PERCENT_UTIL", .title = "UTIL% ", .description = "Percentage of time during transactions", .flags = HTOP_DISK_PERCENT_UTIL_FLAG },
 	[HTOP_DISK_PERCENT_BUSY_FIELD] = { .name = "PERCENT_BUSY", .title = "BUSY% ", .description = "Percentage of time the disk had one or more transactions outstanding", .flags = 0 },
+	[HTOP_DISK_CAM_PATH_FIELD] = { .name = "CAM_PATH", .title = "CAM_PATH                                 ", .description = "Device path in CAM subsystem", .flags = HTOP_DISK_CAM_PATH_FLAG },
 	[HTOP_FREEBSD_DISK_FIELD_COUNT] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0 }
 };
 
@@ -76,6 +82,8 @@ const DiskField Disk_default_fields[] = {
 
 static void FreeBSDDisk_writeField(const Disk *super, RichString *s, DiskField field) {
 	const FreeBSDDisk *this = (const FreeBSDDisk *)super;
+	char buffer[256];
+	int attr = CRT_colors[HTOP_DEFAULT_COLOR];
 	switch((unsigned int)field) {
 		case HTOP_DISK_BUSY_TIME_FIELD:
 			CRT_printTime(s, this->busy_time);
@@ -83,10 +91,14 @@ static void FreeBSDDisk_writeField(const Disk *super, RichString *s, DiskField f
 		case HTOP_DISK_PERCENT_BUSY_FIELD:
 			Disk_printPercent(s, this->percent_busy);
 			return;
+		case HTOP_DISK_CAM_PATH_FIELD:
+			xSnprintf(buffer, sizeof buffer, "%-40s ", this->cam_path ? : "-");
+			break;
 		default:
 			base_Disk_writeField(super, s, field);
 			return;
 	}
+	RichString_append(s, attr, buffer);
 }
 
 static long int FreeBSDDisk_compare(const void *o1, const void *o2) {
@@ -105,6 +117,8 @@ static long int FreeBSDDisk_compare(const void *o1, const void *o2) {
 			return uintcmp(d2->busy_time, d1->busy_time);
 		case HTOP_DISK_PERCENT_BUSY_FIELD:
 			return d2->percent_busy - d1->percent_busy;
+		case HTOP_DISK_CAM_PATH_FIELD:
+			return settings->sort_strcmp(d1->cam_path ? : "", d2->cam_path ? : "");
 		default:
 			return Disk_compare(o1, o2);
 	}
@@ -126,7 +140,9 @@ FreeBSDDisk *FreeBSDDisk_new(const Settings *settings) {
 	return this;
 }
 
-void FreeBSDDisk_delete(Object *this) {
-	Disk_done((Disk *)this);
+void FreeBSDDisk_delete(Object *super) {
+	FreeBSDDisk *this = (FreeBSDDisk *)super;
+	Disk_done((Disk *)super);
+	free(this->cam_path);
 	free(this);
 }
