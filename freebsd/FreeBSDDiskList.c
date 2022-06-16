@@ -65,10 +65,12 @@ static void fill_from_device_ioctl(Disk *disk, int flags) {
 	memcpy(path + 5, disk->name, len);
 	int fd = open(path, O_RDONLY);
 	if(fd == -1) return;
+#ifdef DIOCGPHYSPATH
 	if(flags & HTOP_DISK_PHYS_PATH_FLAG) {
 		char phys_path[MAXPATHLEN];
 		if(ioctl(fd, DIOCGPHYSPATH, phys_path) == 0) disk->phys_path = xStrdup(phys_path);
 	}
+#endif
 	close(fd);
 }
 
