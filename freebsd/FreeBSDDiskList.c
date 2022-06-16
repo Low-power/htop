@@ -53,6 +53,7 @@ DiskList *DiskList_new(const Settings *settings) {
 }
 
 void DiskList_delete(DiskList *super) {
+	DiskList_done(super);
 	FreeBSDDiskList *this = (FreeBSDDiskList *)super;
 	geom_stats_snapshot_free(this->previous_stats);
 	free(this);

@@ -52,6 +52,7 @@ DiskList *DiskList_new(const Settings *settings) {
 }
 
 void DiskList_delete(DiskList *super) {
+	DiskList_done(super);
 	LinuxDiskList *this = (LinuxDiskList *)super;
 	fclose(this->diskstats_file);
 	if(this->disk_id_cache) Vector_delete(this->disk_id_cache);
