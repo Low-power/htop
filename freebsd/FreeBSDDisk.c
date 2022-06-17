@@ -60,6 +60,8 @@ const FieldData Disk_fields[] = {
 	[HTOP_DISK_WRITE_BYTE_RATE_FIELD] = { .name = "WRITE_BYTE_RATE", .title = "WBYTE/S ", .description = "Write bytes per second", .flags = 0 },
 	[HTOP_DISK_PERCENT_UTIL_FIELD] = { .name = "PERCENT_UTIL", .title = "UTIL% ", .description = "Percentage of time during transactions", .flags = HTOP_DISK_PERCENT_UTIL_FLAG },
 	[HTOP_DISK_PERCENT_BUSY_FIELD] = { .name = "PERCENT_BUSY", .title = "BUSY% ", .description = "Percentage of time the disk had one or more transactions outstanding", .flags = 0 },
+	[HTOP_DISK_BLOCK_COUNT_FIELD] = { .name = "BLOCK_COUNT", .title = "BLOCKS ", .description = "Total capacity in blocks", .flags = HTOP_DISK_CAPACITY_FLAG },
+	[HTOP_DISK_BYTE_COUNT_FIELD] = { .name = "BYTE_COUNT", .title = "  BYTES ", .description = "Total capacity in bytes", .flags = HTOP_DISK_CAPACITY_FLAG },
 	[HTOP_DISK_CAM_PATH_FIELD] = { .name = "CAM_PATH", .title = "CAM_PATH                                 ", .description = "Device path in CAM subsystem", .flags = HTOP_DISK_CAM_PATH_FLAG },
 	[HTOP_FREEBSD_DISK_FIELD_COUNT] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0 }
 };

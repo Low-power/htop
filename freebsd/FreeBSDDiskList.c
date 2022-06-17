@@ -59,19 +59,32 @@ void DiskList_delete(DiskList *super) {
 	free(this);
 }
 
-static void fill_from_device_ioctl(Disk *disk, int flags) {
+static void fill_from_device_node(Disk *disk, int flags, bool need_block_size) {
 	size_t len = strlen(disk->name) + 1;
 	char path[5 + len];
 	memcpy(path, "/dev/", 5);
 	memcpy(path + 5, disk->name, len);
 	int fd = open(path, O_RDONLY);
 	if(fd == -1) return;
+	if(need_block_size) {
+		unsigned int size;
+		if(ioctl(fd, DIOCGSECTORSIZE, &size) == 0 && size) disk->block_size = size;
+	}
 #ifdef DIOCGPHYSPATH
 	if(flags & HTOP_DISK_PHYS_PATH_FLAG) {
 		char phys_path[MAXPATHLEN];
 		if(ioctl(fd, DIOCGPHYSPATH, phys_path) == 0) disk->phys_path = xStrdup(phys_path);
 	}
 #endif
+	if(flags & HTOP_DISK_CAPACITY_FLAG) {
+		off_t size;
+		if(ioctl(fd, DIOCGMEDIASIZE, &size) == 0) {
+			disk->block_count = size / disk->block_size;
+		} else {
+			size = lseek(fd, SEEK_END, 0);
+			if(size >= 0) disk->block_count = size / disk->block_size;
+		}
+	}
 	close(fd);
 }
 
@@ -159,8 +172,9 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 			//disk->block_size = lg_sectorsize;
 			disk->block_size = devstat->block_size ? : 512;
 			disk->creation_time = devstat->creation_time.sec;
-			if(super->settings->disk_flags & HTOP_DISK_PHYS_PATH_FLAG) {
-				fill_from_device_ioctl(disk, super->settings->disk_flags);
+			if(!devstat->block_size ||
+			  (super->settings->disk_flags & (HTOP_DISK_PHYS_PATH_FLAG | HTOP_DISK_CAPACITY_FLAG))) {
+				fill_from_device_node(disk, super->settings->disk_flags, !devstat->block_size);
 			}
 			if(super->settings->disk_flags & HTOP_DISK_DEVID_FLAG) {
 				struct gconfig *kvp;

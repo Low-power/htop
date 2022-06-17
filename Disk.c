@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #define HTOP_DISK_PHYS_PATH_FLAG (1 << 0)
 #define HTOP_DISK_DEVID_FLAG (1 << 1)
 #define HTOP_DISK_PERCENT_UTIL_FLAG (1 << 2)
+#define HTOP_DISK_CAPACITY_FLAG (1 << 3)
 
 typedef enum {
 	HTOP_DISK_NULL_FIELD = 0,
@@ -43,6 +44,8 @@ typedef enum {
 	HTOP_DISK_READ_BYTE_RATE_FIELD,
 	HTOP_DISK_WRITE_BYTE_RATE_FIELD,
 	HTOP_DISK_PERCENT_UTIL_FIELD,
+	HTOP_DISK_BLOCK_COUNT_FIELD,
+	HTOP_DISK_BYTE_COUNT_FIELD,
 	HTOP_BASE_DISK_FIELD_COUNT
 } DiskField;
 
@@ -68,6 +71,7 @@ typedef struct {
 	uint32_t read_block_rate;
 	uint32_t write_block_rate;
 	float percent_util;
+	int64_t block_count;
 } Disk;
 
 typedef Disk *(*DiskConstructor)(const struct Settings_ *);
@@ -283,6 +287,22 @@ void base_Disk_writeField(const Disk *this, RichString *s, DiskField field) {
 		case HTOP_DISK_PERCENT_UTIL_FIELD:
 			Disk_printPercent(s, this->percent_util);
 			return;
+		case HTOP_DISK_BLOCK_COUNT_FIELD:
+			if(this->block_count < 0) {
+				attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+				strcpy(buffer, "     - ");
+				break;
+			}
+			human_readable_decimal(s, this->block_count, 0, 10, 6, false);
+			return;
+		case HTOP_DISK_BYTE_COUNT_FIELD:
+			if(this->block_count < 0) {
+				attr = CRT_colors[HTOP_PROCESS_SHADOW_COLOR];
+				strcpy(buffer, "      - ");
+				break;
+			}
+			human_readable_binary(s, this->block_count * this->block_size, 0, 10, 7, false);
+			return;
 		default:
 			strcpy(buffer, "- ");
 			break;
@@ -327,6 +347,7 @@ DiskClass Disk_class = {
 void Disk_init(Disk *this, const struct Settings_ *settings) {
 	this->settings = settings;
 	this->creation_time = -1;
+	this->block_count = -1;
 }
 
 long int Disk_nameCompare(const void *o1, const void *o2) {
@@ -396,5 +417,8 @@ long int Disk_compare(const void *o1, const void *o2) {
 			return uintcmp(d2->write_block_rate, d1->write_block_rate);
 		case HTOP_DISK_PERCENT_UTIL_FIELD:
 			return d2->percent_util - d1->percent_util;
+		case HTOP_DISK_BLOCK_COUNT_FIELD:
+		case HTOP_DISK_BYTE_COUNT_FIELD:
+			return d2->block_count - d1->block_count;
 	}
 }

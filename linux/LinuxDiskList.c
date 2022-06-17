@@ -33,9 +33,11 @@ typedef struct {
 #include "StringUtils.h"
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/mount.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -69,17 +71,17 @@ static uint32_t get_block_size(const char *name, size_t len) {
 	if(!f) {
 		strcpy(path + 11 + len + 7, "hw_sector_size");
 		f = fopen(path, "r");
-		if(!f) return 512;	// TODO: try ioctl(2) as a fallback
+		if(!f) return 0;
 	}
 	char buffer[8];
 	if(!fgets(buffer, sizeof buffer, f)) {
 		fclose(f);
-		return 512;
+		return 0;
 	}
 	fclose(f);
 	char *end_p;
 	unsigned long int size = strtoul(buffer, &end_p, 10);
-	if((*end_p && *end_p != '\n') || !size) return 512;
+	if((*end_p && *end_p != '\n') || !size) return 0;
 	return size;
 }
 
@@ -165,6 +167,44 @@ static char *get_devid(LinuxDiskList *disk_list, const char *name, size_t len) {
 	return get_alternative_name(name, len, "/dev/disk/by-id/", &disk_list->disk_id_cache);
 }
 
+static void fill_from_device_node(Disk *disk, const char *name, size_t len, int flags) {
+	char path[5 + len + 1];
+	memcpy(path, "/dev/", 5);
+	memcpy(path + 5, disk->name, len);
+	path[5 + len] = 0;
+	int fd = open(path, O_RDONLY);
+	if(fd == -1) return;
+#ifdef BLKSSZGET
+	if(!disk->block_size) {
+		int size;
+		if(ioctl(fd, BLKSSZGET, &size) == 0 && size) disk->block_size = size;
+	}
+#endif
+	if(flags & HTOP_DISK_CAPACITY_FLAG) {
+#ifdef BLKGETSIZE64
+		uint64_t size;
+		if(ioctl(fd, BLKGETSIZE64, &size) == 0) {
+			disk->block_count = size / (disk->block_size ? : 512);
+		} else
+#endif
+		{
+			unsigned long int sector_count;
+			if(ioctl(fd, BLKGETSIZE, &sector_count) == 0) {
+				disk->block_count = sector_count;
+				// BLKGETSIZE always use 512 byte sector size
+				if(disk->block_size && disk->block_size != 512) {
+					if(disk->block_size < 512) {
+						disk->block_count *= 512 / disk->block_size;
+					} else {
+						disk->block_count /= disk->block_size / 512;
+					}
+				}
+			}
+		}
+	}
+	close(fd);
+}
+
 void DiskList_internalScan(DiskList *super, double interval) {
 	LinuxDiskList *this = (LinuxDiskList *)super;
 	if(interval < 0) interval = 0.000001;
@@ -219,6 +259,10 @@ void DiskList_internalScan(DiskList *super, double interval) {
 			}
 			if(super->settings->disk_flags & HTOP_DISK_DEVID_FLAG) {
 				disk->devid = get_devid(this, name, name_len);
+			}
+			if(!disk->block_size || (super->settings->disk_flags & HTOP_DISK_CAPACITY_FLAG)) {
+				fill_from_device_node(disk, name, name_len, super->settings->disk_flags);
+				if(!disk->block_size) disk->block_size = 512;
 			}
 			DiskList_add(super, disk);
 		}
