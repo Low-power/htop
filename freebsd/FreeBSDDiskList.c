@@ -122,12 +122,12 @@ static char *get_cam_path(const char *name) {
 	assert(ccb.cdm.num_matches <= 1);
 	if(!ccb.cdm.num_matches) return NULL;
 	assert(ccb.cdm.matches->type == DEV_MATCH_PERIPH);
-	char *phys_path = xMalloc(57);
-	int len = snprintf(phys_path, 57, "scbus%u-target%u-lun%u",
+	char *phys_path = xMalloc(41);
+	int len = snprintf(phys_path, 41, "scbus%u-target%u-lun%u",
 		(unsigned int)ccb.cdm.matches->result.periph_result.path_id,
 		(unsigned int)ccb.cdm.matches->result.periph_result.target_id,
 		(unsigned int)ccb.cdm.matches->result.periph_result.target_lun);
-	if(len < 56) phys_path = xRealloc(phys_path, len + 1);
+	if(len < 40) phys_path = xRealloc(phys_path, len + 1);
 	return phys_path;
 }
 
