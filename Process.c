@@ -398,8 +398,10 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          struct tm tm;
       case HTOP_PERCENT_CPU_FIELD:
          if (this->percent_cpu > 999.9) {
+            attr = CRT_colors[HTOP_HIGH_PERCENT_COLOR];
             xSnprintf(buffer, n, "%4u ", (unsigned int)this->percent_cpu);
          } else if (this->percent_cpu > 99.9) {
+            attr = CRT_colors[HTOP_MEDIUM_PERCENT_COLOR];
             xSnprintf(buffer, n, "%3u. ", (unsigned int)this->percent_cpu);
          } else {
             xSnprintf(buffer, n, "%4.1f ", this->percent_cpu);
@@ -407,8 +409,13 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          break;
       case HTOP_PERCENT_MEM_FIELD:
          if (this->percent_mem > 99.9) {
+            attr = CRT_colors[HTOP_HIGH_PERCENT_COLOR];
             xSnprintf(buffer, n, "100. ");
          } else {
+            if(this->percent_mem > 50) {
+               attr = CRT_colors[this->percent_mem > 90 ?
+                  HTOP_HIGH_PERCENT_COLOR : HTOP_MEDIUM_PERCENT_COLOR];
+            }
             xSnprintf(buffer, n, "%4.1f ", this->percent_mem);
          }
          break;

@@ -197,8 +197,16 @@ static void human_readable_binary(RichString *s, uint64_t n, int unit_prefix, un
 
 void Disk_printPercent(RichString *s, double percent) {
 	char buffer[256];
-	int attr = CRT_colors[HTOP_DEFAULT_COLOR];
-	if(percent > 80) attr = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
+	int attr;
+	if(percent > 80) {
+		attr = CRT_colors[HTOP_HIGH_PERCENT_COLOR];
+	} else if(percent > 50) {
+		attr = CRT_colors[HTOP_MEDIUM_PERCENT_COLOR];
+	} else if(percent > 0) {
+		attr = CRT_colors[HTOP_LOW_PERCENT_COLOR];
+	} else {
+		attr = CRT_colors[HTOP_DEFAULT_COLOR];
+	}
 	xSnprintf(buffer, sizeof buffer, "%5.1f ", percent);
 	RichString_append(s, attr, buffer);
 }
