@@ -193,11 +193,7 @@ static void fill_from_device_node(Disk *disk, const char *name, size_t len, int 
 				disk->block_count = sector_count;
 				// BLKGETSIZE always use 512 byte sector size
 				if(disk->block_size && disk->block_size != 512) {
-					if(disk->block_size < 512) {
-						disk->block_count *= 512 / disk->block_size;
-					} else {
-						disk->block_count /= disk->block_size / 512;
-					}
+					disk->block_count = disk->block_count * 512 / disk->block_size;
 				}
 			}
 		}
