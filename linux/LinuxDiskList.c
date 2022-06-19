@@ -43,6 +43,20 @@ typedef struct {
 #include <errno.h>
 #include <ctype.h>
 
+/* Linux is broken in case of reporting the 'number of sectors', as it hard-
+ * coded these 'sector sizes' to be 512 byte, no matter what logical/physical
+ * sector size a disk actually using. The documentation misleadingly stating
+ * that some fields in 'diskstats' file are 'number of sectors', without
+ * mentioning this 'sector' is neither a 'logical sector' nor a 'physical
+ * sector', which is very confusing for user space programs. Correct this
+ * confusing 'number of sectors' value based on the corresponding logical
+ * sector size of the disk.
+ * References:
+ * https://lkml.org/lkml/2015/8/17/269
+ * https://kernel.org/doc/Documentation/iostats.txt
+ */
+#define FIXUP_SECTOR_COUNT(N,SECTOR_SIZE) ((uint64_t)(N)*512/(SECTOR_SIZE))
+
 DiskList *DiskList_new(const Settings *settings) {
 	LinuxDiskList *disk_list = xMalloc(sizeof(LinuxDiskList));
 	DiskList_init(&disk_list->super, Class(LinuxDisk), settings);
@@ -191,9 +205,10 @@ static void fill_from_device_node(Disk *disk, const char *name, size_t len, int 
 			unsigned long int sector_count;
 			if(ioctl(fd, BLKGETSIZE, &sector_count) == 0) {
 				disk->block_count = sector_count;
-				// BLKGETSIZE always use 512 byte sector size
+				// Fixup broken sector size in Linux
 				if(disk->block_size && disk->block_size != 512) {
-					disk->block_count = disk->block_count * 512 / disk->block_size;
+					disk->block_count =
+						FIXUP_SECTOR_COUNT(disk->block_count, disk->block_size);
 				}
 			}
 		}
@@ -212,15 +227,15 @@ void DiskList_internalScan(DiskList *super, double interval) {
 	while((line = String_readLine(this->diskstats_file))) {
 		int major, minor;
 		char name[32];
-		unsigned long int read_op_count, read_merge_count, read_block_count;
+		unsigned long int read_op_count, read_merge_count, read_512byte_count;
 		unsigned int read_time;
-		unsigned long int write_op_count, write_merge_count, write_block_count;
+		unsigned long int write_op_count, write_merge_count, write_512byte_count;
 		unsigned int write_time;
 		unsigned int pending_op_count, operation_time, queue_time;
 		int n = sscanf(line, "%d %d %31s %lu %lu %lu %u %lu %lu %lu %u %u %u %u",
 			&major, &minor, name,
-			&read_op_count, &read_merge_count, &read_block_count, &read_time,
-			&write_op_count, &write_merge_count, &write_block_count, &write_time,
+			&read_op_count, &read_merge_count, &read_512byte_count, &read_time,
+			&write_op_count, &write_merge_count, &write_512byte_count, &write_time,
 			&pending_op_count, &operation_time, &queue_time);
 		free(line);
 		if(n < 11) continue;
@@ -262,6 +277,8 @@ void DiskList_internalScan(DiskList *super, double interval) {
 			}
 			DiskList_add(super, disk);
 		}
+		uint64_t read_block_count = FIXUP_SECTOR_COUNT(read_512byte_count, disk->block_size);
+		uint64_t write_block_count = FIXUP_SECTOR_COUNT(write_512byte_count, disk->block_size);
 		disk->queue_length = pending_op_count;
 		uint64_t operation_count = read_op_count + write_op_count;
 		disk->operation_rate = (operation_count - disk->operation_count) / interval;
