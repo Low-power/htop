@@ -628,6 +628,7 @@ if test "x$enable_truss_strsize" = xyes; then
 	AC_DEFINE(TRUSS_SUPPORT_STRING_SIZE, 1, [Define if truss(1) support option '-s' for string size.])
 fi
 
+disk_stats_man_page_paragraph=/dev/null
 AC_ARG_ENABLE([disk-statistics],
 	[AS_HELP_STRING([--enable-disk-statistics], [enable disk I/O statistics support [auto detect]])],
 	[], [enable_disk_statistics=check])
@@ -653,6 +654,7 @@ if test "x$enable_disk_statistics" != xno; then
 	if test "x$have_disk_statistics_support" = xyes; then
 		AC_DEFINE(DISK_STATS, 1, [Define for disk statistics support.])
 		enable_disk_statistics=yes
+		disk_stats_man_page_paragraph=$srcdir/htop.disk-stats.1
 	elif test "x$enable_disk_statistics" = xcheck; then
 		enable_disk_statistics=no
 	else
@@ -660,6 +662,7 @@ if test "x$enable_disk_statistics" != xno; then
 	fi
 fi
 AM_CONDITIONAL([DISK_STATS], [test "x$enable_disk_statistics" != xno])
+AC_SUBST_FILE([disk_stats_man_page_paragraph])
 
 AC_ARG_WITH([bug-reporting-url],
 	[AS_HELP_STRING([--bug-reporting-url=URL], [specify where should users report bugs for distribution package])],

@@ -6,7 +6,8 @@ htop \- interactive process viewer
 .B htop [\fIOPTIONS\fR]
 .SH "DESCRIPTION"
 .LP 
-Htop is a free (GPL) ncurses-based process viewer for Linux.
+Htop is a free (GPL) ncurses-based process viewer and system monitor for
+Unix-like systems.
 .LP
 It is similar to top, but allows you to scroll vertically and horizontally,
 so you can see all the processes running on the system, along with their full
@@ -46,6 +47,11 @@ Output version information and exit
 .TP
 \fB\-t, \-\-tree
 Show processes in tree view
+@disk_stats_man_page_paragraph@
+.TP
+\fB\-\-explicit-delay
+Explicitly delay between updates; this could be useful to workaround ncurses
+timer issues when the system time is changed
 .PP
 .br 
 .SH "INTERACTIVE COMMANDS"

@@ -47,6 +47,7 @@ Changes from original version
 * Kernel stack tracing of processes for Linux-based and kFreeBSD-based
   platforms
 * Haiku support
+* Disk statistics mode for Linux-based and kFreeBSD-based platforms
 
 See the commit log for more.
 
