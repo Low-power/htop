@@ -459,8 +459,8 @@ static const struct key_help_entry helpRight[] = {
    { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
    { "         ", "strace(1)", KEY_VI_MODE_COMPATIBLE },
    { "   F2 C: ", "setup", KEY_VI_MODE_COMPATIBLE },
-   { "   F1 h: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
-   { "     F1: ", "show this help screen", KEY_VI_MODE_ONLY },
+   { " F1 h ?: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
+   { "   F1 ?: ", "show this help screen", KEY_VI_MODE_ONLY },
    { "  F10 q: ", "quit", KEY_VI_MODE_COMPATIBLE },
    { NULL }
 };
