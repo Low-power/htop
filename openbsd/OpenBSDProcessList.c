@@ -317,7 +317,7 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
          (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
       proc->nice = kproc->p_nice - NZERO;
-      proc->time = kproc->p_rtime_sec * 100 + ((kproc->p_rtime_usec + 5000) / 10000);
+      proc->time = kproc->p_rtime_sec * 100 + kproc->p_rtime_usec / 10000;
       proc->priority = kproc->p_priority - PZERO;
 
       switch (kproc->p_stat) {

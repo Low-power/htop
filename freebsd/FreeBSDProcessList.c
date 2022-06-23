@@ -560,7 +560,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->percent_mem =
          (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
       proc->nlwp = kproc->ki_numthreads;
-      proc->time = (kproc->ki_runtime + 5000) / 10000;
+      proc->time = kproc->ki_runtime / 10000;
       proc->percent_cpu = (double)kproc->ki_pctcpu / (double)kernelFScale * 100;
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
