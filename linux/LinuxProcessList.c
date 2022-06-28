@@ -246,6 +246,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
          if(cpu_i > max_cpu_i) max_cpu_i = cpu_i;
       }
       closedir(dir);
+      if(!cpu_count) dir = NULL;
    }
 
    FILE* file = fopen(PROCSTATFILE, "r");
