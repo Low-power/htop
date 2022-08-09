@@ -202,6 +202,7 @@ static void fill_from_device_node(Disk *disk, const char *name, size_t len, int 
 		} else
 #endif
 		{
+#ifdef BLKGETSIZE
 			unsigned long int sector_count;
 			if(ioctl(fd, BLKGETSIZE, &sector_count) == 0) {
 				disk->block_count = sector_count;
@@ -211,6 +212,7 @@ static void fill_from_device_node(Disk *disk, const char *name, size_t len, int 
 						FIXUP_SECTOR_COUNT(disk->block_count, disk->block_size);
 				}
 			}
+#endif
 		}
 	}
 	close(fd);
