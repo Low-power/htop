@@ -18,6 +18,8 @@ in the source distribution for its full text.
 #endif
 #include "Meter.h"
 
+#undef columns
+
 typedef struct Header_ {
    Vector** columns;
    Settings* settings;

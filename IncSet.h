@@ -14,6 +14,8 @@ in the source distribution for its full text.
 #include "Panel.h"
 #include <stdbool.h>
 
+#undef lines
+
 #define INCMODE_MAX 40
 
 typedef enum {

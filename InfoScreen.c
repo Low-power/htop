@@ -14,6 +14,8 @@ in the source distribution for its full text.
 #include "Vector.h"
 #include "Settings.h"
 
+#undef lines
+
 typedef struct InfoScreen_ InfoScreen;
 
 typedef void(*InfoScreen_Scan)(InfoScreen*);

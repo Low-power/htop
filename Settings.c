@@ -26,6 +26,8 @@ in the source distribution for its full text.
 #endif
 #include <stdbool.h>
 
+#undef columns
+
 typedef struct {
    int len;
    char** names;

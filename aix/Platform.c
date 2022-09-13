@@ -82,7 +82,9 @@ const SignalItem Platform_signals[] = {
    SIG(MIGRATE),
    SIG(PRE),
    SIG(VIRT),
+#ifdef SIGTALRM
    SIG(TALRM),
+#endif
    // AIX requests not use SIGWAITING/39
    // don't know about the hole here
    SIG(SYSERROR),
