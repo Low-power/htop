@@ -113,8 +113,8 @@ versions of operating system components.
 
 ### AIX
 
-Currently only tested on **AIX 7.1**. Although unsupported, it is expected to
-work on newer versions of the operating system.
+Tested on **AIX 6.1** and **AIX 7.1**. Although unsupported, it is expected
+to work on newer versions of the operating system.
 
 ### Haiku
 
