@@ -1098,10 +1098,12 @@ static inline double LinuxProcessList_scanCPUTime(LinuxProcessList* this) {
       cpuData->guestTime = virtalltime;
       cpuData->totalTime = totaltime;
    }
+   int online_cpu_count = 0;
    for(i = 0; i < (unsigned int)this->super.cpuCount; i++) {
       if(offline_cpu_map[i]) memset(this->cpus + i + 1, 0, sizeof(CPUData));
+      else online_cpu_count++;
    }
-   double period = (double)this->cpus[0].totalPeriod / this->super.cpuCount;
+   double period = (double)this->cpus[0].totalPeriod / online_cpu_count;
    fclose(file);
    return period;
 }
