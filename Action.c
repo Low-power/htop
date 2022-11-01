@@ -363,10 +363,8 @@ Htop_Reaction Action_follow(State* st) {
 
 static Htop_Reaction actionSetup(State* st) {
    Header_runSetup(st->header, st->settings, st->pl);
-   // TODO: shouldn't need this, colors should be dynamic
    int headerHeight = Header_calculateHeight(st->header);
-   Panel_move(st->panel, 0, headerHeight);
-   Panel_resize(st->panel, COLS, LINES-headerHeight-1);
+   Panel_setReservedHeight(st->panel, headerHeight);
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_UPDATE_PANELHDR;
 }
 

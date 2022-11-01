@@ -109,6 +109,8 @@ void Panel_move(Panel* this, int x, int y);
 
 void Panel_resize(Panel* this, int w, int h);
 
+void Panel_setReservedHeight(Panel *this, int reserved_height);
+
 void Panel_prune(Panel* this);
 
 void Panel_add(Panel* this, Object* o);

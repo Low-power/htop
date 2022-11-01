@@ -123,6 +123,7 @@ static HandlerResult DiskPanel_eventHandler(Panel *super, int ch, int repeat) {
       case KEY_F(2):
       case 'C':
          Header_runSetup(this->header, this->settings, NULL);
+         Panel_setReservedHeight(super, Header_calculateHeight(this->header));
          DiskList_printHeader(this->disk_list, Panel_getHeader(super));
          IncSet_drawBar(this->inc);
          return HANDLED | RESCAN;

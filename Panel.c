@@ -178,10 +178,15 @@ void Panel_move(Panel* this, int x, int y) {
 void Panel_resize(Panel* this, int w, int h) {
    assert (this != NULL);
 
-   if (RichString_sizeVal(this->header) > 0)
-      h--;
+   if (RichString_sizeVal(this->header) > 0) h--;
    this->w = w;
    this->h = h;
+   this->needsRedraw = true;
+}
+
+void Panel_setReservedHeight(Panel *this, int reserved_height) {
+   Panel_move(this, 0, reserved_height);
+   this->h = LINES - reserved_height - (RichString_sizeVal(this->header) > 0 ? 2 : 1);
    this->needsRedraw = true;
 }
 
