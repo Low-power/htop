@@ -81,7 +81,7 @@ static void fill_from_device_node(Disk *disk, int flags, bool need_block_size) {
 		if(ioctl(fd, DIOCGMEDIASIZE, &size) == 0) {
 			disk->block_count = size / disk->block_size;
 		} else {
-			size = lseek(fd, SEEK_END, 0);
+			size = lseek(fd, 0, SEEK_END);
 			if(size >= 0) disk->block_count = size / disk->block_size;
 		}
 	}
