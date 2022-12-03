@@ -1127,6 +1127,10 @@ void CRT_init(const Settings *settings) {
 #endif
    signal(SIGTERM, CRT_handleSIGTERM);
    signal(SIGQUIT, CRT_handleSIGTERM);
+#if defined __APPLE__ && defined __MACH__ && defined SIGSYS && defined HAVE_LIBPROC
+   // Ignore this signal in case __proc_info(2) used by libproc unavailable
+   signal(SIGSYS, SIG_IGN);
+#endif
 #ifdef HAVE_USE_DEFAULT_COLORS
    use_default_colors();
 #endif
