@@ -20,9 +20,10 @@ in the source distribution for its full text.
 typedef struct DarwinProcess_ {
    Process super;
    bool is_kernel_process;
+   bool libproc_accessible;
+   bool mach_task_accessible;
    uint64_t utime;
    uint64_t stime;
-   bool taskAccess;
 } DarwinProcess;
 
 extern ProcessClass DarwinProcess_class;
@@ -48,7 +49,7 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
-void DarwinProcess_scanThreads(DarwinProcess *dp);
+void DarwinProcess_setFromMachTaskInfo(DarwinProcess *dp, DarwinProcessList *dpl);
 
 char **Process_getKernelStackTrace(const Process *this);
 

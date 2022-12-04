@@ -66,7 +66,7 @@ typedef struct DarwinProcessList_ {
    struct processor_cpu_load_info *prev_load;
    struct processor_cpu_load_info *curr_load;
    uint64_t global_diff;
-   bool is_scan_thread_supported;
+   bool is_mach_task_info_supported;
 } DarwinProcessList;
 
 }*/
@@ -162,7 +162,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    this->super.running_thread_count = 0;
 
    // Disabled for High Sierra due to bug in macOS High Sierra
-   this->is_scan_thread_supported = !(CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
+   this->is_mach_task_info_supported = !(CompareKernelVersion(17, 0, 0) >= 0 && CompareKernelVersion(17, 5, 0) < 0);
 
    return &this->super;
 }
@@ -219,8 +219,8 @@ void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 		}
 		super->running_process_count++;
 
-		if(dpl->is_scan_thread_supported) {
-			DarwinProcess_scanThreads(proc);
+		if(dpl->is_mach_task_info_supported) {
+			DarwinProcess_setFromMachTaskInfo(proc, dpl);
 		}
 		if(!proc->super.real_user) {
 			proc->super.real_user = UsersTable_getRef(super->usersTable, proc->super.ruid);

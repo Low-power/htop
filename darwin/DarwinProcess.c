@@ -27,9 +27,10 @@ in the source distribution for its full text.
 typedef struct DarwinProcess_ {
    Process super;
    bool is_kernel_process;
+   bool libproc_accessible;
+   bool mach_task_accessible;
    uint64_t utime;
    uint64_t stime;
-   bool taskAccess;
 } DarwinProcess;
 }*/
 
@@ -50,7 +51,8 @@ DarwinProcess* DarwinProcess_new(Settings* settings) {
 
    this->utime = 0;
    this->stime = 0;
-   this->taskAccess = true;
+   this->mach_task_accessible = true;
+   this->libproc_accessible = false;
 
    return this;
 }
@@ -264,32 +266,36 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
    proc->updated = true;
 }
 
+static void set_time(DarwinProcess *proc, DarwinProcessList *dpl, uint64_t utime, uint64_t stime) {
+   if(proc->utime || proc->stime) {
+      uint64_t diff = (utime - proc->utime) + (stime - proc->stime);
+      proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount /
+         ((double)dpl->global_diff * 100000.0);
+   }
+   proc->super.time = utime / 10000000 + stime / 10000000;
+   proc->utime = utime;
+   proc->stime = stime;
+}
+
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl) {
 #ifdef HAVE_LIBPROC
    struct proc_taskinfo pti;
    if(proc_pidinfo(proc->super.pid, PROC_PIDTASKINFO, 0, &pti, sizeof pti) != sizeof pti) return;
 
-   if(proc->utime || proc->stime) {
-      uint64_t diff = (pti.pti_total_system - proc->stime) + (pti.pti_total_user - proc->utime);
-      proc->super.percent_cpu = (double)diff * (double)dpl->super.cpuCount /
-         ((double)dpl->global_diff * 100000.0);
-   }
-
-   proc->super.time = (pti.pti_total_system + pti.pti_total_user) / 10000000;
+   set_time(proc, dpl, pti.pti_total_user, pti.pti_total_system);
    proc->super.nlwp = pti.pti_threadnum;
    proc->super.m_size = pti.pti_virtual_size / CRT_page_size;
    proc->super.m_resident = pti.pti_resident_size / CRT_page_size;
    proc->super.majflt = pti.pti_faults;
    proc->super.percent_mem = (double)pti.pti_resident_size / (double)dpl->host_info.max_mem * 100;
 
-   proc->stime = pti.pti_total_system;
-   proc->utime = pti.pti_total_user;
-
    dpl->super.thread_count += pti.pti_threadnum;
    if(Process_isKernelProcess(&proc->super)) {
       dpl->super.kernel_thread_count += pti.pti_threadnum;
    }
    dpl->super.running_thread_count += pti.pti_numrunning;
+
+   proc->libproc_accessible = true;
 #endif
 }
 
@@ -298,10 +304,10 @@ void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList 
  * Based on: http://stackoverflow.com/questions/6788274/ios-mac-cpu-usage-for-thread
  * and       https://github.com/max-horvath/htop-osx/blob/e86692e869e30b0bc7264b3675d2a4014866ef46/ProcessList.c
  */
-void DarwinProcess_scanThreads(DarwinProcess *dp) {
+void DarwinProcess_setFromMachTaskInfo(DarwinProcess *dp, DarwinProcessList *dpl) {
    Process* proc = (Process*) dp;
    kern_return_t ret;
-   if (!dp->taskAccess) {
+   if (!dp->mach_task_accessible) {
       return;
    }
    if (proc->state == 'Z') {
@@ -311,42 +317,63 @@ void DarwinProcess_scanThreads(DarwinProcess *dp) {
    task_t port;
    ret = task_for_pid(mach_task_self(), proc->pid, &port);
    if (ret != KERN_SUCCESS) {
-      dp->taskAccess = false;
+      dp->mach_task_accessible = false;
       return;
    }
-   task_info_data_t tinfo;
-   mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
-   ret = task_info(port, TASK_BASIC_INFO, (task_info_t) tinfo, &task_info_count);
-   if (ret != KERN_SUCCESS) {
-      dp->taskAccess = false;
-      return;
+
+   uint64_t utime, stime;
+
+   if(!dp->libproc_accessible) {
+      // Fill some process information if they didn't get filled from libproc
+      struct task_basic_info t_info;
+      mach_msg_type_number_t task_info_count = TASK_BASIC_INFO_COUNT;
+      ret = task_info(port, TASK_BASIC_INFO, (task_info_t)&t_info, &task_info_count);
+      if (ret != KERN_SUCCESS) {
+         dp->mach_task_accessible = false;
+         return;
+      }
+
+      utime = (uint64_t)t_info.user_time.seconds * 1000000000 + (uint64_t)t_info.user_time.microseconds * 1000;
+      stime = (uint64_t)t_info.system_time.seconds * 1000000000 + (uint64_t)t_info.system_time.microseconds * 1000;
+
+      proc->m_size = t_info.virtual_size / CRT_page_size;
+      proc->m_resident = t_info.resident_size / CRT_page_size;
    }
+
    thread_array_t thread_list;
    mach_msg_type_number_t thread_count;
    ret = task_threads(port, &thread_list, &thread_count);
    if (ret != KERN_SUCCESS) {
-      dp->taskAccess = false;
+      dp->mach_task_accessible = false;
       mach_port_deallocate(mach_task_self(), port);
       return;
    }
    integer_t run_state = 999, sleep_time = 999;
    for (unsigned int i = 0; i < thread_count; i++) {
-      thread_info_data_t thinfo;
+      struct thread_basic_info thr_info;
       mach_msg_type_number_t thread_info_count = THREAD_BASIC_INFO_COUNT;
-      ret = thread_info(thread_list[i], THREAD_BASIC_INFO, (thread_info_t)thinfo, &thread_info_count);
+      ret = thread_info(thread_list[i], THREAD_BASIC_INFO, (thread_info_t)&thr_info, &thread_info_count);
       if (ret == KERN_SUCCESS) {
-         thread_basic_info_t basic_info_th = (thread_basic_info_t) thinfo;
-         if (basic_info_th->run_state < run_state) {
-            run_state = basic_info_th->run_state;
+         if (thr_info.run_state < run_state) {
+            run_state = thr_info.run_state;
          }
-         if(run_state == TH_STATE_WAITING && basic_info_th->sleep_time < sleep_time) {
-            sleep_time = basic_info_th->sleep_time;
-         }         
+         if(run_state == TH_STATE_WAITING && thr_info.sleep_time < sleep_time) {
+            sleep_time = thr_info.sleep_time;
+         }
+         if(!dp->libproc_accessible) {
+            utime += (uint64_t)thr_info.user_time.seconds * 1000000000 + (uint64_t)thr_info.user_time.microseconds * 1000;
+            stime += (uint64_t)thr_info.system_time.seconds * 1000000000 + (uint64_t)thr_info.system_time.microseconds * 1000;
+         }
          mach_port_deallocate(mach_task_self(), thread_list[i]);
       }
    }
    vm_deallocate(mach_task_self(), (vm_address_t) thread_list, sizeof(thread_port_array_t) * thread_count);
    mach_port_deallocate(mach_task_self(), port);
+
+   if(!dp->libproc_accessible) {
+      set_time(dp, dpl, utime, stime);
+      proc->nlwp = thread_count;
+   }
 
    switch (run_state) {
       case TH_STATE_RUNNING:

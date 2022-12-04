@@ -33,7 +33,7 @@ typedef struct DarwinProcessList_ {
    struct processor_cpu_load_info *prev_load;
    struct processor_cpu_load_info *curr_load;
    uint64_t global_diff;
-   bool is_scan_thread_supported;
+   bool is_mach_task_info_supported;
 } DarwinProcessList;
 
 
