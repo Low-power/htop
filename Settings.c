@@ -431,7 +431,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->showProgramPath = true;
    this->highlightThreads = true;
    this->highlight_kernel_processes = true;
-   this->fields = xCalloc(Platform_numberOfFields+1, sizeof(unsigned int));
+   this->fields = xCalloc(Platform_numberOfFields, sizeof(unsigned int));
    // TODO: turn 'fields' into a Vector
    this->flags = 0;
    ProcessField* defaults = Platform_defaultFields;
@@ -440,7 +440,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
       this->flags |= Process_fields[defaults[i]].flags;
    }
 #ifdef DISK_STATS
-   this->disk_fields = xCalloc(Disk_field_count + 1, sizeof(unsigned int));
+   this->disk_fields = xCalloc(Disk_field_count, sizeof(unsigned int));
    this->disk_flags = 0;
    const DiskField *disk_field = Disk_default_fields;
    unsigned int i = 0;
