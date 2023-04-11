@@ -406,6 +406,17 @@ static const char *get_terminal_type() {
 	return term;
 }
 
+// Make sure the last process field is HTOP_COMM_FIELD
+static void check_fields(Settings *this) {
+	unsigned int i = 0;
+	while(this->fields[i]) {
+		if(this->fields[i] == HTOP_COMM_FIELD) return;
+		if(++i >= Platform_numberOfFields) return;
+	}
+	this->fields[i++] = HTOP_COMM_FIELD;
+	this->fields[i] = HTOP_NULL_PROCESSFIELD;
+}
+
 Settings* Settings_new(int cpuCount, bool have_swap) {
    Settings* this = xCalloc(1, sizeof(Settings));
 
@@ -498,6 +509,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
       if (ok) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this)) unlink(legacyDotfile);
+         check_fields(this);
       }
       free(legacyDotfile);
    }
@@ -507,6 +519,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    if(!ok && !override && global_file_path) {
       // Try read 'htoprc' without terminal name suffix
       ok = Settings_read(this, global_file_path);
+      if(ok) check_fields(this);
    }
    free(global_file_path);
    if (!ok) {
