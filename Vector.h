@@ -58,6 +58,10 @@ void Vector_moveUp(Vector* this, int idx);
 
 void Vector_moveDown(Vector* this, int idx);
 
+void Vector_moveToTop(Vector *this, int i);
+
+void Vector_moveToBottom(Vector *this, int i);
+
 void Vector_set(Vector* this, int idx, void* data_);
 
 #ifdef DEBUG

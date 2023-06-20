@@ -129,6 +129,10 @@ void Panel_moveSelectedUp(Panel* this);
 
 void Panel_moveSelectedDown(Panel* this);
 
+void Panel_moveSelectedToTop(Panel *this);
+
+void Panel_moveSelectedToBottom(Panel *this);
+
 int Panel_getSelectedIndex(Panel* this);
 
 int Panel_size(Panel* this);

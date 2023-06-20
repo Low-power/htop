@@ -260,6 +260,18 @@ void Panel_moveSelectedDown(Panel* this) {
       this->selected++;
 }
 
+void Panel_moveSelectedToTop(Panel *this) {
+	assert(this != NULL);
+	Vector_moveToTop(this->items, this->selected);
+	this->selected = 0;
+}
+
+void Panel_moveSelectedToBottom(Panel *this) {
+	assert(this != NULL);
+	Vector_moveToBottom(this->items, this->selected);
+	this->selected = Vector_size(this->items) - 1;
+}
+
 int Panel_getSelectedIndex(Panel* this) {
    assert (this != NULL);
 

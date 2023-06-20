@@ -91,6 +91,16 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
          }
          result = HANDLED;
          break;
+      case KEY_HOME:
+         if(!this->moving) break;
+         Panel_moveSelectedToTop(super);
+         result = HANDLED;
+         break;
+      case KEY_END:
+         if(!this->moving) break;
+         Panel_moveSelectedToBottom(super);
+         result = HANDLED;
+         break;
       case KEY_F(9):
       case KEY_DC:
 #if 0

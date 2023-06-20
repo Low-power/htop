@@ -243,6 +243,24 @@ void Vector_moveDown(Vector* this, int idx) {
    this->array[idx + 1] = temp;
 }
 
+void Vector_moveToTop(Vector *this, int i) {
+	assert(i >= 0 && i < this->items);
+	assert(Vector_isConsistent(this));
+	if(i == 0) return;
+	Object *tmp = this->array[i];
+	memmove(this->array + 1, this->array, i * sizeof(Object *));
+	this->array[0] = tmp;
+}
+
+void Vector_moveToBottom(Vector *this, int i) {
+	assert(i >= 0 && i < this->items);
+	assert(Vector_isConsistent(this));
+	if(i == this->items - 1) return;
+	Object *tmp = this->array[i];
+	memmove(this->array + i, this->array + i + 1, (this->items - i - 1) * sizeof(Object *));
+	this->array[this->items - 1] = tmp;
+}
+
 void Vector_set(Vector* this, int idx, void* data_) {
    Object* data = data_;
    assert(idx >= 0);

@@ -152,6 +152,18 @@ static HandlerResult MetersPanel_eventHandler(Panel* super, int ch, int repeat) 
          } while(--repeat > 0);
          result = HANDLED;
          break;
+      case KEY_HOME:
+         if(!this->moving) break;
+         Vector_moveToTop(this->meters, selected);
+         Panel_moveSelectedToTop(super);
+         result = HANDLED;
+         break;
+      case KEY_END:
+         if(!this->moving) break;
+         Vector_moveToBottom(this->meters, selected);
+         Panel_moveSelectedToBottom(super);
+         result = HANDLED;
+         break;
       case KEY_RIGHT:
          sideMove = moveToNeighbor(this, this->rightNeighbor, selected);
          if (this->moving && !sideMove) {
