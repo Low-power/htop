@@ -66,6 +66,21 @@ typedef struct State_ {
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
    Header* header = st->header;
+   int pid;
+   bool unfollow = false;
+   if(followProcess) {
+      pid = MainPanel_selectedPid((MainPanel *)panel);
+      if(pid == -1) {
+         beep();
+         return NULL;
+      }
+      if (header->pl->following == -1) {
+         header->pl->following = pid;
+         unfollow = true;
+      }
+   } else {
+      pid = -1;
+   }
    int y = panel->y;
    ScreenManager* scr = ScreenManager_new(0, header->height, 0, -1, HORIZONTAL, header, st->settings, false);
    scr->allowFocusChange = false;
@@ -73,12 +88,6 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    ScreenManager_add(scr, panel, -1);
    Panel* panelFocus;
    int ch;
-   bool unfollow = false;
-   int pid = followProcess ? MainPanel_selectedPid((MainPanel*)panel) : -1;
-   if (followProcess && header->pl->following == -1) {
-      header->pl->following = pid;
-      unfollow = true;
-   }
    ScreenManager_run(scr, &panelFocus, &ch);
    if (unfollow) {
       header->pl->following = -1;
@@ -88,13 +97,11 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    Panel_resize(panel, COLS, LINES-y-1);
    if (panelFocus == list && ch == 13) {
       if (followProcess) {
-         Process* selected = (Process*)Panel_getSelected(panel);
-         if (selected && selected->pid == pid) return Panel_getSelected(list);
+         if (MainPanel_selectedPid((MainPanel *)panel) == pid) return Panel_getSelected(list);
          beep();
       } else {
          return Panel_getSelected(list);
       }
-
    }
    return NULL;
 }
