@@ -519,7 +519,7 @@ HandlerResult Panel_selectByTyping(Panel* this, int ch) {
    } else if (ch != ERR) {
       buffer[0] = '\0';
    }
-   if (ch == 13) {
+   if (ch == KEY_ENTER || ch == '\r') {
       return BREAK_LOOP;
    }
    return IGNORED;

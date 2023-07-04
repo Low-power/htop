@@ -95,7 +95,7 @@ Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess)
    ScreenManager_delete(scr);
    Panel_move(panel, 0, y);
    Panel_resize(panel, COLS, LINES-y-1);
-   if (panelFocus == list && ch == 13) {
+   if (panelFocus == list && (ch == KEY_ENTER || ch == '\r')) {
       if (followProcess) {
          if (MainPanel_selectedPid((MainPanel *)panel) == pid) return Panel_getSelected(list);
          beep();
