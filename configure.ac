@@ -273,33 +273,34 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
+# TODO: running a custom 'config script' is deprecated; pkg-config(1) should
+# used instead.
+
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
 m4_define([HTOP_CHECK_SCRIPT],
 [
-   if test ! -z "m4_toupper($HTOP_[$1]_CONFIG_SCRIPT)"; then
-      # to be used to set the path to ncurses*-config when cross-compiling
-      htop_config_script_libs=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --libs 2> /dev/null)
-      htop_config_script_cflags=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --cflags 2> /dev/null)
+   if test -n "m4_toupper($HTOP_[$1]_CONFIG_SCRIPT)" && \
+    htop_config_script_cflags=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --cflags 2> /dev/null) && \
+    htop_config_script_libs=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --libs 2> /dev/null); then
+      htop_script_success=no
+      htop_save_CFLAGS="$CFLAGS"
+      htop_save_LDFLAGS="$LDFLAGS"
+      if test ! "x$htop_config_script_libs" = x; then
+         LDFLAGS="$htop_config_script_libs $LDFLAGS"
+         CFLAGS="$htop_config_script_cflags $CFLAGS"
+         AC_CHECK_LIB([$1], [$2], [
+               AC_DEFINE([$3], 1, [The library is present.])
+               LIBS="$htop_config_script_libs $LIBS "
+               htop_script_success=yes
+            ], [
+              CFLAGS="$htop_save_CFLAGS"
+            ])
+         LDFLAGS="$htop_save_LDFLAGS"
+      fi
+      if test "x$htop_script_success" = xno; then
+         $5
+      fi
    else
-      htop_config_script_libs=$([$4] --libs 2> /dev/null)
-      htop_config_script_cflags=$([$4] --cflags 2> /dev/null)
-   fi
-   htop_script_success=no
-   htop_save_LDFLAGS="$LDFLAGS"
-   htop_save_CFLAGS="$CFLAGS"
-   if test ! "x$htop_config_script_libs" = x; then
-      LDFLAGS="$htop_config_script_libs $LDFLAGS"
-      CFLAGS="$htop_config_script_cflags $CFLAGS"
-      AC_CHECK_LIB([$1], [$2], [
-         AC_DEFINE([$3], 1, [The library is present.])
-         LIBS="$htop_config_script_libs $LIBS "
-         htop_script_success=yes
-      ], [
-        CFLAGS="$htop_save_CFLAGS"
-      ])
-      LDFLAGS="$htop_save_LDFLAGS"
-   fi
-   if test "x$htop_script_success" = xno; then
       $5
    fi
 ])
