@@ -527,7 +527,7 @@ fi
 
 AC_ARG_ENABLE(linux_affinity,
 	[AS_HELP_STRING([--enable-linux-affinity], [enable Linux sched_setaffinity and sched_getaffinity for affinity support, disables hwloc])],
-	[], [enable_linux_affinity=check])
+	[], [AS_IF([test "x$enable_kfreebsd_cpuset" = xyes], [enable_linux_affinity=no], [enable_linux_affinity=check])])
 if test "x$enable_linux_affinity" != xno; then
 	if test "x$enable_linux_affinity" != xyes && test "x$enable_linux_affinity" != xcheck; then
 		AC_MSG_ERROR([Invalid argument for --enable-linux-affinity])
@@ -686,8 +686,8 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, ["Copyright 2004-2019 Hisham Muhammad\nCopyright 2015-2022 Rivoreo"], [Copyright notices.])
-AC_DEFINE_UNQUOTED(COPYRIGHT_ONE_LINE, ["Copyright 2004-2019 Hisham Muhammad.  Copyright 2022 Rivoreo."], [Copyright notices in a signal line.])
+AC_DEFINE_UNQUOTED(COPYRIGHT, ["Copyright 2004-2019 Hisham Muhammad\nCopyright 2015-2023 Rivoreo"], [Copyright notices.])
+AC_DEFINE_UNQUOTED(COPYRIGHT_ONE_LINE, ["Copyright 2004-2019 Hisham Muhammad.  Copyright 2023 Rivoreo."], [Copyright notices in a signal line.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
