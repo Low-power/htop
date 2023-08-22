@@ -42,20 +42,25 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ":");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " ");
    Meter_humanUnit(buffer, this->total, 50);
    RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
    Meter_humanUnit(buffer, this->values[0], 50);
-   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " used:");
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " used");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_MEMORY_USED_COLOR], buffer);
    Meter_humanUnit(buffer, this->values[1], 50);
-   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " buffers:");
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " buffers");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_MEMORY_BUFFERS_TEXT_COLOR], buffer);
    Meter_humanUnit(buffer, this->values[2], 50);
-   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " cache:");
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " cache");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_MEMORY_CACHE_COLOR], buffer);
    if(this->values[3] > 0) {
       Meter_humanUnit(buffer, this->values[3], 50);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " zfs arc:");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " zfs-arc");
+      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
       RichString_append(out, CRT_colors[HTOP_MEMORY_ZFS_ARC_COLOR], buffer);
    }
 }
