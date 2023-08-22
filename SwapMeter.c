@@ -41,10 +41,12 @@ static void SwapMeter_display(Object* cast, RichString* out) {
    char buffer[50];
    Meter* this = (Meter*)cast;
    RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ":");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " ");
    Meter_humanUnit(buffer, this->total, 50);
    RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
    Meter_humanUnit(buffer, this->values[0], 50);
-   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " used:");
+   RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " used");
+   if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
 }
 
