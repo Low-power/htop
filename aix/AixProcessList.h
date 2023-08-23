@@ -15,6 +15,7 @@ in the source distribution for its full text.
 
 #include "ProcessList.h"
 #ifndef __PASE__
+#define Hyp_Name __Hyp_Name_dummy(struct __Hyp_Name_dummy); static const char *const __Hyp_Name__
 #include <libperfstat.h>
 #endif
 #include <sys/time.h>

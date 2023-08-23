@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include <math.h>
 #include <procinfo.h>
 #ifndef __PASE__
+#define Hyp_Name __Hyp_Name_dummy(struct __Hyp_Name_dummy); static const char *const __Hyp_Name__
 #include <libperfstat.h>
 #endif
 
@@ -88,7 +89,12 @@ const SignalItem Platform_signals[] = {
    // AIX requests not use SIGWAITING/39
    // don't know about the hole here
    SIG(SYSERROR),
+#ifdef SIGRECOVERY
    SIG(RECOVERY),
+#endif
+#ifdef SIGCAPI
+   SIG(CAPI),
+#endif
    // Real-time signals 50-57
    //SIG(RECONFIG),
    // AIX also requests us to not use SIGCPUFAIL/59
