@@ -199,7 +199,8 @@ static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* ou
    if (Object_displayFn(this)) {
       Object_display(this, out);
    } else {
-      RichString_write(out, CRT_colors[Meter_attributes(this)[0]], buffer);
+      RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
+      RichString_append(out, CRT_colors[Meter_attributes(this)[0]], buffer);
    }
 }
 

@@ -67,5 +67,5 @@ MeterClass BatteryMeter_class = {
    .attributes = BatteryMeter_attributes,
    .name = "Battery",
    .uiName = "Battery",
-   .caption = "Battery: "
+   .caption = "Battery"
 };

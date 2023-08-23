@@ -36,5 +36,5 @@ MeterClass HostnameMeter_class = {
    .attributes = HostnameMeter_attributes,
    .name = "Hostname",
    .uiName = "Hostname",
-   .caption = "Hostname: ",
+   .caption = "Hostname",
 };

@@ -105,5 +105,5 @@ MeterClass UptimeMeter_class = {
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
    .uiName = "Uptime",
-   .caption = "Uptime: "
+   .caption = "Uptime"
 };

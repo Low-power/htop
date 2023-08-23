@@ -39,5 +39,5 @@ MeterClass ClockMeter_class = {
    .attributes = ClockMeter_attributes,
    .name = "Clock",
    .uiName = "Clock",
-   .caption = "Time: ",
+   .caption = "Time",
 };

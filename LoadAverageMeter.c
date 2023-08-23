@@ -28,8 +28,9 @@ static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
 static void LoadAverageMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    char buffer[20];
+   RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
    xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[0]);
-   RichString_write(out, CRT_colors[HTOP_LOAD_AVERAGE_ONE_COLOR], buffer);
+   RichString_append(out, CRT_colors[HTOP_LOAD_AVERAGE_ONE_COLOR], buffer);
    xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[1]);
    RichString_append(out, CRT_colors[HTOP_LOAD_AVERAGE_FIVE_COLOR], buffer);
    xSnprintf(buffer, sizeof(buffer), "%.2f ", this->values[2]);
@@ -48,8 +49,9 @@ static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
 static void LoadMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    char buffer[20];
+   RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
    xSnprintf(buffer, sizeof(buffer), "%.2f ", ((Meter*)this)->values[0]);
-   RichString_write(out, CRT_colors[HTOP_LOAD_COLOR], buffer);
+   RichString_append(out, CRT_colors[HTOP_LOAD_COLOR], buffer);
 }
 
 MeterClass LoadAverageMeter_class = {
@@ -66,7 +68,7 @@ MeterClass LoadAverageMeter_class = {
    .name = "LoadAverage",
    .uiName = "Load average",
    .description = "Load averages: 1 minute, 5 minutes, 15 minutes",
-   .caption = "Load average: "
+   .caption = "Load average"
 };
 
 MeterClass LoadMeter_class = {
@@ -83,5 +85,5 @@ MeterClass LoadMeter_class = {
    .name = "Load",
    .uiName = "Load",
    .description = "Load: average of ready processes in the last minute",
-   .caption = "Load: "
+   .caption = "Load"
 };

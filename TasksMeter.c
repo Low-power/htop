@@ -39,9 +39,10 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
 static void TasksMeter_display(Object* cast, RichString* out) {
    Meter* this = (Meter*)cast;
    Settings* settings = this->pl->settings;
+   RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
    char buffer[20];
    xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[0]);
-   RichString_write(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
+   RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
    RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " proc");
    int threadValueColor, threadCaptionColor;
    if (settings->highlightThreads) {
@@ -88,5 +89,5 @@ MeterClass TasksMeter_class = {
    .attributes = TasksMeter_attributes, 
    .name = "Tasks",
    .uiName = "Task counter",
-   .caption = "Tasks: "
+   .caption = "Tasks"
 };
