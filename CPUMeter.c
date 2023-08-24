@@ -74,60 +74,47 @@ static void CPUMeter_display(Object* cast, RichString* out) {
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "absent");
       return;
    }
-   xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NORMAL]);
+   xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_NORMAL]);
+   RichString_append(out, CRT_colors[HTOP_CPU_NORMAL_COLOR], buffer);
    if (this->pl->settings->detailedCPUTime) {
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "us");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
-      RichString_append(out, CRT_colors[HTOP_CPU_NORMAL_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sy");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "us ");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[HTOP_CPU_KERNEL_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "ni");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sy");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "hi");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "ni");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_IRQ]);
       RichString_append(out, CRT_colors[HTOP_CPU_IRQ_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_SOFTIRQ]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "si");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "hi");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_SOFTIRQ]);
       RichString_append(out, CRT_colors[HTOP_CPU_SOFTIRQ_COLOR], buffer);
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "si");
       if (this->values[CPU_METER_STEAL] > 0) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_STEAL]);
-         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "st");
-         if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+         xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_STEAL]);
          RichString_append(out, CRT_colors[HTOP_CPU_STEAL_COLOR], buffer);
+         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "st");
       }
       if (this->values[CPU_METER_GUEST] > 0) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_GUEST]);
-         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "gu");
-         if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+         xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_GUEST]);
          RichString_append(out, CRT_colors[HTOP_CPU_GUEST_COLOR], buffer);
+         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "gu");
       }
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IOWAIT]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "wa");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_IOWAIT]);
       RichString_append(out, CRT_colors[HTOP_CPU_IOWAIT_COLOR], buffer);
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "wa");
    } else {
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "usr");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
-      RichString_append(out, CRT_colors[HTOP_CPU_NORMAL_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_KERNEL]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sys");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[HTOP_CPU_KERNEL_COLOR], buffer);
-      xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_NICE]);
-      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "low");
-      if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sys");
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], buffer);
+      RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "low");
       if (this->values[CPU_METER_IRQ] > 0) {
-         xSnprintf(buffer, sizeof(buffer), "%5.1f%% ", this->values[CPU_METER_IRQ]);
-         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "vir");
-         if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
+         xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_IRQ]);
          RichString_append(out, CRT_colors[HTOP_CPU_GUEST_COLOR], buffer);
+         RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "vir");
       }
    }
 }
