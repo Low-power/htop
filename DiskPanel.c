@@ -99,6 +99,12 @@ static HandlerResult DiskPanel_eventHandler(Panel *super, int ch, int repeat) {
       case KEY_RIGHT:
          //reaction |= HTOP_KEEP_FOLLOWING;
 */
+#ifdef KEY_RESIZE
+      case KEY_RESIZE:
+         Panel_resize(super, COLS, LINES - super->y - 1);
+         IncSet_drawBar(this->inc);
+         return HANDLED;
+#endif
       case 0x1b:
          return HANDLED;
       case KEY_F(3):
