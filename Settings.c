@@ -1,22 +1,10 @@
 /*
 htop - Settings.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
-
-#include "Settings.h"
-#include "Platform.h"
-#include "StringUtils.h"
-#include "Vector.h"
-#include "CRT.h"
-
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#define DEFAULT_DELAY 15
 
 /*{
 #include "config.h"
@@ -94,6 +82,20 @@ typedef struct Settings_ {
 #endif
 
 }*/
+
+#include "Settings.h"
+#include "Platform.h"
+#include "StringUtils.h"
+#include "Vector.h"
+#include "CRT.h"
+
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
+
+#define DEFAULT_DELAY 15
 
 void Settings_delete(Settings* this) {
    free(this->filename);

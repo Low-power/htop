@@ -118,6 +118,7 @@ typedef enum {
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <locale.h>
 #ifndef __ANDROID__
 #include <langinfo.h>

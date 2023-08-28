@@ -5,11 +5,10 @@
 /*
 htop - Settings.h
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
-
-#define DEFAULT_DELAY 15
 
 #include "config.h"
 #include "Process.h"
@@ -85,6 +84,8 @@ typedef struct Settings_ {
 #define Settings_cpuId(settings, cpu) ((settings)->countCPUsFromZero ? (cpu) : (cpu)+1)
 #endif
 
+
+#define DEFAULT_DELAY 15
 
 void Settings_delete(Settings* this);
 
