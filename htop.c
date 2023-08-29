@@ -198,6 +198,22 @@ static CommandLineSettings parseArguments(int argc, char** argv) {
             exit(-1);
       }
    }
+#ifdef DISK_STATS
+   if(flags.disk) {
+      if(flags.pidWhiteList) {
+         fputs("Error: cannot specific PIDs for disk statistics mode\n", stderr);
+         exit(-1);
+      }
+      if(flags.userId != (uid_t)-1) {
+         fputs("Error: cannot specific user for disk statistics mode\n", stderr);
+         exit(-1);
+      }
+      if(flags.treeView) {
+         fputs("Error: disk statistics mode doesn't support tree view\n", stderr);
+         exit(-1);
+      }
+   }
+#endif
    if(sort_key) {
 #ifdef DISK_STATS
       const FieldData *field_data = flags.disk ? Disk_fields : Process_fields;
