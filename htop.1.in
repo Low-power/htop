@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2022" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2023" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
@@ -446,13 +446,15 @@ Currently unsupported (always displays '-').
 .SH "CONFIG FILE"
 .LP 
 By default htop reads its configuration from the XDG-compliant path
-~/.config/htop/htoprc -- the configuration file is overwritten by htop's
-in-program Setup configuration, so it should not be hand-edited. If no
-user configuration exists htop tries to read the system-wide configuration
-from @sysconfdir@/htoprc and as a last resort, falls back to its
-hard coded defaults.
+\fI~/.config/htop/htoprc.$TERM\fR -- where \fI$TERM\fR is the terminal type
+htop currently runs with; the configuration file is overwritten by htop's
+in-program Setup screen, so it should not be hand-edited. If no
+terminal-type-specific configuration file exists, htop then tries to read
+\fI~/.config/htop/htoprc\fR; if that is also missing it tries the system-wide
+configuration from \fI@sysconfdir@/htoprc\fR and as a last resort, before
+falls back to its hard coded defaults.
 .LP
-You may override the location of the configuration file using the $HTOPRC
+You may override the location of the configuration file using the \fBHTOPRC\fR
 environment variable (so you can have multiple configurations for different
 machines that share the same home directory, for example).
 
