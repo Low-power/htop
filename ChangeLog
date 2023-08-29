@@ -1,3 +1,35 @@
+What's new in version 2.3.1
+
+* Process open file count column for Interix
+* BUGFIX: avoid memory size values underflow when reading from Linux procfs
+* BUGFIX: reduce changes of memory size values overflow by always using a
+  generally big enough integer type to store and calculate them
+* Improve fatal error reporting on Darwin
+* BUGFIX: fix process list sometimes stops sorting
+* Disk statistics mode for Linux-based and kFreeBSD-based platforms
+* Generic support for colorization of percent values
+* BUGFIX: fix processor time of processes losing precision on OpenBSD
+* BUGFIX: fix detection of multi-processor system fails when Linux sysfs
+  '/sys/devices/system/cpu/' directory is empty
+* BUGFIX: fix incorrect processor percentage of processes when a Linux-based
+  system have any off-line processor
+* Support of AIX versions 6.1 and 7.2
+* BUGFIX: fix incorrect arguments to lseek(2) in kFreeBSD-specific code
+* Mac OS X Tiger powerpc support
+* Support using Mach task_info(2) to get additional task information without
+  libproc for older releases of Mac OS X
+* Check and make sure the last process field is HTOP_COMM_FIELD when the
+  configuration is loaded from legacy or global configuration file; this helps
+  transiting from configuration files generated in version 2.2.0 or earlier
+* Support moving selected panel entry to top or buttom by pressing Home or End
+  key respectively
+* BUGFIX: fix Enter key sometimes didn't work as expected
+* Build system: deprecate uses of 'ncurses*-config' scripts, they will no
+  longer be used unless enabled explicitly via environment variable(s)
+* Build system: try to use pkg-config(1) to get requires flags for ncurses,
+  before falling back to previous detection methods
+* Adjust text format of some meters to improve readability
+
 What's new in version 2.3.0
 
 * System call tracing support via truss(1)
