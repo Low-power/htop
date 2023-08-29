@@ -98,7 +98,7 @@ AC_CHECK_TYPE([struct utmpx],
 	[AC_DEFINE(HAVE_UTMPX, 1, Define if 'struct utmpx' is available from utmpx.h)],
 	[], [#include <utmpx.h>])
 
-# CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
+dnl CHECK_CFLAGS_DEPENDED(OPTIONS, [ACTION-ON-FAILURE])
 m4_define([CHECK_CFLAGS_DEPENDED], [
 		for o in $2; do
 			save_cflags="$CFLAGS"
@@ -245,13 +245,6 @@ if test -n "$withval"; then
 fi,
 AC_DEFINE(PROCDIR, "/proc", [Path of proc filesystem]))
 
-if test "x$cross_compiling" = xno; then
-   if test "x$enable_proc" = xyes; then
-      AC_CHECK_FILE($PROCDIR/stat,,AC_MSG_ERROR(Cannot find $PROCDIR/stat. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-      AC_CHECK_FILE($PROCDIR/meminfo,,AC_MSG_ERROR(Cannot find $PROCDIR/meminfo. Make sure you have a Linux-compatible /proc filesystem mounted. See the file README for help.))
-   fi
-fi
-
 AC_ARG_ENABLE(openvz, [AS_HELP_STRING([--enable-openvz], [enable OpenVZ support])], ,enable_openvz="no")
 if test "x$enable_openvz" = xyes; then
    AC_DEFINE(HAVE_OPENVZ, 1, [Define if openvz support enabled.])
@@ -278,7 +271,7 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
-# HTOP_CHECK_PKG(PKG_NAME, FUNCTION, DEFINE, ELSE_PART)
+dnl HTOP_CHECK_PKG(PKG_NAME, FUNCTION, DEFINE, ELSE_PART)
 m4_define([HTOP_CHECK_PKG], [
 		m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES(m4_toupper($1), [$1], [
 				htop_save_CFLAGS="$CFLAGS"
@@ -297,8 +290,8 @@ m4_define([HTOP_CHECK_PKG], [
 		AS_IF([test "x$htop_check_pkg_ok" = xno], [$4])
 	])
 
-# HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
-# Deprecated
+dnl HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
+dnl Deprecated
 m4_define([HTOP_CHECK_SCRIPT],
 [
    htop_script_success=no
@@ -326,7 +319,7 @@ m4_define([HTOP_CHECK_SCRIPT],
 ]
 )
 
-# HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
+dnl HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
 m4_define([HTOP_CHECK_LIB],
 [
    AC_CHECK_LIB([$1], [$2], [
