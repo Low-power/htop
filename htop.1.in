@@ -468,7 +468,7 @@ The decision to use this convention was made in order to conserve screen space
 and make memory size representations consistent throughout htop.
 
 .SH "SEE ALSO"
-proc(5), top(1), free(1), ps(1), uptime(1), limits.conf(5)
+proc(5), top(1), free(1), ps(1), uptime(1), kill(1), vmstat(8)
 
 .SH "AUTHORS"
 .LP 
