@@ -1,11 +1,16 @@
 /*
 htop - htop.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
 #include "config.h"
+
+#if defined DISK_STATS && !defined HAVE_GETOPT_LONG
+#error "Disk statistics mode requires getopt_long(3)"
+#endif
 
 #include "FunctionBar.h"
 #include "Hashtable.h"
@@ -32,8 +37,6 @@ in the source distribution for its full text.
 #include <time.h>
 #include <unistd.h>
 
-//#link m
-
 static void printVersionFlag() {
    fputs("htop " VERSION "\n" COPYRIGHT "\n"
          "Released under the GNU GPL any version.\n",
@@ -44,6 +47,7 @@ static void print_usage(FILE *f, const char *name) {
    fprintf(f,
          "Usage: %s [OPTION]...\n\n"
          "Options:\n"
+#ifdef HAVE_GETOPT_LONG
          "   -C, --no-color              Use a monochrome color scheme\n"
          "   -d, --delay=DELAY           Set the delay between updates, in tenths of\n"
          "                               seconds\n"
@@ -57,8 +61,18 @@ static void print_usage(FILE *f, const char *name) {
 #endif
          "       --explicit-delay        Explicitly delay between updates\n"
          "   -v, --version               Print version info\n"
+         "\nArguments to long options are required for short options too.\n\n"
+#else
+         "   -C                   Use a monochrome color scheme\n"
+         "   -d DELAY             Set the delay between updates, in tenths of seconds\n"
+         "   -h                   Print this help screen\n"
+         "   -s COLUMN            Sort by COLUMN (try --sort-key=help for a list)\n"
+         "   -t                   Show the tree view by default\n"
+         "   -u USERNAME          Show only processes of a given user\n"
+         "   -p PID[,PID,PID...]  Show only the given PIDs\n"
+         "   -v                   Print version info\n"
          "\n"
-         "Arguments to long options are required for short options too.\n\n"
+#endif
          "Press F1 inside htop for online help.\n"
          "See 'man htop' for more information.\n",
          name);
