@@ -63,6 +63,11 @@ haiku*)
    ;;
 esac
 
+m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG()], [
+		pkg_m4_absent=yes
+		m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
+	])
+
 # Checks for header files.
 # ----------------------------------------------------------------------
 AC_HEADER_DIRENT
@@ -183,12 +188,12 @@ AC_ARG_WITH([backtrace],
 # Try to export all symbols if the backtrace(3) GNU extension is expected to use
 if test "x$with_backtrace" != xno && test "x$ac_cv_header_execinfo_h" = xyes; then
 	AC_CHECK_FUNCS([backtrace], [], [
-		AC_CHECK_LIB([execinfo], [backtrace], [
-			ac_cv_func_backtrace=yes
-			AC_DEFINE(HAVE_BACKTRACE)
-			LIBS="$LIBS -lexecinfo"
+			AC_CHECK_LIB([execinfo], [backtrace], [
+					ac_cv_func_backtrace=yes
+					AC_DEFINE(HAVE_BACKTRACE)
+					LIBS="$LIBS -lexecinfo"
+				])
 		])
-	])
 	if test "x$ac_cv_func_backtrace" = xyes; then
 		save_ldflags="$LDFLAGS"
 		accepted_flag=
@@ -208,9 +213,9 @@ if test "x$with_backtrace" != xno && test "x$ac_cv_header_execinfo_h" = xyes; th
 		for o in -Wl,--export-dynamic -Wl,-E $extra_option; do
 			LDFLAGS="$save_ldflags $o"
 			AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])], [
-				accepted_flag="$o"
-				break
-			], [])
+					accepted_flag="$o"
+					break
+				], [])
 		done
 		if test "x$accepted_flag" = x; then
 			LDFLAGS="$save_ldflags"
@@ -273,16 +278,33 @@ if test "x$enable_taskstats" = xyes; then
     AC_DEFINE(HAVE_TASKSTATS, 1, [Define if taskstats support enabled.])
 fi
 
-# TODO: running a custom 'config script' is deprecated; pkg-config(1) should
-# used instead.
+# HTOP_CHECK_PKG(PKG_NAME, FUNCTION, DEFINE, ELSE_PART)
+m4_define([HTOP_CHECK_PKG], [
+		m4_ifdef([PKG_CHECK_MODULES], [PKG_CHECK_MODULES(m4_toupper($1), [$1], [
+				htop_save_CFLAGS="$CFLAGS"
+				htop_save_LIBS="$LIBS"
+				CFLAGS="$m4_toupper($1)_CFLAGS $CFLAGS"
+				LIBS="$m4_toupper($1)_LIBS $LIBS"
+				AC_CHECK_FUNC([$2], [
+						AC_DEFINE([$3], 1, [The library is present.])
+						htop_check_pkg_ok=yes
+					], [
+						CFLAGS="$htop_save_CFLAGS"
+						LIBS="$htop_save_LIBS"
+						htop_check_pkg_ok=no
+					])
+			], [htop_check_pkg_ok=no])], [htop_check_pkg_ok=no])
+		AS_IF([test "x$htop_check_pkg_ok" = xno], [$4])
+	])
 
 # HTOP_CHECK_SCRIPT(LIBNAME, FUNCTION, DEFINE, CONFIG_SCRIPT, ELSE_PART)
+# Deprecated
 m4_define([HTOP_CHECK_SCRIPT],
 [
+   htop_script_success=no
    if test -n "m4_toupper($HTOP_[$1]_CONFIG_SCRIPT)" && \
     htop_config_script_cflags=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --cflags 2> /dev/null) && \
     htop_config_script_libs=$(m4_toupper($HTOP_[$1]_CONFIG_SCRIPT) --libs 2> /dev/null); then
-      htop_script_success=no
       htop_save_CFLAGS="$CFLAGS"
       htop_save_LDFLAGS="$LDFLAGS"
       if test ! "x$htop_config_script_libs" = x; then
@@ -297,13 +319,12 @@ m4_define([HTOP_CHECK_SCRIPT],
             ])
          LDFLAGS="$htop_save_LDFLAGS"
       fi
-      if test "x$htop_script_success" = xno; then
-         $5
-      fi
-   else
+   fi
+   if test "x$htop_script_success" = xno; then
       $5
    fi
-])
+]
+)
 
 # HTOP_CHECK_LIB(LIBNAME, FUNCTION, DEFINE, ELSE_PART)
 m4_define([HTOP_CHECK_LIB],
@@ -331,16 +352,18 @@ curses_include="
 
 AC_ARG_ENABLE(unicode, [AS_HELP_STRING([--enable-unicode], [enable Unicode support])], ,enable_unicode="yes")
 if test "x$enable_unicode" = xyes; then
-   HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config",
-     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config",
-      HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config",
-       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW],
-        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW],
-         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW],
-       missing_libraries="$missing_libraries libncursesw"
-       AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
-   )))))))
+ HTOP_CHECK_PKG([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], [
+  HTOP_CHECK_PKG([ncurses], [addnwstr], [HAVE_LIBNCURSESW], [
+   HTOP_CHECK_SCRIPT([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config", [
+    HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw6-config", [
+     HTOP_CHECK_SCRIPT([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], "ncursesw5-config", [
+      HTOP_CHECK_SCRIPT([ncurses], [addnwstr], [HAVE_LIBNCURSESW], "ncurses5-config", [
+       HTOP_CHECK_LIB([ncursesw6], [addnwstr], [HAVE_LIBNCURSESW], [
+        HTOP_CHECK_LIB([ncursesw], [addnwstr], [HAVE_LIBNCURSESW], [
+         HTOP_CHECK_LIB([ncurses], [addnwstr], [HAVE_LIBNCURSESW], [
+           missing_libraries="$missing_libraries libncursesw"
+           AC_MSG_ERROR([You may want to use --disable-unicode or install libncursesw.])
+          ])])])])])])])])])
 
    AC_CHECK_HEADERS([ncursesw/curses.h],[:],
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
@@ -357,12 +380,14 @@ if test "x$enable_unicode" = xyes; then
 				[AC_MSG_ERROR([libncursesw present but development headers didn't work properly. You may want to use --disable-unicode])])
 		])
 else
-   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], ["ncurses6-config"],
-    [HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], ["ncurses5-config"],
-     [HTOP_CHECK_LIB([ncurses6],  [refresh], [HAVE_LIBNCURSES],
-      [HTOP_CHECK_LIB([ncurses],  [refresh], [HAVE_LIBNCURSES],
-       [HTOP_CHECK_LIB([curses], [refresh], [HAVE_LIBCURSES],
-        [missing_libraries="$missing_libraries libncurses/libcurses"])])])])])
+  HTOP_CHECK_PKG([ncurses], [refresh], [HAVE_LIBNCURSES], [
+   HTOP_CHECK_SCRIPT([ncurses6], [refresh], [HAVE_LIBNCURSES], ["ncurses6-config"], [
+    HTOP_CHECK_SCRIPT([ncurses], [refresh], [HAVE_LIBNCURSES], ["ncurses5-config"], [
+     HTOP_CHECK_LIB([ncurses6], [refresh], [HAVE_LIBNCURSES], [
+      HTOP_CHECK_LIB([ncurses], [refresh], [HAVE_LIBNCURSES], [
+       HTOP_CHECK_LIB([curses], [refresh], [HAVE_LIBCURSES],
+        [missing_libraries="$missing_libraries libncurses/libcurses"]
+       )])])])])])
    AC_CHECK_HEADERS([ncurses.h],[:],
       [AC_CHECK_HEADERS([ncurses/ncurses.h],[:],
          [AC_CHECK_HEADERS([ncurses/curses.h],[:],
@@ -610,18 +635,15 @@ fi
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
-   m4_ifdef([PKG_PROG_PKG_CONFIG], [
-      PKG_PROG_PKG_CONFIG()
+   if test "x$pkg_m4_absent" = xyes; then
+      AC_MSG_ERROR([htop on Linux requires pkg-config(1) for checking delayacct requirements. Please install pkg-config and run autogen.sh to rebuild the configure script.])
+   else
       PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
       PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
       CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
       LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
       AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
-   ], [
-      pkg_m4_absent=1
-      m4_warning([configure is generated without pkg.m4. 'make dist' target will be disabled.])
-      AC_MSG_ERROR([htop on Linux requires pkg-config for checking delayacct requirements. Please install pkg-config and run ./autogen.sh to rebuild the configure script.])
-   ])
+   fi
 fi
 
 AC_ARG_ENABLE([truss-strsize], [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])

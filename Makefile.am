@@ -371,9 +371,9 @@ cppcheck:
 	cppcheck -q -v . --enable=all -DHAVE_CGROUP -DHAVE_OPENVZ -DHAVE_TASKSTATS
 
 dist-hook: $(top_distdir)/configure
-	@if grep 'pkg_m4_absent' '$(top_distdir)/configure'; then \
-	   echo 'configure is generated without pkg.m4. Please supply pkg.m4 and run ./autogen.sh to rebuild the configure script.'>&2; \
-	   (exit 1); \
+	@if grep -Fq pkg_m4_absent=yes '$(top_distdir)/configure'; then \
+	   echo 'configure is generated without pkg.m4. Please supply pkg.m4 and run autogen.sh to rebuild the configure script.' 1>&2; \
+	   exit 1; \
 	else :; \
 	fi
 
