@@ -47,7 +47,7 @@ Changes from original version
 * Kernel stack tracing of processes for Linux-based and kFreeBSD-based
   platforms
 * Haiku support
-* Disk statistics mode for Linux-based and kFreeBSD-based platforms
+* Disk statistics mode for Linux-based and kFreeBSD-based platforms (option `--disk`)
 * Mac OS X Tiger powerpc support
 
 See the commit log for more.
