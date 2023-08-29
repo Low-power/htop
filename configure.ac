@@ -628,15 +628,15 @@ fi
 AC_ARG_ENABLE(delayacct, [AS_HELP_STRING([--enable-delayacct], [enable Linux delay accounting])],, enable_delayacct="no")
 if test "x$enable_delayacct" = xyes
 then
-   if test "x$pkg_m4_absent" = xyes; then
-      AC_MSG_ERROR([htop on Linux requires pkg-config(1) for checking delayacct requirements. Please install pkg-config and run autogen.sh to rebuild the configure script.])
-   else
-      PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
-      PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
-      CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
-      LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
-      AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
-   fi
+   m4_ifdef([PKG_CHECK_MODULES], [
+         PKG_CHECK_MODULES(LIBNL3, libnl-3.0, [], [missing_libraries="$missing_libraries libnl-3"])
+         PKG_CHECK_MODULES(LIBNL3GENL, libnl-genl-3.0, [], [missing_libraries="$missing_libraries libnl-genl-3"])
+         CFLAGS="$CFLAGS $LIBNL3_CFLAGS $LIBNL3GENL_CFLAGS"
+         LIBS="$LIBS $LIBNL3_LIBS $LIBNL3GENL_LIBS"
+         AC_DEFINE(HAVE_DELAYACCT, 1, [Define if delay accounting support should be enabled.])
+      ], [
+         AC_MSG_ERROR([htop on Linux requires pkg-config(1) for checking delayacct requirements. Please install pkg-config and run autogen.sh to rebuild the configure script.])
+      ])
 fi
 
 AC_ARG_ENABLE([truss-strsize], [AS_HELP_STRING([--enable-truss-strsize], [use option '-s' for string size when running truss(1)])], [], [test "x$my_htop_platform" = xfreebsd && enable_truss_strsize=yes || enable_truss_strsize=no])
