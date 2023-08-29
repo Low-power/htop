@@ -48,6 +48,7 @@ Changes from original version
   platforms
 * Haiku support
 * Disk statistics mode for Linux-based and kFreeBSD-based platforms
+* Mac OS X Tiger powerpc support
 
 See the commit log for more.
 
@@ -113,8 +114,8 @@ versions of operating system components.
 
 ### AIX
 
-Tested on **AIX 6.1** and **AIX 7.1**. Although unsupported, it is expected
-to work on newer versions of the operating system.
+Tested on **AIX 6.1**, **AIX 7.1** and **AIX 7.2**. Although unsupported, it
+is expected to work on newer versions of the operating system.
 
 ### Haiku
 
