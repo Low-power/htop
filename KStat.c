@@ -1,6 +1,6 @@
 /*
 htop - KStat.c
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -64,7 +64,7 @@ static const struct kstat_name {
 	[KSTAT_UNIX_VAR] = { "unix", "misc", "var" },
 	[KSTAT_ZFS_ARCSTATS] = { "zfs", "misc", "arcstats" }
 };
-static char *kstat_data_map[KSTAT_COUNT] = {
+static char *kstat_data_map[KSTAT_DATA_COUNT] = {
 	[KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM] = "physmem",
 	[KSTAT_ZFS_ARCSTATS_SIZE] = "size"
 };
@@ -72,7 +72,6 @@ static kstat_ctl_t *ksc;
 static kstat_t *kstat_table[KSTAT_COUNT];
 
 static kstat_t *get_kstat(unsigned int kstat_key) {
-	assert(kstat_key < KSTAT_COUNT);
 	if(!ksc) ksc = kstat_open();
 	kstat_t *ksp = kstat_table[kstat_key];
 	if(!ksp) {
@@ -88,6 +87,7 @@ static kstat_t *get_kstat(unsigned int kstat_key) {
 }
 
 void *read_unnamed_kstat(unsigned int kstat_key) {
+	assert(kstat_key < KSTAT_COUNT);
 	kstat_t *ksp = get_kstat(kstat_key);
 	return ksp ? ksp->ks_data : NULL;
 }
@@ -100,7 +100,7 @@ void *read_unnamed_kstat(unsigned int kstat_key) {
 static const char *kstat_path_map[KSTAT_COUNT] = {
 	[KSTAT_ZFS_ARCSTATS] = "/spl/kstat/zfs/arcstats"
 };
-static const char *kstat_data_map[KSTAT_COUNT] = {
+static const char *kstat_data_map[KSTAT_DATA_COUNT] = {
 	[KSTAT_ZFS_ARCSTATS_SIZE] = "size ",
 };
 static FILE *kstat_file_map[KSTAT_COUNT];
@@ -116,6 +116,7 @@ static int *sysctl_mib_map[KSTAT_COUNT | (KSTAT_DATA_COUNT << 8)];
 #endif
 
 int read_kstat(unsigned int kstat_key, unsigned int data_key, unsigned char data_type, void *value) {
+	assert(kstat_key < KSTAT_COUNT);
 	assert(data_key < KSTAT_DATA_COUNT);
 #ifdef USE_LIBKSTAT
 	kstat_t *ksp = get_kstat(kstat_key);
