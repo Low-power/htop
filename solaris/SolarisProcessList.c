@@ -2,7 +2,7 @@
 htop - solaris/SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -129,27 +129,31 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
       CPUData *cpuData = spl->cpus + i + arrskip;
       kstat_t *cpuinfo = kstat_lookup(spl->kd, "cpu", i, "sys");
       if(cpuinfo && kstat_read(spl->kd, cpuinfo, NULL) != -1) {
-         kstat_named_t *idletime = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
-         kstat_named_t *intrtime = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
-         kstat_named_t *krnltime = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
-         kstat_named_t *usertime = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+         kstat_named_t *ksn = kstat_data_lookup(cpuinfo, "cpu_nsec_idle");
+         uint64_t idletime = ksn ? ksn->value.ui64 : 0;
+         ksn = kstat_data_lookup(cpuinfo, "cpu_nsec_intr");
+         uint64_t intrtime = ksn ? ksn->value.ui64 : 0;
+         ksn = kstat_data_lookup(cpuinfo, "cpu_nsec_kernel");
+         uint64_t krnltime = ksn ? ksn->value.ui64 : 0;
+         ksn = kstat_data_lookup(cpuinfo, "cpu_nsec_user");
+         uint64_t usertime = ksn ? ksn->value.ui64 : 0;
          uint64_t totaltime =
-            (idletime->value.ui64 - cpuData->lidle) +
-            (intrtime->value.ui64 - cpuData->lintr) +
-            (krnltime->value.ui64 - cpuData->lkrnl) +
-            (usertime->value.ui64 - cpuData->luser);
+            (idletime - cpuData->lidle) +
+            (intrtime - cpuData->lintr) +
+            (krnltime - cpuData->lkrnl) +
+            (usertime - cpuData->luser);
          // Calculate percentages of deltas since last reading
-         cpuData->userPercent      = ((usertime->value.ui64 - cpuData->luser) / (double)totaltime) * 100.0;
-         cpuData->nicePercent      = (double)0.0; // Not implemented on Solaris
-         cpuData->systemPercent    = ((krnltime->value.ui64 - cpuData->lkrnl) / (double)totaltime) * 100.0;
-         cpuData->irqPercent       = ((intrtime->value.ui64 - cpuData->lintr) / (double)totaltime) * 100.0;
+         cpuData->userPercent      = ((usertime - cpuData->luser) / (double)totaltime) * 100.0;
+         cpuData->nicePercent      = (double)0; // Not implemented on Solaris
+         cpuData->systemPercent    = ((krnltime - cpuData->lkrnl) / (double)totaltime) * 100.0;
+         cpuData->irqPercent       = ((intrtime - cpuData->lintr) / (double)totaltime) * 100.0;
          cpuData->systemAllPercent = cpuData->systemPercent + cpuData->irqPercent;
-         cpuData->idlePercent      = ((idletime->value.ui64 - cpuData->lidle) / (double)totaltime) * 100.0;
+         cpuData->idlePercent      = ((idletime - cpuData->lidle) / (double)totaltime) * 100.0;
          // Store current values to use for the next round of deltas
-         cpuData->luser            = usertime->value.ui64;
-         cpuData->lkrnl            = krnltime->value.ui64;
-         cpuData->lintr            = intrtime->value.ui64;
-         cpuData->lidle            = idletime->value.ui64;
+         cpuData->luser            = usertime;
+         cpuData->lkrnl            = krnltime;
+         cpuData->lintr            = intrtime;
+         cpuData->lidle            = idletime;
          // Accumulate the current percentages into buffers for later average calculation
          if (cpus > 1) {
             userbuf               += cpuData->userPercent;
