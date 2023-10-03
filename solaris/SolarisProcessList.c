@@ -230,10 +230,10 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->buffersMem = 0;
    } else {
       // Fall back to basic sysconf if kstat isn't working
-      pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_page_size;
+      pl->totalMem = (unsigned long long int)sysconf(_SC_PHYS_PAGES) * CRT_page_size;
       pl->buffersMem = 0;
       pl->cachedMem  = 0;
-      pl->usedMem    = pl->totalMem - (sysconf(_SC_AVPHYS_PAGES) * CRT_page_size);
+      pl->usedMem    = pl->totalMem - ((unsigned long long int)sysconf(_SC_AVPHYS_PAGES) * CRT_page_size);
    }
    // Part 2 - swap
    struct swaptable    *sl = NULL;
