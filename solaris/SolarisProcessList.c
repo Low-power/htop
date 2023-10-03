@@ -10,6 +10,7 @@ in the source distribution for its full text.
 #include "config.h"
 #include "ProcessList.h"
 #include "SolarisProcessList.h"
+#include "KStat.h"
 #include "Platform.h"
 #include "IOUtils.h"
 #include "CRT.h"
@@ -63,6 +64,7 @@ typedef struct SolarisProcessList_ {
    kstat_ctl_t* kd;
    int online_cpu_count;
    CPUData* cpus;
+   //kstat_t *meminfo;
 #ifndef HAVE_LIBPROC
    DIR *proc_dir;
 #endif
@@ -182,28 +184,50 @@ static inline void SolarisProcessList_scanCPUTime(ProcessList* pl) {
    }
 }
 
-static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
-   SolarisProcessList* spl = (SolarisProcessList*) pl;
+static inline int unsigned_variable_bit_read_kstat(unsigned int kstat_key, unsigned int data_key, uint64_t *value) {
+	uint32_t ui32v;
+#ifdef __LP64__
+	if(read_kstat(kstat_key, data_key, KSTAT_DATA_UINT64, value) == 0) return 0;
+	if(read_kstat(kstat_key, data_key, KSTAT_DATA_UINT32, &ui32v) == 0) {
+		*value = ui32v;
+		return 0;
+	}
+#else
+	if(read_kstat(kstat_key, data_key, KSTAT_DATA_UINT32, &ui32v) == 0) {
+		*value = ui32v;
+		return 0;
+	}
+	if(read_kstat(kstat_key, data_key, KSTAT_DATA_UINT64, value) == 0) return 0;
+#endif
+	return -1;
+}
 
+static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    // Part 1 - memory
-   kstat_t             *meminfo = NULL;
-   int                 ksrphyserr = -1;
+#if 0
+   SolarisProcessList* spl = (SolarisProcessList*) pl;
+   int ksrphyserr = -1;
    if (spl->kd != NULL) {
-      meminfo = kstat_lookup(spl->kd,"unix",0,"system_pages");
-      if(meminfo) ksrphyserr = kstat_read(spl->kd,meminfo,NULL);
+      if(!spl->meminfo) spl->meminfo = kstat_lookup(spl->kd, "unix", 0, "system_pages");
+      if(spl->meminfo) ksrphyserr = kstat_read(spl->kd, spl->meminfo, NULL);
    }
    if (ksrphyserr != -1) {
-      kstat_named_t *totalmem_pgs  = kstat_data_lookup(meminfo, "physmem");
-      kstat_named_t *lockedmem_pgs = kstat_data_lookup(meminfo, "pageslocked");
-      kstat_named_t *pages         = kstat_data_lookup(meminfo, "pagestotal");
-
-      pl->totalMem   = totalmem_pgs->value.ui64 * CRT_page_size_kib;
-      pl->usedMem    = lockedmem_pgs->value.ui64 * CRT_page_size_kib;
-      // Not sure how to implement this on Solaris - suggestions welcome!
-      pl->cachedMem  = 0;
-      // Not really "buffers" but the best Solaris analogue that I can find to
-      // "memory in use but not by programs or the kernel itself"
-      pl->buffersMem = (totalmem_pgs->value.ui64 - pages->value.ui64) * CRT_page_size_kib;
+      kstat_named_t *phys_pages    = kstat_data_lookup(meminfo, "physmem");
+      kstat_named_t *free_pages    = kstat_data_lookup(meminfo, "freemem");
+      kstat_named_t *avail_res_pages   = kstat_data_lookup(meminfo, "availrmem");
+      pl->totalMem   = phys_pages->value.ui32 * CRT_page_size_kib;
+      pl->usedMem    = (phys_pages->value.ui32 - avail_res_pages->value.ui32) * CRT_page_size_kib;
+      pl->cachedMem  = (avail_res_pages->value.ui32 - free_pages->value.ui32) * CRT_page_size_kib;
+#else
+   uint64_t phys_pages, free_pages, avail_res_pages;
+   if(unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM, &phys_pages) == 0 &&
+     unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_FREEMEM, &free_pages) == 0 &&
+     unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_AVAILRMEM, &avail_res_pages) == 0) {
+      pl->totalMem = phys_pages * CRT_page_size_kib;
+      pl->usedMem = (phys_pages - avail_res_pages) * CRT_page_size_kib;
+      pl->cachedMem = (avail_res_pages - free_pages) * CRT_page_size_kib;
+#endif
+      pl->buffersMem = 0;
    } else {
       // Fall back to basic sysconf if kstat isn't working
       pl->totalMem = sysconf(_SC_PHYS_PAGES) * CRT_page_size;

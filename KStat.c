@@ -11,13 +11,24 @@ in the source distribution for its full text.
 #include <stdint.h>
 #include <assert.h>
 
-#define KSTAT_UNIX_SYSTEM_PAGES 0
-#define KSTAT_UNIX_VAR 1
-#define KSTAT_ZFS_ARCSTATS 2
+#define KSTAT_ZFS_ARCSTATS 0
+#if defined __sun && defined __SVR4
+#define KSTAT_UNIX_SYSTEM_PAGES 1
+#define KSTAT_UNIX_VAR 2
 #define KSTAT_COUNT 3
-#define KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM 0
-#define KSTAT_ZFS_ARCSTATS_SIZE 1
-#define KSTAT_DATA_COUNT 2
+#else
+#define KSTAT_COUNT 1
+#endif
+
+#define KSTAT_ZFS_ARCSTATS_SIZE 0
+#if defined __sun && defined __SVR4
+#define KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM 1
+#define KSTAT_UNIX_SYSTEM_PAGES_FREEMEM 2
+#define KSTAT_UNIX_SYSTEM_PAGES_AVAILRMEM 3
+#define KSTAT_DATA_COUNT 4
+#else
+#define KSTAT_DATA_COUNT 1
+#endif
 
 #if defined __FreeBSD__ && !defined __FreeBSD_kernel__
 #define __FreeBSD_kernel__
@@ -65,8 +76,10 @@ static const struct kstat_name {
 	[KSTAT_ZFS_ARCSTATS] = { "zfs", "misc", "arcstats" }
 };
 static char *kstat_data_map[KSTAT_DATA_COUNT] = {
+	[KSTAT_ZFS_ARCSTATS_SIZE] = "size",
 	[KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM] = "physmem",
-	[KSTAT_ZFS_ARCSTATS_SIZE] = "size"
+	[KSTAT_UNIX_SYSTEM_PAGES_FREEMEM] = "freemem",
+	[KSTAT_UNIX_SYSTEM_PAGES_AVAILRMEM] = "availrmem",
 };
 static kstat_ctl_t *ksc;
 static kstat_t *kstat_table[KSTAT_COUNT];

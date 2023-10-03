@@ -44,6 +44,7 @@ typedef struct SolarisProcessList_ {
    kstat_ctl_t* kd;
    int online_cpu_count;
    CPUData* cpus;
+   //kstat_t *meminfo;
 #ifndef HAVE_LIBPROC
    DIR *proc_dir;
 #endif
