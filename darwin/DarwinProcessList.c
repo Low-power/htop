@@ -209,7 +209,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 		const struct kinfo_proc *info = dpl->kip_buffer + i;
 		DarwinProcess *proc = (DarwinProcess *)ProcessList_getProcess(super, info->kp_proc.p_pid, &preExisting, (Process_New)DarwinProcess_new);
 
-		DarwinProcess_setFromKInfoProc(&proc->super, info, now.tv_sec, preExisting);
+		DarwinProcess_setFromKInfoProc(&proc->super, info, super, now.tv_sec, preExisting);
 		DarwinProcess_setFromLibprocPidinfo(proc, dpl);
 
 		super->totalTasks++;

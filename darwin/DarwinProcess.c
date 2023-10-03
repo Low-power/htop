@@ -219,7 +219,7 @@ ERROR_A:
    return retval;
 }
 
-void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, time_t now, bool exists) {
+void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, const ProcessList *pl, time_t now, bool exists) {
    const struct extern_proc *ep = &ps->kp_proc;
 
    /* UNSET HERE :
@@ -238,6 +238,12 @@ void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, 
    if(exists) {
       if(proc->ruid != ps->kp_eproc.e_pcred.p_ruid) proc->real_user = NULL;
       if(proc->euid != ps->kp_eproc.e_ucred.cr_uid) proc->effective_user = NULL;
+      if(ProcessList_shouldUpdateProcessNames(pl)) {
+         free(proc->name);
+         free(proc->comm);
+         proc->name = xStrdup(ps->kp_proc.p_comm);
+         proc->comm = DarwinProcess_getCmdLine(ps, &proc->argv0_length);
+      }
    } else {
       /* First, the "immutable" parts */
       proc->tgid = proc->pid;

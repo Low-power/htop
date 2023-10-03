@@ -297,7 +297,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 				proc->tgid = team_info.team;
 				ProcessList_add(super, proc);
 			}
-			if(!is_existing || super->settings->updateProcessNames) {
+			if(!is_existing || ProcessList_shouldUpdateProcessNames(super)) {
 				free(proc->name);
 				free(proc->comm);
 				proc->name = xStrdup(thread_info.name);

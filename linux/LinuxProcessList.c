@@ -918,7 +918,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
 
          ProcessList_add(pl, proc);
       } else {
-         if (settings->updateProcessNames && proc->state != 'Z') {
+         if (ProcessList_shouldUpdateProcessNames(pl) && proc->state != 'Z') {
             if (! LinuxProcessList_readCmdlineFile(proc, dirname, name)) {
                goto errorReadingProcess;
             }

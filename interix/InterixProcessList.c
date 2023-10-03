@@ -88,11 +88,11 @@ void ProcessList_goThroughEntries(ProcessList *this, bool skip_processes) {
 				proc->tgid = info.pr_pid;
 				i_proc->native_pid = info.pr_natpid;
 				proc->starttime_ctime = info.pr_start;
-			} else if(this->settings->updateProcessNames) {
+			} else if(ProcessList_shouldUpdateProcessNames(this)) {
 				free(proc->name);
 				free(proc->comm);
 			}
-			if(!is_existing || this->settings->updateProcessNames) {
+			if(!is_existing || ProcessList_shouldUpdateProcessNames(this)) {
 				proc->name = xStrdup(info.pr_fname);
 				proc->comm = xStrdup(*info.pr_psargs ? info.pr_psargs : info.pr_fname);
 			}
@@ -172,11 +172,11 @@ try_stat:
 			}
 			fclose(f);
 			t = utime + stime;
-			if(!proc->name || this->settings->updateProcessNames) {
+			if(!proc->name || ProcessList_shouldUpdateProcessNames(this)) {
 				free(proc->name);
 				proc->name = comm;
 			}
-			if(!proc->comm || this->settings->updateProcessNames) {
+			if(!proc->comm || ProcessList_shouldUpdateProcessNames(this)) {
 				free(proc->comm);
 				strcpy(path + 6 + len, "/cmdline");
 				f = fopen(path, "rb");

@@ -253,7 +253,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			proc->starttime_ctime = info->taskinfo.creation_time.seconds;
 			ProcessList_add(super, proc);
 		}
-		if(!is_existing || super->settings->updateProcessNames) {
+		if(!is_existing || ProcessList_shouldUpdateProcessNames(super)) {
 			free(proc->name);
 			free(proc->comm);
 			scan_process_command_line(this, pid, proc);

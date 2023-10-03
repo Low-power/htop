@@ -229,7 +229,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 		} else {
 			if(proc->ruid != pe->pi_uid) proc->real_user = NULL;
 			if(proc->euid != pe->pi_uid) proc->effective_user = NULL;	// XXX
-			if (super->settings->updateProcessNames) {
+			if (ProcessList_shouldUpdateProcessNames(super)) {
 				free(proc->name);
 				free(proc->comm);
 				AixProcessList_readProcessName(pe, &proc->name, &proc->comm, &proc->argv0_length);

@@ -361,6 +361,12 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
       proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
+   } else if(ProcessList_shouldUpdateProcessNames(pl)) {
+      free(proc->name);
+      free(proc->comm);
+      proc->name            = xStrdup(_psinfo->pr_fname);
+      proc->comm            = xStrdup(_psinfo->pr_psargs);
+      //proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
    }
    if(!proc->real_user) {
       proc->real_user       = UsersTable_getRef(pl->usersTable, proc->ruid);
@@ -494,6 +500,11 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			proc->comm = xStrdup(info.pr_psargs);
 			//proc->commLen = strnlen(info.pr_psargs, PRFNSZ);
 			proc->starttime_ctime = info.pr_start.tv_sec;
+		} else if(ProcessList_shouldUpdateProcessNames(super)) {
+			free(proc->name);
+			free(proc->comm);
+			proc->name = xStrdup(info.pr_fname);
+			proc->comm = xStrdup(info.pr_psargs);
 		}
 		proc->ppid = info.pr_ppid;
 		sol_proc->realppid = info.pr_ppid;

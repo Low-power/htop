@@ -270,7 +270,7 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
       } else {
          if(proc->ruid != kproc->p_ruid) proc->real_user = NULL;
          if(proc->euid != kproc->p_uid) proc->effective_user = NULL;
-         if (this->settings->updateProcessNames) {
+         if (ProcessList_shouldUpdateProcessNames(this)) {
             free(proc->name);
             free(proc->comm);
             OpenBSDProcessList_readProcessName(opl->kd, kproc, &proc->name, &proc->comm, &proc->argv0_length);

@@ -544,7 +544,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
             proc->euid = kproc->ki_uid;
             proc->effective_user = UsersTable_getRef(this->usersTable, proc->euid);
          }
-         if (this->settings->updateProcessNames) {
+         if (ProcessList_shouldUpdateProcessNames(this)) {
             free(proc->name);
             free(proc->comm);
             FreeBSDProcessList_readProcessName(fpl, kproc, &proc->name, &proc->comm, &proc->argv0_length);

@@ -40,7 +40,7 @@ void DarwinProcess_setStartTime(Process *proc, const struct extern_proc *ep, tim
 
 char *DarwinProcess_getCmdLine(const struct kinfo_proc *k, int* argv0_length);
 
-void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, time_t now, bool exists);
+void DarwinProcess_setFromKInfoProc(Process *proc, const struct kinfo_proc *ps, const ProcessList *pl, time_t now, bool exists);
 
 void DarwinProcess_setFromLibprocPidinfo(DarwinProcess *proc, DarwinProcessList *dpl);
 
