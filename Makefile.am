@@ -365,7 +365,7 @@ coverage:
 			[ -d $(@D) ] || mkdir -p $(@D) \
 			;; \
 	esac
-	@[ -h $@ ] && rm -f $@
+	@if [ -h $@ ]; then rm -f $@ || exit; fi
 	@srcdir@/scripts/MakeHeader.sh $< > $@
 
 cppcheck:
