@@ -415,6 +415,7 @@ static Htop_Reaction actionRedraw(State *st) {
 #ifndef KEY_RESIZE
    Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
 #endif
+   if(st->settings->update_process_names_on_ctrl_l) st->pl->should_update_names = true;
    return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 

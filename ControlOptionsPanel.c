@@ -87,5 +87,12 @@ ControlOptionsPanel* ControlOptionsPanel_new(Settings* settings, ScreenManager* 
 #ifdef HAVE_MOUSEMASK
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Use mouse control"), &settings->use_mouse));
 #endif
+#ifdef DISK_STATS
+   if(!settings->disk_mode) {
+#endif
+      Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Update process names on CTRL-L"), &settings->update_process_names_on_ctrl_l));
+#ifdef DISK_STATS
+   }
+#endif
    return this;
 }

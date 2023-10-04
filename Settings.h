@@ -71,6 +71,7 @@ typedef struct Settings_ {
    bool highlight_new_processes;
    bool vi_mode;
    bool use_mouse;
+   bool update_process_names_on_ctrl_l;
    int (*sort_strcmp)(const char *, const char *);
 
    bool changed;

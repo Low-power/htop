@@ -48,6 +48,8 @@ typedef struct ProcessList_ {
    bool topologyOk;
    #endif
 
+   bool should_update_names;
+
    int totalTasks;
    int thread_count;
    int kernel_process_count;
@@ -73,7 +75,7 @@ ProcessList* ProcessList_new(UsersTable* ut, const Hashtable *pidWhiteList, uid_
 void ProcessList_delete(ProcessList* pl);
 void ProcessList_goThroughEntries(ProcessList *, bool);
 
-#define ProcessList_shouldUpdateProcessNames(THIS) ((THIS)->settings->updateProcessNames)
+#define ProcessList_shouldUpdateProcessNames(THIS) ((THIS)->should_update_names || (THIS)->settings->updateProcessNames)
 
 ProcessList* ProcessList_init(ProcessList* this, ObjectClass* klass, UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId);
 

@@ -68,6 +68,7 @@ typedef struct Settings_ {
    bool highlight_new_processes;
    bool vi_mode;
    bool use_mouse;
+   bool update_process_names_on_ctrl_l;
    int (*sort_strcmp)(const char *, const char *);
 
    bool changed;
@@ -270,6 +271,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->vi_mode = atoi(option[1]);
       } else if(String_eq(option[0], "use_mouse")) {
          this->use_mouse = atoi(option[1]);
+      } else if(String_eq(option[0], "update_process_names_on_ctrl_l")) {
+         this->update_process_names_on_ctrl_l = atoi(option[1]);
       } else if (String_eq(option[0], "account_guest_in_cpu_meter")) {
          this->accountGuestInCPUMeter = atoi(option[1]);
       } else if (String_eq(option[0], "delay")) {
@@ -369,6 +372,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "highlight_new_processes=%d\n", (int)this->highlight_new_processes);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
+   fprintf(f, "update_process_names_on_ctrl_l=%d", (int)this->update_process_names_on_ctrl_l);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(f, "color_scheme=%s\n", CRT_color_scheme_names[this->colorScheme]);
    fprintf(f, "delay=%d\n", this->delay);
@@ -468,6 +472,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->highlight_new_processes = false;
    this->vi_mode = false;
    this->use_mouse = true;
+   this->update_process_names_on_ctrl_l = false;
 
    char* legacyDotfile = NULL;
    char *global_file_path = NULL;
