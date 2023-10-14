@@ -66,6 +66,7 @@ typedef struct Settings_ {
    bool headerMargin;
    bool explicit_delay;
    bool highlight_new_processes;
+   bool tasks_meter_show_kernel_process_count;
    bool vi_mode;
    bool use_mouse;
    bool update_process_names_on_ctrl_l;
@@ -267,6 +268,8 @@ static bool Settings_read(Settings* this, const char* fileName) {
          this->explicit_delay = atoi(option[1]);
       } else if(String_eq(option[0], "highlight_new_processes")) {
          this->highlight_new_processes = atoi(option[1]);
+      } else if(String_eq(option[0], "tasks_meter_show_kernel_process_count")) {
+         this->tasks_meter_show_kernel_process_count = atoi(option[1]);
       } else if(String_eq(option[0], "vi_mode")) {
          this->vi_mode = atoi(option[1]);
       } else if(String_eq(option[0], "use_mouse")) {
@@ -370,6 +373,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "case_insensitive_sort=%d\n", (int)(this->sort_strcmp == strcasecmp));
    fprintf(f, "explicit_delay=%d\n", (int)this->explicit_delay);
    fprintf(f, "highlight_new_processes=%d\n", (int)this->highlight_new_processes);
+   fprintf(f, "tasks_meter_show_kernel_process_count=%d\n", (int)this->tasks_meter_show_kernel_process_count);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "update_process_names_on_ctrl_l=%d", (int)this->update_process_names_on_ctrl_l);
@@ -470,6 +474,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->sort_strcmp = strcmp;
    this->explicit_delay = false;
    this->highlight_new_processes = false;
+   this->tasks_meter_show_kernel_process_count = true;
    this->vi_mode = false;
    this->use_mouse = true;
    this->update_process_names_on_ctrl_l = false;

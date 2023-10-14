@@ -104,6 +104,7 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Highlight newly created processes"), &settings->highlight_new_processes));
+   Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Show kernel process/thread count in task counter"), &settings->tasks_meter_show_kernel_process_count));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight program \"basename\""), &(settings->highlightBaseName)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Highlight large numbers in memory counters"), &(settings->highlightMegabytes)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Update process names on every refresh"), &(settings->updateProcessNames)));

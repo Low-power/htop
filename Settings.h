@@ -69,6 +69,7 @@ typedef struct Settings_ {
    bool headerMargin;
    bool explicit_delay;
    bool highlight_new_processes;
+   bool tasks_meter_show_kernel_process_count;
    bool vi_mode;
    bool use_mouse;
    bool update_process_names_on_ctrl_l;

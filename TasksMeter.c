@@ -22,12 +22,12 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    ProcessList* pl = this->pl;
    this->values[0] = pl->totalTasks;
    this->values[1] = pl->thread_count > pl->totalTasks ? pl->thread_count : 0;
-   if (this->pl->settings->hide_kernel_processes) {
-      this->values[2] = 0;
-      this->values[3] = 0;
-   } else {
+   if (this->pl->settings->tasks_meter_show_kernel_process_count) {
       this->values[2] = pl->kernel_process_count;
       this->values[3] = pl->kernel_thread_count > pl->kernel_process_count ? pl->kernel_thread_count : 0;
+   } else {
+      this->values[2] = 0;
+      this->values[3] = 0;
    }
    this->values[4] = MIN(pl->running_thread_count, pl->cpuCount);
    if (pl->totalTasks > this->total) {
@@ -58,7 +58,7 @@ static void TasksMeter_display(Object* cast, RichString* out) {
       RichString_append(out, threadValueColor, buffer);
       RichString_append(out, threadCaptionColor, " thr");
    }
-   if (!settings->hide_kernel_processes) {
+   if (settings->tasks_meter_show_kernel_process_count) {
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], ", ");
       xSnprintf(buffer, sizeof(buffer), "%d", (int)this->values[2]);
       RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
