@@ -987,7 +987,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
    }
    char buffer[128];
    while (fgets(buffer, 128, file)) {
-      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu ", variable)) { break; } } while(0)
+      #define tryRead(label, variable) do { if (String_startsWith(buffer, label) && sscanf(buffer + strlen(label), " %32llu ", variable)) continue; } while(0)
       switch (buffer[0]) {
       case 'M':
          tryRead("MemTotal:", &this->totalMem);
