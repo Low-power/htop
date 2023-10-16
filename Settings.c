@@ -72,6 +72,8 @@ typedef struct Settings_ {
    bool update_process_names_on_ctrl_l;
    int (*sort_strcmp)(const char *, const char *);
 
+   char **unsupported_options;
+
    bool changed;
 
 #ifdef DISK_STATS
@@ -109,6 +111,7 @@ void Settings_delete(Settings* this) {
       String_freeArray(this->columns[i].names);
       free(this->columns[i].modes);
    }
+   String_freeArray(this->unsupported_options);
    free(this);
 }
 
@@ -196,18 +199,19 @@ static void readFields(unsigned int *fields, int* flags, const FieldData *field_
    String_freeArray(ids);
 }
 
-static bool Settings_read(Settings* this, const char* fileName) {
+static bool Settings_read(Settings* this, const char* fileName, bool should_preserve_unsupported) {
    CRT_dropPrivileges();
    FILE *f = fopen(fileName, "r");
    CRT_restorePrivileges();
    if (!f) return false;
+   int unsupported_count = 0;
    bool didReadFields = false;
    char *line;
    while((line = String_readLine(f))) {
       int nOptions;
       char** option = String_split(line, '=', &nOptions);
-      free (line);
       if (nOptions < 2) {
+         free(line);
          String_freeArray(option);
          continue;
       }
@@ -297,7 +301,13 @@ static bool Settings_read(Settings* this, const char* fileName) {
          Settings_readMeterModes(this, option[1], 0);
       } else if (String_eq(option[0], "right_meter_modes")) {
          Settings_readMeterModes(this, option[1], 1);
+      } else if(should_preserve_unsupported) {
+         this->unsupported_options = xRealloc(this->unsupported_options, (unsupported_count + 1) * sizeof(char *));
+         this->unsupported_options[unsupported_count++] = line;
+         this->unsupported_options[unsupported_count] = NULL;
+         line = NULL;
       }
+      free(line);
       String_freeArray(option);
    }
    fclose(f);
@@ -384,6 +394,14 @@ bool Settings_write(Settings* this) {
    fprintf(f, "left_meter_modes="); writeMeterModes(this, f, 0);
    fprintf(f, "right_meters="); writeMeters(this, f, 1);
    fprintf(f, "right_meter_modes="); writeMeterModes(this, f, 1);
+   if(this->unsupported_options) {
+      char **p = this->unsupported_options;
+      while(*p) {
+         fputs(*p, f);
+         fputc('\n', f);
+         p++;
+      }
+   }
    fclose(f);
    return true;
 }
@@ -517,7 +535,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->delay = DEFAULT_DELAY;
    bool ok = false;
    if (legacyDotfile) {
-      ok = Settings_read(this, legacyDotfile);
+      ok = Settings_read(this, legacyDotfile, false);
       if (ok) {
          // Transition to new location and delete old configuration file
          if (Settings_write(this)) unlink(legacyDotfile);
@@ -526,11 +544,11 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
       free(legacyDotfile);
    }
    if (!ok) {
-      ok = Settings_read(this, this->filename);
+      ok = Settings_read(this, this->filename, true);
    }
    if(!ok && !override && global_file_path) {
       // Try read 'htoprc' without terminal name suffix
-      ok = Settings_read(this, global_file_path);
+      ok = Settings_read(this, global_file_path, false);
       if(ok) check_fields(this);
    }
    free(global_file_path);
@@ -538,7 +556,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
       this->changed = true;
       // TODO: how to get SYSCONFDIR correctly through Autoconf?
       char* systemSettings = String_cat(SYSCONFDIR, "/htoprc");
-      ok = Settings_read(this, systemSettings);
+      ok = Settings_read(this, systemSettings, false);
       free(systemSettings);
    }
    if (!ok) {

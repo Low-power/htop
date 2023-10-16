@@ -75,6 +75,8 @@ typedef struct Settings_ {
    bool update_process_names_on_ctrl_l;
    int (*sort_strcmp)(const char *, const char *);
 
+   char **unsupported_options;
+
    bool changed;
 
 #ifdef DISK_STATS
