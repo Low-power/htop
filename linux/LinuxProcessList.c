@@ -129,9 +129,9 @@ typedef struct LinuxProcessList_ {
 #endif
 
 static int sortTtyDrivers(const void* va, const void* vb) {
-   TtyDriver* a = (TtyDriver*) va;
-   TtyDriver* b = (TtyDriver*) vb;
-   return (a->major == b->major) ? (a->minorFrom - b->minorFrom) : (a->major - b->major);
+   const TtyDriver *a = (const TtyDriver *)va;
+   const TtyDriver *b = (const TtyDriver *)vb;
+   return (a->major == b->major) ? uintcmp(a->minorFrom, b->minorFrom) : uintcmp(a->major, b->major);
 }
 
 static void LinuxProcessList_initTtyDrivers(LinuxProcessList* this) {
