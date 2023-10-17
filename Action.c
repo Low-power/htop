@@ -223,10 +223,12 @@ static Htop_Reaction actionToggleKernelThreads(State* st) {
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
 
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
 static Htop_Reaction actionToggleUserlandThreads(State* st) {
    st->settings->hide_thread_processes = !st->settings->hide_thread_processes;
    return HTOP_RECALCULATE | HTOP_SAVE_SETTINGS;
 }
+#endif
 
 static Htop_Reaction actionToggleProgramPath(State* st) {
    st->settings->showProgramPath = !st->settings->showProgramPath;
@@ -437,7 +439,9 @@ static const struct key_help_entry helpLeft[] = {
    { "   F5 t: ", "tree view", KEY_VI_MODE_COMPATIBLE },
    //{ "      p: ", "toggle program path", KEY_VI_MODE_COMPATIBLE },
    { "      u: ", "show processes of a single user", KEY_VI_MODE_COMPATIBLE },
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    { "      H: ", "hide/show thread processes", KEY_VI_MODE_COMPATIBLE },
+#endif
    { "      K: ", "hide/show kernel processes", KEY_VI_MODE_COMPATIBLE },
    { "      F: ", "cursor follows process", KEY_VI_MODE_COMPATIBLE },
    { " F6 + -: ", "expand/collapse tree", KEY_VI_MODE_COMPATIBLE },
@@ -575,7 +579,9 @@ static Htop_Reaction actionHelp(State* st) {
    FOR_EACH_ENTRY(mvaddstr(y++, 40, entry->key););
 #undef FOR_EACH_ENTRY
    attrset(CRT_colors[HTOP_PROCESS_THREAD_COLOR]);
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    mvaddstr(st->settings->vi_mode ? 16 : 15, 19, "thread");
+#endif
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
 
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
@@ -644,7 +650,9 @@ void Action_setBindings(Htop_Action* keys) {
    keys['M'] = actionSortByMemory;
    keys['T'] = actionSortByTime;
    keys['P'] = actionSortByCPU;
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    keys['H'] = actionToggleUserlandThreads;
+#endif
    keys['K'] = actionToggleKernelThreads;
    keys['p'] = actionToggleProgramPath;
    keys['t'] = actionToggleTreeView;

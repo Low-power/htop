@@ -14,6 +14,10 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
 
+#ifdef __linux__
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+#endif
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif

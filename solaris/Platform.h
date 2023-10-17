@@ -24,6 +24,10 @@ in the source distribution for its full text.
 #include <sys/proc.h>
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
+#ifdef HAVE_LIBPROC
+// XXX
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+#endif
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
 

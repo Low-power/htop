@@ -54,6 +54,9 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 #ifdef KEY_RESIZE
 #endif
 
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
+#endif
+
 Htop_Reaction Action_follow(State* st);
 
 

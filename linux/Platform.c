@@ -10,6 +10,10 @@ in the source distribution for its full text.
 #include "MainPanel.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+
+#ifdef __linux__
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+#endif
 }*/
 
 #include "Platform.h"

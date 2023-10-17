@@ -24,6 +24,7 @@ typedef struct DisplayOptionsPanel_ {
 #include "config.h"
 #include "DisplayOptionsPanel.h"
 #include "CRT.h"
+#include "Platform.h"
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -95,13 +96,17 @@ DisplayOptionsPanel* DisplayOptionsPanel_new(Settings* settings, ScreenManager* 
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Tree view"), &(settings->treeView)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Shadow other users' processes"), &(settings->shadowOtherUsers)));
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide kernel processes"), &(settings->hide_kernel_processes)));
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Hide additional thread processes"), &(settings->hide_thread_processes)));
 #if defined __OpenBSD__ && defined PID_AND_MAIN_THREAD_ID_DIFFER
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Hide high-level processes"), &settings->hide_high_level_processes));
 #endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Display additional threads in a different color"), &(settings->highlightThreads)));
+#endif
    Panel_add(super, (Object*)CheckItem_newByRef(xStrdup("Display kernel processes in a different color"), &(settings->highlight_kernel_processes)));
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show custom thread names"), &(settings->showThreadNames)));
+#endif
    Panel_add(super, (Object*) CheckItem_newByRef(xStrdup("Show program path"), &(settings->showProgramPath)));
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Highlight newly created processes"), &settings->highlight_new_processes));
    Panel_add(super, (Object *)CheckItem_newByRef(xStrdup("Show kernel process/thread count in task counter"), &settings->tasks_meter_show_kernel_process_count));

@@ -23,6 +23,7 @@ in the source distribution for its full text.
 #include "SignalsPanel.h"
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 
 extern ProcessField Platform_defaultFields[];
 

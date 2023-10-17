@@ -34,6 +34,7 @@ in the source distribution for its full text.
 #include <dlfcn.h>
 
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 
 #ifndef PRIO_PROCESS
 #define PRIO_PROCESS 0
