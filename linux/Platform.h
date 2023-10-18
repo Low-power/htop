@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 #ifdef __linux__
 #define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+#define PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
 #endif
 
 #ifndef CLAMP

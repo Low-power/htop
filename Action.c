@@ -463,7 +463,9 @@ static const struct key_help_entry helpRight[] = {
    { "      a: ", "set CPU affinity", KEY_VI_MODE_COMPATIBLE },
 #endif
    { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },
-   { "      i: ", "set IO priority", KEY_VI_MODE_COMPATIBLE },
+#ifdef PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
+   { "      i: ", "set I/O priority", KEY_VI_MODE_COMPATIBLE },
+#endif
    { "    l o: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
    { "      o: ", "list open files with lsof(8)", KEY_VI_MODE_ONLY },
    { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
