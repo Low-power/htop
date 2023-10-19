@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.65)
-AC_INIT([htop], [2.3.1], [https://sourceforge.net/p/rivoreo/htop/tickets/])
+AC_INIT([htop], [2.3.2], [https://sourceforge.net/p/rivoreo/htop/tickets/])
 
 AC_CONFIG_SRCDIR([htop.c])
 AC_CONFIG_AUX_DIR([.])
