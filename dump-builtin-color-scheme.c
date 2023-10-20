@@ -1,5 +1,5 @@
 /*	Dump built-in color scheme of htop
-	Copyright 2015-2022 Rivoreo
+	Copyright 2015-2023 Rivoreo
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of any version of the GNU General Public License
@@ -15,8 +15,6 @@
 #include "local-curses.h"
 #include <unistd.h>
 #include <stdio.h>
-
-//#define ColorIndex(i,j) ( ( 7 - (i) ) * 8  +  (j) )
 
 //#if COLOR_PAIR(1) == NCURSES_BITS(1, 0)
 #if 1
@@ -102,7 +100,7 @@ int main(int argc, char **argv) {
 			color_names[7 - (int)((colors[HTOP_##KEY##_COLOR]&A_COLOR)>>NCURSES_ATTR_SHIFT) / 8 % 8], \
 			color_names[(int)((colors[HTOP_##KEY##_COLOR]&A_COLOR)>>NCURSES_ATTR_SHIFT) % 8]); \
 		print_font_attribute(colors[HTOP_##KEY##_COLOR]); \
-	} while(0);
+	} while(0)
 #else
 #define PRINT_COLOR_ATTRIBUTE(KEY) printf(#KEY "=0x%x\n", colors[HTOP_##KEY##_COLOR])
 #endif
