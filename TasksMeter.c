@@ -1,18 +1,18 @@
 /*
 htop - TasksMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "TasksMeter.h"
-
-#include "Platform.h"
-#include "CRT.h"
-
 /*{
 #include "Meter.h"
 }*/
+
+#include "TasksMeter.h"
+#include "Platform.h"
+#include "CRT.h"
 
 int TasksMeter_attributes[] = {
    HTOP_PROCESS_COLOR, HTOP_PROCESS_THREAD_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_TASKS_RUNNING_COLOR
@@ -25,15 +25,16 @@ static void TasksMeter_updateValues(Meter* this, char* buffer, int len) {
    if (this->pl->settings->tasks_meter_show_kernel_process_count) {
       this->values[2] = pl->kernel_process_count;
       this->values[3] = pl->kernel_thread_count > pl->kernel_process_count ? pl->kernel_thread_count : 0;
+      xSnprintf(buffer, len, "%d/%d", pl->kernel_process_count, pl->totalTasks);
    } else {
       this->values[2] = 0;
       this->values[3] = 0;
+      xSnprintf(buffer, len, "%d", pl->totalTasks);
    }
    this->values[4] = MIN(pl->running_thread_count, pl->cpuCount);
    if (pl->totalTasks > this->total) {
       this->total = pl->totalTasks;
    }
-   xSnprintf(buffer, len, "%d/%d", (int) this->values[3], (int) this->total);
 }
 
 static void TasksMeter_display(Object* cast, RichString* out) {
@@ -87,6 +88,7 @@ MeterClass TasksMeter_class = {
    .maxItems = 5,
    .total = 100.0,
    .attributes = TasksMeter_attributes, 
+   .values_are_overlapped = true,
    .name = "Tasks",
    .uiName = "Task counter",
    .caption = "Tasks"

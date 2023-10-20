@@ -1,6 +1,7 @@
 /*
 htop - Meter.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -36,6 +37,7 @@ typedef struct MeterClass_ {
    const char* description;
    const char maxItems;
    char curItems;
+   bool values_are_overlapped;
 } MeterClass;
 
 #define As_Meter(this_)                ((MeterClass*)((this_)->super.klass))
@@ -287,15 +289,44 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
       return;
    }
-   char bar[w + 1];
-   int blockSizes[10];
 
+   char bar[w + 1];
    xSnprintf(bar, w + 1, "%*.*s", w, w, buffer);
 
    // First draw in the bar[] buffer...
-   int offset = 0;
-   int items = Meter_getItems(this);
-   for (int i = 0; i < items; i++) {
+   int nitems = Meter_getItems(this);
+   assert((size_t)nitems < sizeof BarMeterMode_characters);
+   int blockSizes[nitems];
+   int indexes[nitems];
+   if(As_Meter(this)->values_are_overlapped) {
+      bool mask[nitems];
+      memset(mask, 0, nitems * sizeof(bool));
+      for(int i = 0; i < nitems; i++) {
+         int cur_min_i = -1;
+         for(int j = 0; j < nitems; j++) {
+            if(mask[j]) continue;
+            if(cur_min_i < 0 || this->values[j] < this->values[cur_min_i]) cur_min_i = j;
+         }
+         assert(cur_min_i >= 0);
+         mask[indexes[i] = cur_min_i] = true;
+      }
+      int offset = 0;
+      for(int j = 0; j < nitems; j++) {
+         int i = indexes[j];
+         double value = this->values[i];
+         value = CLAMP(value, 0, this->total);
+         int block_size = value > 0 ? ceil((value/this->total) * w) : 0;
+         assert(block_size >= offset);
+         for(int k = offset; k < block_size; k++) {
+            if(bar[k] != ' ') continue;
+            bar[k] =
+               CRT_color_scheme_is_monochrome[CRT_color_scheme_index] ?
+                  BarMeterMode_characters[i] : '|';
+         }
+         blockSizes[i] = block_size - offset;
+         offset = block_size;
+      }
+   } else for (int i = 0, offset = 0; i < nitems; i++) {
       double value = this->values[i];
       value = CLAMP(value, 0.0, this->total);
       if (value > 0) {
@@ -314,11 +345,13 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
          }
       }
       offset = nextOffset;
+      indexes[i] = i;
    }
 
    // ...then print the buffer.
-   offset = 0;
-   for (int i = 0; i < items; i++) {
+   int offset = 0;
+   for (int j = 0; j < nitems; j++) {
+      int i = indexes[j];
       attrset(CRT_colors[Meter_attributes(this)[i]]);
       mvaddnstr(y, x + offset, bar + offset, blockSizes[i]);
       offset += blockSizes[i];

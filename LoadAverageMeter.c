@@ -65,6 +65,7 @@ MeterClass LoadAverageMeter_class = {
    .maxItems = 3,
    .total = 100.0,
    .attributes = LoadAverageMeter_attributes,
+   .values_are_overlapped = true,
    .name = "LoadAverage",
    .uiName = "Load average",
    .description = "Load averages: 1 minute, 5 minutes, 15 minutes",

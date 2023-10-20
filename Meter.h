@@ -5,6 +5,7 @@
 /*
 htop - Meter.h
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -39,6 +40,7 @@ typedef struct MeterClass_ {
    const char* description;
    const char maxItems;
    char curItems;
+   bool values_are_overlapped;
 } MeterClass;
 
 #define As_Meter(this_)                ((MeterClass*)((this_)->super.klass))
