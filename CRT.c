@@ -1,7 +1,7 @@
 /*
 htop - CRT.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -1039,6 +1039,22 @@ void CRT_initColorSchemes() {
 
    assert(CRT_user_defined_color_schemes == NULL);
    char *config_dir_path = CRT_getConfigDirPath(NULL);
+   char *colorschemes_dir_path = String_cat(config_dir_path, "colorschemes/");
+   DIR *colorschemes_dir = opendir(colorschemes_dir_path);
+   if(colorschemes_dir) {
+      struct dirent *de;
+      while((de = readdir(colorschemes_dir))) {
+         if(*de->d_name == '.') continue;
+         char *path = String_cat(colorschemes_dir_path, de->d_name);
+         struct stat st;
+         if(stat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+            load_user_defined_color_scheme(path);
+         }
+         free(path);
+      }
+      closedir(colorschemes_dir);
+   }
+   free(colorschemes_dir_path);
    DIR *config_dir = opendir(config_dir_path);
    if(config_dir) {
       struct dirent *e;
