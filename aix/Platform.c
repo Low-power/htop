@@ -7,6 +7,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Platform.h"
 #include "CPUMeter.h"
 #include "MemoryMeter.h"
@@ -16,6 +17,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include "UsersMeter.h"
 #include "AixProcessList.h"
 #include <signal.h>
 #include <sys/proc.h>
@@ -117,6 +119,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &BatteryMeter_class,
    &HostnameMeter_class,
    &UptimeMeter_class,

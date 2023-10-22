@@ -2,28 +2,10 @@
 htop - haiku/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
-
-#include "Platform.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "HaikuProcess.h"
-#include "HaikuProcessList.h"
-#include <OS.h>
-#include <unistd.h>
-#include <signal.h>
-#include <limits.h>
-#include <string.h>
-#include <errno.h>
 
 /*{
 #include "config.h"
@@ -62,6 +44,25 @@ static inline void *get_libroot() {
 	return libroot;
 }
 }*/
+
+#include "Platform.h"
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "ClockMeter.h"
+#include "HostnameMeter.h"
+#include "UptimeMeter.h"
+#include "UsersMeter.h"
+#include "HaikuProcess.h"
+#include "HaikuProcessList.h"
+#include <OS.h>
+#include <unistd.h>
+#include <signal.h>
+#include <limits.h>
+#include <string.h>
+#include <errno.h>
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -112,6 +113,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &BatteryMeter_class,
    &HostnameMeter_class,
    &UptimeMeter_class,

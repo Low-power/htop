@@ -76,6 +76,14 @@ char* strcasestr(const char* s, const char* find) {
 }
 #endif
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t max_len) {
+	size_t len = 0;
+	while(len < max_len && s[len]) len++;
+	return len;
+}
+#endif
+
 char* String_cat(const char* s1, const char* s2) {
    size_t l1 = strlen(s1);
    size_t l2 = strlen(s2);

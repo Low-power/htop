@@ -56,6 +56,10 @@ in the source distribution for its full text.
 char* strcasestr(const char* s, const char* find);
 #endif
 
+#ifndef HAVE_STRNLEN
+size_t strnlen(const char *s, size_t max_len);
+#endif
+
 char* String_cat(const char* s1, const char* s2);
 
 char* String_trim(const char* in);

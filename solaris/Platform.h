@@ -11,10 +11,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#ifdef HAVE_LIBPROC
-#else
-#endif
-
 #include "config.h"
 #include "Action.h"
 #include "BatteryMeter.h"
@@ -30,6 +26,10 @@ in the source distribution for its full text.
 #endif
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
+
+#ifdef HAVE_LIBPROC
+#else
+#endif
 
 extern const SignalItem Platform_signals[];
 
@@ -70,10 +70,6 @@ char **Platform_getProcessEnvv(const Process *proc);
 
 char **Platform_getProcessEnvv(const Process *proc);
 
-#endif
-
-#ifndef HAVE_STRNLEN
-size_t strnlen(const char *s, size_t max_len);
 #endif
 
 bool Platform_haveSwap();

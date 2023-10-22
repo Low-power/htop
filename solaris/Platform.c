@@ -7,37 +7,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
-#include "Meter.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "SolarisProcess.h"
-#include "SolarisProcessList.h"
-#include "IOUtils.h"
-#include "KStat.h"
-#include <sys/types.h>
-#include <sys/resource.h>
-#include <sys/loadavg.h>
-#include <sys/stat.h>
-#include <sys/swap.h>
-#include <string.h>
-#include <limits.h>
-#include <math.h>
-#include <sys/var.h>
-#ifdef HAVE_LIBPROC
-#include <libproc.h>
-#else
-#include <procfs.h>
-#include <unistd.h>
-#include <fcntl.h>
-#endif
-
 /*{
 #include "config.h"
 #include "Action.h"
@@ -55,6 +24,39 @@ in the source distribution for its full text.
 
 #define MAX_VALUE_OF(T) (((size_t)1 << (sizeof(T) * 8 - ((T)-1 == -1))) - 1)
 }*/
+
+#include "Platform.h"
+#include "Meter.h"
+#include "CPUMeter.h"
+#include "MemoryMeter.h"
+#include "SwapMeter.h"
+#include "TasksMeter.h"
+#include "LoadAverageMeter.h"
+#include "ClockMeter.h"
+#include "HostnameMeter.h"
+#include "UptimeMeter.h"
+#include "UsersMeter.h"
+#include "SolarisProcess.h"
+#include "SolarisProcessList.h"
+#include "IOUtils.h"
+#include "KStat.h"
+#include "StringUtils.h"
+#include <sys/types.h>
+#include <sys/resource.h>
+#include <sys/loadavg.h>
+#include <sys/stat.h>
+#include <sys/swap.h>
+#include <string.h>
+#include <limits.h>
+#include <math.h>
+#include <sys/var.h>
+#ifdef HAVE_LIBPROC
+#include <libproc.h>
+#else
+#include <procfs.h>
+#include <unistd.h>
+#include <fcntl.h>
+#endif
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -124,6 +126,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &BatteryMeter_class,
    &HostnameMeter_class,
    &UptimeMeter_class,
@@ -301,14 +306,6 @@ char **Platform_getProcessEnvv(const Process *proc) {
 	return get_process_vector(proc, true);
 }
 
-#endif
-
-#ifndef HAVE_STRNLEN
-size_t strnlen(const char *s, size_t max_len) {
-	size_t len = 0;
-	while(len < max_len && s[len]) len++;
-	return len;
-}
 #endif
 
 bool Platform_haveSwap() {

@@ -2,10 +2,23 @@
 htop - hurd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
+
+/*{
+#include "Action.h"
+#include "BatteryMeter.h"
+#include "SignalsPanel.h"
+#include <mach/mach_traps.h>
+
+static inline mach_port_t get_host_port() {
+	static mach_port_t host = MACH_PORT_NULL;
+	if(host == MACH_PORT_NULL) host = mach_host_self();
+	return host;
+}
+}*/
 
 #include "Platform.h"
 #include "CPUMeter.h"
@@ -16,6 +29,7 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include "UsersMeter.h"
 #include "HurdProcess.h"
 #include "HurdProcessList.h"
 #include <sys/mman.h>
@@ -31,19 +45,6 @@ in the source distribution for its full text.
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
-
-/*{
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-#include <mach/mach_traps.h>
-
-static inline mach_port_t get_host_port() {
-	static mach_port_t host = MACH_PORT_NULL;
-	if(host == MACH_PORT_NULL) host = mach_host_self();
-	return host;
-}
-}*/
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -97,6 +98,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &BatteryMeter_class,
    &HostnameMeter_class,
    &UptimeMeter_class,

@@ -112,6 +112,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,

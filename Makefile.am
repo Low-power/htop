@@ -25,7 +25,8 @@ RichString.c ScreenManager.c Settings.c SignalsPanel.c StringUtils.c \
 IOUtils.c SwapMeter.c TasksMeter.c UptimeMeter.c TraceScreen.c \
 UsersTable.c Vector.c AvailableColumnsPanel.c AffinityPanel.c \
 HostnameMeter.c OpenFilesScreen.c Affinity.c IncSet.c Action.c ArgScreen.c \
-EnvScreen.c InfoScreen.c XAlloc.c KStat.c KernelStackTraceScreen.c
+EnvScreen.c InfoScreen.c XAlloc.c KStat.c KernelStackTraceScreen.c \
+UsersMeter.c
 
 myhtopheaders = AvailableColumnsPanel.h AvailableMetersPanel.h \
 CategoriesPanel.h CheckItem.h ClockMeter.h ColorsPanel.h ColumnsPanel.h \
@@ -37,7 +38,7 @@ StringUtils.h IOUtils.h SwapMeter.h TasksMeter.h UptimeMeter.h \
 TraceScreen.h UsersTable.h Vector.h Process.h AffinityPanel.h \
 HostnameMeter.h OpenFilesScreen.h Affinity.h IncSet.h Action.h \
 ArgScreen.h EnvScreen.h InfoScreen.h XAlloc.h KStat.h \
-KernelStackTraceScreen.h FieldData.h
+KernelStackTraceScreen.h FieldData.h UsersMeter.h
 
 if DISK_STATS
 myhtopsources += DiskPanel.c DiskList.c Disk.c

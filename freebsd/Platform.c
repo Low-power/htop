@@ -16,6 +16,7 @@ in the source distribution for its full text.
 #include "UptimeMeter.h"
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
+#include "UsersMeter.h"
 #include "FreeBSDProcess.h"
 #include "FreeBSDProcessList.h"
 #include <sys/param.h>
@@ -108,6 +109,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &UptimeMeter_class,
    &BatteryMeter_class,
    &HostnameMeter_class,

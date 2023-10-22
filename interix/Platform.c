@@ -2,10 +2,17 @@
 htop - interix/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
+
+/*{
+#include "Action.h"
+#include "BatteryMeter.h"
+#include "SignalsPanel.h"
+#include "InterixProcess.h"
+}*/
 
 #include "Platform.h"
 #include "CPUMeter.h"
@@ -16,15 +23,9 @@ in the source distribution for its full text.
 #include "ClockMeter.h"
 #include "HostnameMeter.h"
 #include "UptimeMeter.h"
+#include "UsersMeter.h"
 #include <signal.h>
 #include <stdio.h>
-
-/*{
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-#include "InterixProcess.h"
-}*/
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -78,6 +79,9 @@ MeterClass* Platform_meterTypes[] = {
    &MemoryMeter_class,
    &SwapMeter_class,
    &TasksMeter_class,
+#ifdef HAVE_UTMPX
+   &UsersMeter_class,
+#endif
    &BatteryMeter_class,
    &HostnameMeter_class,
    &UptimeMeter_class,
