@@ -335,6 +335,8 @@ SUFFIXES = .h
 BUILT_SOURCES = $(myhtopheaders) $(myhtopplatheaders)
 htop_SOURCES  = $(myhtopheaders) $(myhtopplatheaders) $(myhtopsources) $(myhtopplatsources) config.h
 
+DUMP_BUILTIN_COLOR_SCHEME_OBJECTS = dump-builtin-color-scheme.o CRT.o StringUtils.o XAlloc.o RichString.o
+
 .PHONY: htop-headers clean-htop-headers
 
 htop-headers: $(myhtopheaders) $(all_platform_headers)
@@ -353,6 +355,9 @@ debug:
 
 coverage:
 	LOCAL_CPPFLAGS="-D DEBUG=1" LOCAL_CFLAGS="-fprofile-arcs -ftest-coverage" LDADD=-lgcov $(MAKE) all
+
+dump-builtin-color-scheme:	$(DUMP_BUILTIN_COLOR_SCHEME_OBJECTS)
+	$(AM_V_CCLD)$(LINK) $(DUMP_BUILTIN_COLOR_SCHEME_OBJECTS) -Wl,--as-needed $(LIBS)
 
 .c.h:
 	@case "$@" in \
@@ -385,3 +390,6 @@ lcov:
 	mkdir -p lcov
 	lcov --capture --directory . --output-file coverage.info
 	genhtml coverage.info --output-directory lcov
+
+clean-local:
+	-rm -f dump-builtin-color-scheme
