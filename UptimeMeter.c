@@ -78,7 +78,7 @@ static void UptimeMeter_updateValues(Meter* this, char* buffer, int len) {
    int days = (totalseconds/86400);
    this->values[0] = days;
    if (days > this->total) {
-      this->total = days;
+      this->total = (days - 1 + 100) / 100 * 100;
    }
    char daysbuf[32];
    if (days > 100) {

@@ -23,6 +23,7 @@ typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
 typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
+typedef double (*MeterGetDoubleFunction)(Meter *);
 
 typedef struct MeterClass_ {
    ObjectClass super;
@@ -31,6 +32,7 @@ typedef struct MeterClass_ {
    Meter_UpdateMode updateMode;
    Meter_Draw draw;
    Meter_UpdateValues updateValues;
+   MeterGetDoubleFunction getMaximum;
    int defaultMode;
    double total;
    const int* attributes;
@@ -59,6 +61,7 @@ typedef struct MeterClass_ {
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
+#define Meter_getMaximum(this_)        As_Meter(this_)->getMaximum(this_)
 
 struct Meter_ {
    Object super;

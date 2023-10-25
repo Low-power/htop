@@ -78,6 +78,16 @@ static void UsersMeter_display(Object *super, RichString *out) {
 	RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], user_count == 1 ? " user" : " users");
 }
 
+static double UsersMeter_getMaximum(Meter *this) {
+	double v = this->values[0];
+	double r = 64;
+	while(v > 64) {
+		v /= 2;
+		r *= 2;
+	}
+	return r;
+}
+
 MeterClass UsersMeter_class = {
    .super = {
       .extends = Class(Meter),
@@ -85,6 +95,7 @@ MeterClass UsersMeter_class = {
       .display = UsersMeter_display,
    },
    .updateValues = UsersMeter_updateValues,
+   .getMaximum = UsersMeter_getMaximum,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 2,
    .total = 64,

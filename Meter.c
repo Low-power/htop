@@ -20,6 +20,7 @@ typedef void(*Meter_Done)(Meter*);
 typedef void(*Meter_UpdateMode)(Meter*, int);
 typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
+typedef double (*MeterGetDoubleFunction)(Meter *);
 
 typedef struct MeterClass_ {
    ObjectClass super;
@@ -28,6 +29,7 @@ typedef struct MeterClass_ {
    Meter_UpdateMode updateMode;
    Meter_Draw draw;
    Meter_UpdateValues updateValues;
+   MeterGetDoubleFunction getMaximum;
    int defaultMode;
    double total;
    const int* attributes;
@@ -56,6 +58,7 @@ typedef struct MeterClass_ {
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
+#define Meter_getMaximum(this_)        As_Meter(this_)->getMaximum(this_)
 
 struct Meter_ {
    Object super;
@@ -126,9 +129,19 @@ static long int lround(double v) {
 }
 #endif
 
+static double base_Meter_getMaximum(Meter *this) {
+	return this->total;
+}
+
+static void Meter_inherit(ObjectClass *super_class) {
+	MeterClass *class = (MeterClass *)super_class;
+	if(!class->getMaximum) class->getMaximum = base_Meter_getMaximum;
+}
+
 MeterClass Meter_class = {
    .super = {
-      .extends = Class(Object)
+      .extends = Class(Object),
+      .inherit = Meter_inherit,
    }
 };
 
@@ -294,6 +307,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    xSnprintf(bar, w + 1, "%*.*s", w, w, buffer);
 
    // First draw in the bar[] buffer...
+   double total = Meter_getMaximum(this);
    int nitems = Meter_getItems(this);
    assert((size_t)nitems < sizeof BarMeterMode_characters);
    int blockSizes[nitems];
@@ -314,8 +328,8 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       for(int j = 0; j < nitems; j++) {
          int i = indexes[j];
          double value = this->values[i];
-         value = CLAMP(value, 0, this->total);
-         int block_size = value > 0 ? ceil((value/this->total) * w) : 0;
+         value = CLAMP(value, 0, total);
+         int block_size = value > 0 ? ceil((value/total) * w) : 0;
          assert(block_size >= offset);
          for(int k = offset; k < block_size; k++) {
             if(bar[k] != ' ') continue;
@@ -328,9 +342,9 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
       }
    } else for (int i = 0, offset = 0; i < nitems; i++) {
       double value = this->values[i];
-      value = CLAMP(value, 0.0, this->total);
+      value = CLAMP(value, 0.0, total);
       if (value > 0) {
-         blockSizes[i] = ceil((value/this->total) * w);
+         blockSizes[i] = ceil((value/total) * w);
       } else {
          blockSizes[i] = 0;
       }
@@ -432,10 +446,9 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       char buffer[nValues];
       Meter_updateValues(this, buffer, nValues);
       double value = 0.0;
-      int items = Meter_getItems(this);
-      for (int i = 0; i < items; i++)
-         value += this->values[i];
-      value /= this->total;
+      int nitems = Meter_getItems(this);
+      for (int i = 0; i < nitems; i++) value += this->values[i];
+      value /= Meter_getMaximum(this);
       data->values[nValues - 1] = value;
    }
    int i = nValues - (w*2) + 2, k = 0;

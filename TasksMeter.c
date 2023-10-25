@@ -77,6 +77,16 @@ static void TasksMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " running");
 }
 
+static double TasksMeter_getMaximum(Meter *this) {
+	double v = this->values[0];
+	double r = 100;
+	while(v >= 100) {
+		v /= 10;
+		r *= 10;
+	}
+	return r;
+}
+
 MeterClass TasksMeter_class = {
    .super = {
       .extends = Class(Meter),
@@ -84,6 +94,7 @@ MeterClass TasksMeter_class = {
       .display = TasksMeter_display,
    },
    .updateValues = TasksMeter_updateValues,
+   .getMaximum = TasksMeter_getMaximum,
    .defaultMode = TEXT_METERMODE,
    .maxItems = 5,
    .total = 100.0,
