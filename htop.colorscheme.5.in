@@ -1,0 +1,103 @@
+.TH HTOP.COLORSCHEME 5 2023 "@PACKAGE_STRING@" "File Formats"
+.SH NAME
+htop.colorscheme \- htop color scheme definition file
+.SH DESCRIPTION
+.LP
+Htop supports loading user-defined color schemes. The color scheme definition
+files will be automatically searched and loaded on htop starting up; then a
+color scheme can be selected from the Setup screen in htop.
+.LP
+The format of each line is composed with a key and a value, as follows:
+.RS
+\fIKEY\fR=\fIVALUE\fR
+.RE
+.LP
+Blank lines, lines contain only white-space characters, as well as lines begin
+with a # character will be ignored.
+.LP
+.SH KEYS
+Possible keys are \fBNAME\fR, \fBMONOCHROME\fR, and many color elements;
+please see source file \fICRT.c\fR or \fIcontrib/colorschemes/*\fR for a full
+list of available color elements.
+.LP
+Key \fBNAME\fR is mandatory in a file, and must appear only once; otherwise
+this file is considered invalid and won't be available for use. Because
+\fIhtop(1)\fR uses the name to uniquely identify each color scheme, it must be
+unique across all built-in color schemes and user-defined color schemes.
+.LP
+Key \fBMONOCHROME\fR indicates whether this color scheme is intended to work
+with a monochrome terminal. Due to lack of color supports, \fIhtop(1)\fR will
+make some minor appearance changes to fit such a terminal if this option is
+enabled. Possible values for this key are \fB0\fR, \fBno\fR, \fBfalse\fR,
+\fBoff\fR, \fB1\fR, \fByes\fR, \fBtrue\fR and \fBon\fR; this value is matched
+case-insensitively.
+.LP
+A color scheme definition file should define every available color element.
+The default foreground and background colors for undefined color elements will
+both be BLACK, which will result in a broken look of affected color elements.
+.SH "COLOR ELEMENT FORMAT"
+For color element keys, their value format is as follows:
+.RS
+\fIFOREGROUND-COLOR\fR,\fIBACKGROUND-COLOR\fR[,\fIFONT-ATTRIBUTE\fR...]
+.RE
+.LP
+Where possible chooses for \fIFOREGROUND-COLOR\fR and \fIBACKGROUND-COLOR\fR
+are:
+.RS
+BLACK
+RED
+GREEN
+YELLOW
+BLUE
+MAGENTA
+CYAN
+WHITE
+.RE
+.LP
+A color element can optionally have one or more \fIFONT-ATTRIBUTE\fRs, the
+possible chooses are:
+.RS
+STANDOUT
+UNDERLINE
+REVERSE
+BLINK
+DIM
+BOLD
+ALTCHARSET
+INVIS
+PROTECT
+HORIZONTAL
+LEFT
+LOW
+RIGHT
+TOP
+VERTICAL
+.RE
+.LP
+Not all attributes are supported on every platform; unsupported attributes
+will be ignored if specified. See \fIcurs_attr(3X)\fR for descriptions of
+supported attributes.
+.SH EXAMPLES
+The source distribution of htop contains a small tool which can be used to
+dump built-in color schemes into this format, for use as examples and
+templates. To build this tool, first \fIconfigure\fR the source tree, then
+\fImake(1)\fR the \fBdump-builtin-color-scheme\fR target; for example after
+entering the newly extracted htop source code directory, run:
+.sp
+.in +2
+.nf
+$ mkdir build
+$ cd build
+$ ../configure
+$ make dump-builtin-color-scheme
+.fi
+.in -2
+.LP
+Should build the tool named \fBdump-builtin-color-scheme\fR.
+.LP
+To test a dumped color scheme in htop, its \fBNAME\fR must be at first changed
+to avoid conflicting with the original built-in color scheme.
+.SH FILES
+$HOME/.config/htop/colorschemes/*
+.SH "SEE ALSO"
+curs_color(3X), curs_attr(3X), ncurses(3X), htop(1)

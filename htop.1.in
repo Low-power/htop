@@ -458,6 +458,14 @@ You may override the location of the configuration file using the \fBHTOPRC\fR
 environment variable (so you can have multiple configurations for different
 machines that share the same home directory, for example).
 
+.SH "USER-DEFINED COLOR SCHEMES"
+.LP
+In addition to built-in color schemes, htop supports using more color schemes
+defined from external files. Htop tries to read files under directory
+\fI~/.config/htop/colorschemes\fR as color scheme definition files;
+successfully loaded color schemes will appear in the Setup screen. Please see
+\fIhtop.colorscheme(5)\fR for the file format details.
+
 .SH "MEMORY SIZES"
 .LP
 Memory sizes in htop are displayed as they are in tools from the GNU Coreutils

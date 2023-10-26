@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = htop
 
-dist_man_MANS = htop.1
+dist_man_MANS = htop.1 htop.colorscheme.5
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.sh \
 install-sh autogen.sh missing
 applicationsdir = $(datadir)/applications

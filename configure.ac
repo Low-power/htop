@@ -719,7 +719,7 @@ AM_CONDITIONAL([HTOP_HURD], [test "$my_htop_platform" = hurd])
 AM_CONDITIONAL([HTOP_HAIKU], [test "$my_htop_platform" = haiku])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
-AC_CONFIG_FILES([Makefile htop.1])
+AC_CONFIG_FILES([Makefile htop.1 htop.colorscheme.5])
 AC_OUTPUT
 
 if test "$my_htop_platform" = "unsupported"
