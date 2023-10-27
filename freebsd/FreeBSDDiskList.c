@@ -1,6 +1,6 @@
 /*
 htop - freebsd/FreeBSDDiskList.c
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2023 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -8,11 +8,13 @@ in the source distribution for its full text.
 /*{
 #include "DiskList.h"
 #include <libgeom.h>
+#include <time.h>
 
 typedef struct {
 	DiskList super;
 	void *previous_stats;
 	struct gmesh tree;
+	time_t tree_mtime;
 } FreeBSDDiskList;
 }*/
 
@@ -47,8 +49,7 @@ DiskList *DiskList_new(const Settings *settings) {
 	DiskList_init(&disk_list->super, Class(FreeBSDDisk), settings);
 	disk_list->previous_stats = geom_stats_snapshot_get();
 	if(!disk_list->previous_stats) CRT_fatalError("geom_stats_snapshot_get", 0);
-	e = geom_gettree(&disk_list->tree);
-	if(e) CRT_fatalError("geom_gettree", e);
+	disk_list->tree_mtime = -1;
 	return (DiskList *)disk_list;
 }
 
@@ -156,6 +157,11 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 	geom_stats_snapshot_timestamp(this->previous_stats, &prev_ts);
 	long double interval = (ts.tv_sec - prev_ts.tv_sec) +
 		(long double)(ts.tv_nsec - prev_ts.tv_nsec) / 1000000000;
+	if(this->tree_mtime == (time_t)-1 || ts.tv_sec - this->tree_mtime > 60) {
+		int e = geom_gettree(&this->tree);
+		if(e) CRT_fatalError("geom_gettree", e);
+		this->tree_mtime = ts.tv_sec;
+	}
 	struct devstat *devstat;
 	while((devstat = geom_stats_snapshot_next(stats))) {
 		struct devstat *prev_devstat = geom_stats_snapshot_next(this->previous_stats);
