@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #include <string.h>
 
 int UsersMeter_attributes[] = {
-	HTOP_TASKS_RUNNING_COLOR, HTOP_METER_VALUE_COLOR
+	HTOP_SESSIONS_COLOR, HTOP_USERS_COLOR
 };
 
 static void UsersMeter_updateValues(Meter *this, char *buffer, int len) {
@@ -52,14 +52,7 @@ static void UsersMeter_updateValues(Meter *this, char *buffer, int len) {
 	endutxent();
 	free(user_names);
 
-#if 0
-	xSnprintf(buffer, len, "%d session%s, %d user%s",
-		session_count, session_count == 1 ? "" : "s",
-		user_count, user_count == 1 ? "" : "s");
-#else
 	xSnprintf(buffer, len, "%d/%d", session_count, user_count);
-#endif
-
 	this->values[0] = session_count;
 	this->values[1] = user_count;
 }
@@ -71,10 +64,10 @@ static void UsersMeter_display(Object *super, RichString *out) {
 	int user_count = this->values[1];
 	RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
 	xSnprintf(buffer, sizeof buffer, "%d", session_count);
-	RichString_append(out, CRT_colors[HTOP_TASKS_RUNNING_COLOR], buffer);
+	RichString_append(out, CRT_colors[HTOP_SESSIONS_COLOR], buffer);
 	RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], session_count == 1 ? " session, " : " sessions, ");
 	xSnprintf(buffer, sizeof buffer, "%d", user_count);
-	RichString_append(out, CRT_colors[HTOP_METER_VALUE_COLOR], buffer);
+	RichString_append(out, CRT_colors[HTOP_USERS_COLOR], buffer);
 	RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], user_count == 1 ? " user" : " users");
 }
 

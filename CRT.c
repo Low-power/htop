@@ -96,6 +96,8 @@ typedef enum {
    HTOP_CPU_SOFTIRQ_COLOR,
    HTOP_CPU_STEAL_COLOR,
    HTOP_CPU_GUEST_COLOR,
+   HTOP_SESSIONS_COLOR,
+   HTOP_USERS_COLOR,
    LAST_COLORELEMENT
 } ColorElement;
 
@@ -268,6 +270,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = ColorPair(Magenta,Black),
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,Black),
+      [HTOP_SESSIONS_COLOR] = A_BOLD | ColorPair(Green,Black),
+      [HTOP_USERS_COLOR] = A_BOLD | ColorPair(Cyan,Black),
    },
    [MONOCHROME_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = A_NORMAL,
@@ -333,6 +337,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = A_BOLD,
       [HTOP_CPU_STEAL_COLOR] = A_REVERSE,
       [HTOP_CPU_GUEST_COLOR] = A_REVERSE,
+      [HTOP_SESSIONS_COLOR] = A_BOLD,
+      [HTOP_USERS_COLOR] = A_BOLD,
    },
    [BLACKONWHITE_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Black,White),
@@ -398,6 +404,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = ColorPair(Blue,White),
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,White),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,White),
+      [HTOP_SESSIONS_COLOR] = ColorPair(Green,White),
+      [HTOP_USERS_COLOR] = ColorPair(Black,White),
    },
    [LIGHTTERMINAL_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Black,Black),
@@ -463,6 +471,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = ColorPair(Blue,Black),
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Black,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Black,Black),
+      [HTOP_SESSIONS_COLOR] = ColorPair(Green,Black),
+      [HTOP_USERS_COLOR] = ColorPair(Black,Black),
    },
    [MIDNIGHT_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(White,Blue),
@@ -528,6 +538,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = ColorPair(Black,Blue),
       [HTOP_CPU_STEAL_COLOR] = ColorPair(White,Blue),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(White,Blue),
+      [HTOP_SESSIONS_COLOR] = A_BOLD | ColorPair(Green,Blue),
+      [HTOP_USERS_COLOR] = A_BOLD | ColorPair(Cyan,Blue),
    },
    [BLACKNIGHT_COLOR_SCHEME] = {
       [HTOP_DEFAULT_COLOR] = ColorPair(Cyan,Black),
@@ -593,6 +605,8 @@ int CRT_colorSchemes[LAST_COLORSCHEME][LAST_COLORELEMENT] = {
       [HTOP_CPU_SOFTIRQ_COLOR] = ColorPair(Blue,Black),
       [HTOP_CPU_STEAL_COLOR] = ColorPair(Cyan,Black),
       [HTOP_CPU_GUEST_COLOR] = ColorPair(Cyan,Black),
+      [HTOP_SESSIONS_COLOR] = A_BOLD | ColorPair(Green,Black),
+      [HTOP_USERS_COLOR] = ColorPair(Green,Black),
    },
    [BROKENGRAY_COLOR_SCHEME] = { 0 } // dynamically generated.
 };
@@ -840,6 +854,8 @@ static const struct key_name {
 	COLOR_ELEMENT_NAME(CPU_SOFTIRQ),
 	COLOR_ELEMENT_NAME(CPU_STEAL),
 	COLOR_ELEMENT_NAME(CPU_GUEST),
+	COLOR_ELEMENT_NAME(SESSIONS),
+	COLOR_ELEMENT_NAME(USERS),
 #undef COLOR_ELEMENT_NAME
 };
 
