@@ -50,6 +50,7 @@ static void UsersMeter_updateValues(Meter *this, char *buffer, int len) {
 		} while(len != user_names[i].len || memcmp(utx->ut_user, user_names[i].name, len));
 	}
 	endutxent();
+	for(int i = 0; i < user_count; i++) free(user_names[i].name);
 	free(user_names);
 
 	xSnprintf(buffer, len, "%d/%d", session_count, user_count);
