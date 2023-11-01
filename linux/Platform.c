@@ -232,7 +232,13 @@ void Platform_updateMemoryValues(Meter *meter) {
    unsigned long long int usedMem = pl->usedMem;
    unsigned long long int buffersMem = pl->buffersMem;
    unsigned long long int cachedMem = pl->cachedMem;
+#ifdef __NetBSD__
+   usedMem -= cachedMem;
+   if(buffersMem < usedMem) usedMem -= buffersMem;
+   else buffersMem = 0;
+#else
    usedMem -= buffersMem + cachedMem;
+#endif
    meter->total = pl->totalMem;
    meter->values[0] = usedMem;
    meter->values[1] = buffersMem;
