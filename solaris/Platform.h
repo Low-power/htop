@@ -31,6 +31,11 @@ in the source distribution for its full text.
 #else
 #endif
 
+#ifndef HAVE_ISNAN
+#undef isnan
+#define isnan isnand
+#endif
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;

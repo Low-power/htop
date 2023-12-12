@@ -518,6 +518,20 @@ if test "$my_htop_platform" = "solaris"; then
 	AC_CHECK_MEMBERS([psinfo_t.pr_poolid, psinfo_t.pr_contract], [], [], [#include <procfs.h>])
 	AC_CHECK_FUNCS([dirfd strnlen])
    AC_CHECK_LIB([kstat], [kstat_open], [], [missing_libraries="$missing_libraries libkstat"])
+	AC_MSG_CHECKING([for isnan])
+	AC_LINK_IFELSE(
+		[
+			AC_LANG_PROGRAM([#include <math.h>], [
+					double n = 0 / 0;
+					return isnan(n) ? 0 : 1;
+				])
+		],
+		[
+			AC_MSG_RESULT([yes])
+			AC_DEFINE(HAVE_ISNAN, 1, [Define if you have a working isnan(3) implementation])
+		],
+		[AC_MSG_RESULT([no])]
+	)
 fi
 
 if test "$my_htop_platform" = "aix"; then

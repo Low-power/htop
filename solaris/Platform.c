@@ -58,6 +58,12 @@ in the source distribution for its full text.
 #include <fcntl.h>
 #endif
 
+#ifndef HAVE_ISNAN
+#undef isnan
+#include <ieeefp.h>
+#define isnan isnand
+#endif
+
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
 #define SIG(NAME) { .name = #NAME, .number = SIG##NAME }
