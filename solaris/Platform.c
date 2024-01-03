@@ -177,7 +177,7 @@ int Platform_getMaxPid() {
 #ifdef PID_MAX
 	return PID_MAX;
 #else
-	return = 32778; // Reasonable Solaris default
+	return 32778;	// Reasonable Solaris default
 #endif
 }
 
