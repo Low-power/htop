@@ -2,7 +2,7 @@
 htop - hurd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -143,9 +143,9 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 
 int Platform_getMaxPid() {
 	/* The Hurd process server only have a soft limit for PID values,
-	 * which can be raise by creating a lot of processes that would run
-	 * out of available PID value in current limit. Use the initial limit
-	 * here and hoping that won't happen. */
+	 * which can be raised by creating a lot of processes that would run
+	 * out of available PID value in current limit. Using the initial
+	 * limit here and hoping that won't happen. */
 	return 29999;
 }
 
