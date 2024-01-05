@@ -220,7 +220,7 @@ void Platform_updateSwapValues(Meter *meter) {
 
 static char **get_process_vector(const Process *proc, bool is_env) {
 	bool is_64bit;
-	SolarisProcess *sol_proc = (SolarisProcess *)proc;
+	const SolarisProcess *sol_proc = (const SolarisProcess *)proc;
 	switch(sol_proc->data_model) {
 		case PR_MODEL_ILP32:
 			is_64bit = false;
