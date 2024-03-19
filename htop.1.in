@@ -201,8 +201,8 @@ monitoring a process: this way, you can keep a process always visible on
 screen. When a movement key is used, "follow" loses effect.
 .TP
 .B K
-Hide kernel threads: prevent the threads belonging the kernel to be
-displayed in the process list. (This is a toggle key.)
+Hide kernel processes: prevent the kernel processes to be displayed in the
+process list. (This is a toggle key.)
 .TP
 .B H
 Hide user threads: on systems that represent them differently than ordinary
