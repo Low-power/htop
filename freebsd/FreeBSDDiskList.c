@@ -1,6 +1,6 @@
 /*
 htop - freebsd/FreeBSDDiskList.c
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -185,7 +185,7 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 			if(super->settings->disk_flags & HTOP_DISK_DEVID_FLAG) {
 				struct gconfig *kvp;
 				LIST_FOREACH(kvp, &p->lg_config, lg_config) {
-					if(strcmp(kvp->lg_name, "ident") == 0) {
+					if(kvp->lg_val && strcmp(kvp->lg_name, "ident") == 0) {
 						disk->devid = xStrdup(kvp->lg_val);
 						break;
 					}
