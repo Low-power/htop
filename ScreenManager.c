@@ -239,7 +239,7 @@ void ScreenManager_run(ScreenManager* this, Panel** lastFocus, int* lastKey) {
                               focus = i;
                               focused_panel = setCurrentPanel(panel);
                               Object* oldSelection = Panel_getSelected(panel);
-                              Panel_setSelected(panel, mevent.y - panel->y + panel->scrollV - 1);
+                              Panel_onMouseSelect(panel, mevent.y);
                               if (Panel_getSelected(panel) == oldSelection) {
                                  ch = KEY_RECLICK;
                               }

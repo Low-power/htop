@@ -35,12 +35,14 @@ typedef enum HandlerResult_ {
 typedef HandlerResult (*Panel_EventHandler)(Panel *, int, int);
 typedef bool (*Panel_BoolFunction)(const Panel *);
 typedef void (*Panel_VoidFunction)(const Panel *);
+typedef void (*Panel_VoidIntFunction)(Panel *, int);
 
 typedef struct PanelClass_ {
    ObjectClass super;
    Panel_EventHandler eventHandler;
    Panel_BoolFunction isInsertMode;
    Panel_VoidFunction placeCursor;
+   Panel_VoidIntFunction onMouseSelect;
 } PanelClass;
 
 #define As_Panel(this_)                ((PanelClass*)((this_)->super.klass))
@@ -48,6 +50,7 @@ typedef struct PanelClass_ {
 #define Panel_eventHandler(this_,ev_,rep_) As_Panel(this_)->eventHandler((Panel*)(this_),(ev_),(rep_))
 #define Panel_isInsertMode(this_) (As_Panel(this_)->isInsertMode && As_Panel(this_)->isInsertMode((Panel*)(this_)))
 #define Panel_placeCursor(this_) (As_Panel(this_)->placeCursor && (As_Panel(this_)->placeCursor(this_), true))
+#define Panel_onMouseSelect(this_,y_) As_Panel(this_)->onMouseSelect((this_), (y_))
 
 struct Panel_ {
    Object super;

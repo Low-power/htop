@@ -127,12 +127,21 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
    return result;
 }
 
+static void ColumnsPanel_onMouseSelect(Panel *this, int y) {
+   int old_selection = Panel_getSelectedIndex(this);
+   int new_selection = y - this->y + this->scrollV - 1;
+   if(old_selection == new_selection) return;
+   ((ListItem *)Panel_get(this, old_selection))->moving = false;
+   Panel_setSelected(this, new_selection);
+}
+
 PanelClass ColumnsPanel_class = {
    .super = {
       .extends = Class(Panel),
       .delete = ColumnsPanel_delete
    },
-   .eventHandler = ColumnsPanel_eventHandler
+   .eventHandler = ColumnsPanel_eventHandler,
+   .onMouseSelect = ColumnsPanel_onMouseSelect
 };
 
 ColumnsPanel* ColumnsPanel_new(Settings* settings) {
