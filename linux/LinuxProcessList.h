@@ -5,6 +5,7 @@
 /*
 htop - linux/LinuxProcessList.h
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */

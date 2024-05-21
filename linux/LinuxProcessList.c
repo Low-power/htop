@@ -1,6 +1,7 @@
 /*
 htop - linux/LinuxProcessList.c
 (C) 2014 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -286,7 +287,14 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       if(*end_p == '.') {
          if(n == 2) {
             n = strtol(end_p + 1, &end_p, 10);
-            if(*end_p == '.' && n < 27) this->support_kthread_flag = false;
+            if(*end_p == '.') {
+               if(n == 6) {
+                  n = strtol(end_p + 1, NULL, 10);
+                  if(n < 27) this->support_kthread_flag = false;
+               } else if(n < 6) {
+                  this->support_kthread_flag = false;
+               }
+            } else this->support_kthread_flag = false;
          } else if(n < 2) {
             this->support_kthread_flag = false;
          }
