@@ -57,8 +57,6 @@ Meter* Header_addMeterByClass(Header* this, MeterClass* type, int param, int col
 
 int Header_size(Header* this, int column);
 
-char* Header_readMeterName(Header* this, int i, int column);
-
 MeterModeId Header_readMeterMode(Header* this, int i, int column);
 
 void Header_reinit(const Header *this);
