@@ -5,6 +5,7 @@
 /*
 htop - HostnameMeter.h
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
