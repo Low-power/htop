@@ -98,7 +98,7 @@ AC_CHECK_TYPE([struct utmpx],
 	[AC_DEFINE(HAVE_UTMPX, 1, Define if 'struct utmpx' is available from utmpx.h)],
 	[], [#include <utmpx.h>])
 
-dnl CHECK_CFLAGS_DEPENDED(FIX-OPTIONS, TEXT-OPTIONS, [ACTION-ON-FAILURE])
+dnl CHECK_CFLAGS_DEPENDED(FIXED-OPTIONS, OPTIONS-TO-TEST, [ACTION-ON-FAILURE])
 m4_define([CHECK_CFLAGS_DEPENDED], [
 		for o in $2; do
 			save_cflags="$CFLAGS"
