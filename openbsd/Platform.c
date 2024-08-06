@@ -129,20 +129,18 @@ MeterClass* Platform_meterTypes[] = {
 };
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   struct loadavg loadAverage;
    int mib[2] = { CTL_VM, VM_LOADAVG };
-   size_t size = sizeof(loadAverage);
-
-   int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
-   if (err) {
+   struct loadavg loadavg;
+   size_t size = sizeof loadavg;
+   if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
       *one = 0;
       *five = 0;
       *fifteen = 0;
       return;
    }
-   *one     = (double) loadAverage.ldavg[0] / loadAverage.fscale;
-   *five    = (double) loadAverage.ldavg[1] / loadAverage.fscale;
-   *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
+   *one     = (double)loadavg.ldavg[0] / loadavg.fscale;
+   *five    = (double)loadavg.ldavg[1] / loadavg.fscale;
+   *fifteen = (double)loadavg.ldavg[2] / loadavg.fscale;
 }
 
 int Platform_getMaxPid() {
