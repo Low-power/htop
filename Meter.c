@@ -1,7 +1,7 @@
 /*
 htop - Meter.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -33,9 +33,14 @@ typedef struct MeterClass_ {
    int defaultMode;
    double total;
    const int* attributes;
+   // For internal use only
    const char* name;
+   // For display in setup screen
    const char* uiName;
+   // For Text mode and LED mode display
    const char* caption;
+   // For Bar mode and Graph mode display, default to caption if NULL
+   const char *short_caption;
    const char* description;
    const char maxItems;
    char curItems;
@@ -64,6 +69,7 @@ struct Meter_ {
    Object super;
    Meter_Draw draw;
    char* caption;
+   char *short_caption;
    int mode;
    int param;
    void* drawData;
@@ -155,6 +161,7 @@ Meter* Meter_new(ProcessList *pl, int param, MeterClass* type) {
    this->values = xCalloc(type->maxItems, sizeof(double));
    this->total = type->total;
    this->caption = xStrdup(type->caption);
+   if(type->short_caption) this->short_caption = xStrdup(type->short_caption);
    if (Meter_initFn(this))
       Meter_init(this);
    Meter_setMode(this, type->defaultMode);
@@ -201,6 +208,7 @@ void Meter_delete(Object* cast) {
    }
    free(this->drawData);
    free(this->caption);
+   free(this->short_caption);
    free(this->values);
    free(this);
 }
@@ -208,6 +216,11 @@ void Meter_delete(Object* cast) {
 void Meter_setCaption(Meter* this, const char* caption) {
    free(this->caption);
    this->caption = xStrdup(caption);
+}
+
+void Meter_setShortCaption(Meter *this, const char *caption) {
+   free(this->short_caption);
+   this->short_caption = xStrdup(caption);
 }
 
 static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* out) {
@@ -289,7 +302,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    w -= 2;
    attrset(CRT_colors[HTOP_METER_TEXT_COLOR]);
    int captionLen = 3;
-   mvaddnstr(y, x, this->caption, captionLen);
+   mvaddnstr(y, x, this->short_caption ? this->short_caption : this->caption, captionLen);
    x += captionLen;
    w -= captionLen;
    attrset(CRT_colors[HTOP_BAR_BORDER_COLOR]);
@@ -424,7 +437,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
 
    attrset(CRT_colors[HTOP_METER_TEXT_COLOR]);
    int captionLen = 3;
-   mvaddnstr(y, x, this->caption, captionLen);
+   mvaddnstr(y, x, this->short_caption ? this->short_caption : this->caption, captionLen);
    x += captionLen;
    w -= captionLen;
    struct timeval now;

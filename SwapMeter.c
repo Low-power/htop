@@ -62,5 +62,6 @@ MeterClass SwapMeter_class = {
    .attributes = SwapMeter_attributes,
    .name = "Swap",
    .uiName = "Swap",
-   .caption = "Swp"
+   .caption = "Swap",
+   .short_caption = "Swp"
 };

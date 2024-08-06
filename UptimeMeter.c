@@ -1,6 +1,7 @@
 /*
 htop - UptimeMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -37,7 +38,7 @@ static int UptimeMeter_getUptimeFromUtmpx() {
 		}
 	}
 	endutxent();
-	return boot_time == -1 ? -1 : curr_time - boot_time;
+	return boot_time == (time_t)-1 ? -1 : curr_time - boot_time;
 #else
 	return -1;
 #endif
@@ -105,5 +106,6 @@ MeterClass UptimeMeter_class = {
    .attributes = UptimeMeter_attributes,
    .name = "Uptime",
    .uiName = "Uptime",
-   .caption = "Uptime"
+   .caption = "Uptime",
+   .short_caption = "Up"
 };

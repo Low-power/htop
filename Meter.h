@@ -5,7 +5,7 @@
 /*
 htop - Meter.h
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -36,9 +36,14 @@ typedef struct MeterClass_ {
    int defaultMode;
    double total;
    const int* attributes;
+   // For internal use only
    const char* name;
+   // For display in setup screen
    const char* uiName;
+   // For Text mode and LED mode display
    const char* caption;
+   // For Bar mode and Graph mode display, default to caption if NULL
+   const char *short_caption;
    const char* description;
    const char maxItems;
    char curItems;
@@ -67,6 +72,7 @@ struct Meter_ {
    Object super;
    Meter_Draw draw;
    char* caption;
+   char *short_caption;
    int mode;
    int param;
    void* drawData;
@@ -121,6 +127,8 @@ int Meter_humanUnit(char* buffer, unsigned long int value, int size);
 void Meter_delete(Object* cast);
 
 void Meter_setCaption(Meter* this, const char* caption);
+
+void Meter_setShortCaption(Meter *this, const char *caption);
 
 void Meter_setMode(Meter* this, int modeIndex);
 

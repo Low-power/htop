@@ -1,6 +1,7 @@
 /*
 htop - CPUMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -45,14 +46,18 @@ int CPUMeter_attributes[] = {
 #endif
 
 static void CPUMeter_init(Meter* this) {
-   int cpu = this->param;
+   if (this->param == 0) {
+      Meter_setCaption(this, "Avg");
+      return;
+   }
+   int cpu_id = Settings_cpuId(this->pl->settings, this->param - 1);
    if (this->pl->cpuCount > 1) {
       char caption[10];
-      xSnprintf(caption, sizeof(caption), "%-3d", Settings_cpuId(this->pl->settings, cpu - 1));
+      xSnprintf(caption, sizeof(caption), "%-3d", cpu_id);
+      Meter_setShortCaption(this, caption);
+      xSnprintf(caption, sizeof caption, "CPU%d", cpu_id);
       Meter_setCaption(this, caption);
    }
-   if (this->param == 0)
-      Meter_setCaption(this, "Avg");
 }
 
 static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {

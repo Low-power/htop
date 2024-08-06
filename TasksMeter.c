@@ -102,5 +102,6 @@ MeterClass TasksMeter_class = {
    .values_are_overlapped = true,
    .name = "Tasks",
    .uiName = "Task counter",
-   .caption = "Tasks"
+   .caption = "Tasks",
+   .short_caption = "Tsk"
 };
