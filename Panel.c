@@ -121,6 +121,7 @@ PanelClass Panel_class = {
       .delete = Panel_delete
    },
    .eventHandler = (Panel_EventHandler)Panel_selectByTyping,
+   .onMouseSelect = base_Panel_onMouseSelect
 };
 
 Panel* Panel_new(int x, int y, int w, int h, bool owner, ObjectClass* type, FunctionBar* fuBar) {
