@@ -21,6 +21,7 @@ typedef void(*Meter_UpdateMode)(Meter*, int);
 typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef double (*MeterGetDoubleFunction)(Meter *);
+typedef int (*MeterGetAttributeFunction)(Meter *, int);
 
 typedef struct MeterClass_ {
    ObjectClass super;
@@ -30,6 +31,7 @@ typedef struct MeterClass_ {
    Meter_Draw draw;
    Meter_UpdateValues updateValues;
    MeterGetDoubleFunction getMaximum;
+   MeterGetAttributeFunction getAttribute;
    int defaultMode;
    double total;
    const int* attributes;
@@ -64,6 +66,7 @@ typedef struct MeterClass_ {
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
 #define Meter_getMaximum(this_)        As_Meter(this_)->getMaximum(this_)
+#define Meter_getAttribute(this_,n_)   As_Meter(this_)->getAttribute((this_),(n_))
 
 struct Meter_ {
    Object super;
@@ -139,9 +142,14 @@ static double base_Meter_getMaximum(Meter *this) {
 	return this->total;
 }
 
+static int base_Meter_getAttribute(Meter *this, int i) {
+	return Meter_attributes(this)[i];
+}
+
 static void Meter_inherit(ObjectClass *super_class) {
 	MeterClass *class = (MeterClass *)super_class;
 	if(!class->getMaximum) class->getMaximum = base_Meter_getMaximum;
+	if(!class->getAttribute) class->getAttribute = base_Meter_getAttribute;
 }
 
 MeterClass Meter_class = {
@@ -228,7 +236,7 @@ static inline void Meter_displayBuffer(Meter* this, char* buffer, RichString* ou
       Object_display(this, out);
    } else {
       RichString_write(out, CRT_colors[HTOP_METER_TEXT_COLOR], ": ");
-      RichString_append(out, CRT_colors[Meter_attributes(this)[0]], buffer);
+      RichString_append(out, CRT_colors[Meter_getAttribute(this, 0)], buffer);
    }
 }
 
@@ -379,7 +387,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
    int offset = 0;
    for (int j = 0; j < nitems; j++) {
       int i = indexes[j];
-      attrset(CRT_colors[Meter_attributes(this)[i]]);
+      attrset(CRT_colors[Meter_getAttribute(this, i)]);
       mvaddnstr(y, x + offset, bar + offset, blockSizes[i]);
       offset += blockSizes[i];
       offset = CLAMP(offset, 0, w);

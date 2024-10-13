@@ -34,8 +34,12 @@ typedef enum {
 
 }*/
 
-int CPUMeter_attributes[] = {
+static const int CPUMeter_detailed_attributes[] = {
    HTOP_CPU_NICE_COLOR, HTOP_CPU_NORMAL_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_CPU_IRQ_COLOR, HTOP_CPU_SOFTIRQ_COLOR, HTOP_CPU_STEAL_COLOR, HTOP_CPU_GUEST_COLOR, HTOP_CPU_IOWAIT_COLOR
+};
+
+static const int CPUMeter_attributes[] = {
+   HTOP_CPU_NICE_COLOR, HTOP_CPU_NORMAL_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_CPU_GUEST_COLOR
 };
 
 #ifndef MIN
@@ -58,6 +62,10 @@ static void CPUMeter_init(Meter* this) {
       xSnprintf(caption, sizeof caption, "CPU%d", cpu_id);
       Meter_setCaption(this, caption);
    }
+}
+
+static int CPUMeter_getAttribute(Meter *this, int i) {
+	return (this->pl->settings->detailedCPUTime ? CPUMeter_detailed_attributes : CPUMeter_attributes)[i];
 }
 
 static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
@@ -113,11 +121,11 @@ static void CPUMeter_display(Object* cast, RichString* out) {
       xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[HTOP_CPU_KERNEL_COLOR], buffer);
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sys");
-      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_NICE]);
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[2]);
       RichString_append(out, CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], buffer);
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "low");
-      if (this->values[CPU_METER_IRQ] > 0) {
-         xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_IRQ]);
+      if (this->values[3] > 0) {
+         xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[3]);
          RichString_append(out, CRT_colors[HTOP_CPU_GUEST_COLOR], buffer);
          RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "vir");
       }
@@ -217,7 +225,7 @@ MeterClass CPUMeter_class = {
    .defaultMode = BAR_METERMODE,
    .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "CPU",
    .uiName = "CPU",
    .caption = "CPU",
@@ -232,7 +240,7 @@ MeterClass AllCPUsMeter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "AllCPUs",
    .uiName = "CPUs (1/1)",
    .description = "CPUs (1/1): all CPUs",
@@ -251,7 +259,7 @@ MeterClass AllCPUs2Meter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "AllCPUs2",
    .uiName = "CPUs (1&2/2)",
    .description = "CPUs (1&2/2): all CPUs in 2 shorter columns",
@@ -270,7 +278,7 @@ MeterClass LeftCPUsMeter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "LeftCPUs",
    .uiName = "CPUs (1/2)",
    .description = "CPUs (1/2): first half of list",
@@ -289,7 +297,7 @@ MeterClass RightCPUsMeter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "RightCPUs",
    .uiName = "CPUs (2/2)",
    .description = "CPUs (2/2): second half of list",
@@ -308,7 +316,7 @@ MeterClass LeftCPUs2Meter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "LeftCPUs2",
    .uiName = "CPUs (1&2/4)",
    .description = "CPUs (1&2/4): first half in 2 shorter columns",
@@ -327,7 +335,7 @@ MeterClass RightCPUs2Meter_class = {
    },
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
-   .attributes = CPUMeter_attributes,
+   .getAttribute = CPUMeter_getAttribute,
    .name = "RightCPUs2",
    .uiName = "CPUs (3&4/4)",
    .description = "CPUs (3&4/4): second half in 2 shorter columns",

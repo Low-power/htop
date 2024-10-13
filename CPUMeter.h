@@ -25,8 +25,6 @@ typedef enum {
 } CPUMeterValue;
 
 
-extern int CPUMeter_attributes[];
-
 #ifndef MIN
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #endif
