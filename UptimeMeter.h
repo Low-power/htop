@@ -17,8 +17,6 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 
-extern int UptimeMeter_attributes[];
-
 #ifdef HAVE_CLOCK_GETTIME
 // CLOCK_UPTIME excludes suspend time, available since kFreeBSD 7.0
 // CLOCK_BOOTTIME includes suspend time, available since Linux 2.6.39

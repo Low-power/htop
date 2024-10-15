@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int MemoryMeter_attributes[] = {
+static const int MemoryMeter_attributes[] = {
    HTOP_MEMORY_USED_COLOR, HTOP_MEMORY_BUFFERS_COLOR, HTOP_MEMORY_CACHE_COLOR, HTOP_MEMORY_ZFS_ARC_COLOR
 };
 

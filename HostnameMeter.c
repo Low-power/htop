@@ -17,7 +17,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int HostnameMeter_attributes[] = {
+static const int HostnameMeter_attributes[] = {
    HTOP_HOSTNAME_COLOR
 };
 

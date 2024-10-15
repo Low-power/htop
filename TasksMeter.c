@@ -1,7 +1,7 @@
 /*
 htop - TasksMeter.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -14,7 +14,7 @@ in the source distribution for its full text.
 #include "Platform.h"
 #include "CRT.h"
 
-int TasksMeter_attributes[] = {
+static const int TasksMeter_attributes[] = {
    HTOP_PROCESS_COLOR, HTOP_PROCESS_THREAD_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_CPU_KERNEL_COLOR, HTOP_TASKS_RUNNING_COLOR
 };
 

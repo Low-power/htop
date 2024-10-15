@@ -15,7 +15,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int ClockMeter_attributes[] = {
+static const int ClockMeter_attributes[] = {
    HTOP_CLOCK_COLOR
 };
 

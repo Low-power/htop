@@ -21,7 +21,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int UptimeMeter_attributes[] = {
+static const int UptimeMeter_attributes[] = {
    HTOP_UPTIME_COLOR
 };
 

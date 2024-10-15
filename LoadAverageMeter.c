@@ -14,7 +14,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int LoadAverageMeter_attributes[] = {
+static const int LoadAverageMeter_attributes[] = {
    HTOP_LOAD_AVERAGE_ONE_COLOR, HTOP_LOAD_AVERAGE_FIVE_COLOR, HTOP_LOAD_AVERAGE_FIFTEEN_COLOR
 };
 

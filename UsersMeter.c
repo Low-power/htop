@@ -1,7 +1,7 @@
 /*
 htop - UsersMeter.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include <utmpx.h>
 #include <string.h>
 
-int UsersMeter_attributes[] = {
+static const int UsersMeter_attributes[] = {
 	HTOP_SESSIONS_COLOR, HTOP_USERS_COLOR
 };
 

@@ -20,7 +20,7 @@ in the source distribution for its full text.
 #include "Meter.h"
 }*/
 
-int SwapMeter_attributes[] = {
+static const int SwapMeter_attributes[] = {
    HTOP_SWAP_COLOR
 };
 

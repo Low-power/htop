@@ -28,7 +28,7 @@ typedef enum ACPresence_ {
 } ACPresence;
 }*/
 
-int BatteryMeter_attributes[] = {
+static const int BatteryMeter_attributes[] = {
    HTOP_BATTERY_COLOR
 };
 
