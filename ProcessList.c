@@ -153,6 +153,10 @@ void ProcessList_remove(ProcessList* this, Process* p) {
    assert(Hashtable_get(this->processTable, p->pid) != NULL);
    Process* pp = Hashtable_remove(this->processTable, p->pid);
    assert(pp == p); (void)pp;
+   if(this->following == p->pid) {
+      this->following = -1;
+      Panel_setSelectionColor(this->panel, CRT_colors[HTOP_PANEL_SELECTION_FOCUS_COLOR]);
+   }
    unsigned int pid = p->pid;
    int idx = Vector_indexOf(this->processes, p, Process_pidCompare);
    assert(idx != -1);
