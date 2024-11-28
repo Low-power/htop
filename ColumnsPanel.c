@@ -1,6 +1,7 @@
 /*
 htop - ColumnsPanel.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -26,6 +27,7 @@ typedef struct ColumnsPanel_ {
 
    Settings* settings;
    bool moving;
+   bool have_immutable_column;
 } ColumnsPanel;
 
 }*/
@@ -43,11 +45,6 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
    ColumnsPanel *this = (ColumnsPanel *)super;
    HandlerResult result = IGNORED;
    int size = Panel_size(super);
-#ifdef DISK_STATS
-#define DISK_MODE (this->settings->disk_mode)
-#else
-#define DISK_MODE false
-#endif
    switch(ch) {
          int selected;
 
@@ -56,7 +53,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_ENTER:
       case KEY_MOUSE:
       case KEY_RECLICK:
-         if (Panel_getSelectedIndex(super) < size - (DISK_MODE ? 0 : 1)) {
+         if (Panel_getSelectedIndex(super) < size - (this->have_immutable_column ? 1 : 0)) {
             this->moving = !(this->moving);
             Panel_setSelectionColor(super, CRT_colors[this->moving ? HTOP_PANEL_SELECTION_FOLLOW_COLOR : HTOP_PANEL_SELECTION_FOCUS_COLOR]);
             ((ListItem*)Panel_getSelected(super))->moving = this->moving;
@@ -72,7 +69,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_F(7):
       case '[':
       case '-':
-         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (DISK_MODE ? 0 : 1)) {
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (this->have_immutable_column ? 1 : 0)) {
             Panel_moveSelectedUp(super);
          }
          result = HANDLED;
@@ -86,7 +83,7 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_F(8):
       case ']':
       case '+':
-         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (DISK_MODE ? 1 : 2)) {
+         while(repeat-- > 0 && Panel_getSelectedIndex(super) < size - (this->have_immutable_column ? 2 : 1)) {
             Panel_moveSelectedDown(super);
          }
          result = HANDLED;
@@ -99,22 +96,16 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
       case KEY_END:
          if(!this->moving) break;
          Panel_moveSelectedToBottom(super);
+         if(this->have_immutable_column) Panel_moveSelectedUp(super);
          result = HANDLED;
          break;
       case KEY_F(9):
       case KEY_DC:
-#if 0
-         while(repeat-- > 0 && (selected = Panel_getSelectedIndex(super)) < size - (DISK_MODE ? 0 : 1)) {
-            Panel_remove(super, selected);
-            size--;
-         }
-#else
          // Don't repeat delete operation
          selected = Panel_getSelectedIndex(super);
-         if(selected < size - (DISK_MODE ? 0 : 1)) {
+         if(selected < size - (this->have_immutable_column ? 1 : 0)) {
             Panel_remove(super, selected);
          }
-#endif
          result = HANDLED;
          break;
       default:
@@ -122,7 +113,6 @@ static HandlerResult ColumnsPanel_eventHandler(Panel* super, int ch, int repeat)
          if (result == BREAK_LOOP) result = IGNORED;
          break;
    }
-#undef DISK_MODE
    if (result == HANDLED) ColumnsPanel_update(super);
    return result;
 }
@@ -156,9 +146,11 @@ ColumnsPanel* ColumnsPanel_new(Settings* settings) {
 #ifdef DISK_STATS
    const unsigned int *field = settings->disk_mode ? settings->disk_fields : settings->fields;
    const FieldData *field_data = settings->disk_mode ? Disk_fields : Process_fields;
+   this->have_immutable_column = !settings->disk_mode;
 #else
    const unsigned int *field = settings->fields;
    const FieldData *field_data = Process_fields;
+   this->have_immutable_column = true;
 #endif
    while(*field) {
       if (field_data[*field].name) {

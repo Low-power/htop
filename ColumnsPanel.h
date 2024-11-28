@@ -5,6 +5,7 @@
 /*
 htop - ColumnsPanel.h
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -17,6 +18,7 @@ typedef struct ColumnsPanel_ {
 
    Settings* settings;
    bool moving;
+   bool have_immutable_column;
 } ColumnsPanel;
 
 
