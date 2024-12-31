@@ -180,10 +180,11 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 
 void Platform_updateMemoryValues(Meter *meter) {
    const ProcessList *pl = meter->pl;
-   meter->total = meter->pl->totalMem;
-   meter->values[0] = meter->pl->usedMem;
+   const FreeBSDProcessList *fbsd_pl = (const FreeBSDProcessList *)pl;
+   meter->total = pl->totalMem;
+   meter->values[0] = pl->usedMem;
    meter->values[1] = 0;
-   meter->values[2] = ((const FreeBSDProcessList *)pl)->vfs_buffer_size + pl->cachedMem;
+   meter->values[2] = fbsd_pl->vfs_buffer_size + pl->cachedMem;
 }
 
 void Platform_updateSwapValues(Meter *meter) {
