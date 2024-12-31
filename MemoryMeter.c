@@ -1,6 +1,7 @@
 /*
 htop - MemoryMeter.c
 (C) 2004-2011 Hisham H. Muhammad
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -48,10 +49,12 @@ static void MemoryMeter_display(Object* cast, RichString* out) {
    RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " used");
    if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_MEMORY_USED_COLOR], buffer);
+#ifdef PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
    Meter_humanUnit(buffer, this->values[1], 50);
    RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " buffers");
    if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");
    RichString_append(out, CRT_colors[HTOP_MEMORY_BUFFERS_TEXT_COLOR], buffer);
+#endif
    Meter_humanUnit(buffer, this->values[2], 50);
    RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], " cache");
    if(this->mode == TEXT_METERMODE) RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "=");

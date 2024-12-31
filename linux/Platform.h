@@ -18,6 +18,7 @@ in the source distribution for its full text.
 #define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 #define PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
 #endif
+#define PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))

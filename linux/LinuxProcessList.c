@@ -86,6 +86,7 @@ typedef struct TtyDriver_ {
 
 typedef struct LinuxProcessList_ {
    ProcessList super;
+   unsigned long long int buffers_size;
    CPUData* cpus;
    TtyDriver* ttyDrivers;
    #ifdef HAVE_DELAYACCT
@@ -1002,7 +1003,7 @@ static inline void LinuxProcessList_scanMemoryInfo(ProcessList* this) {
          tryRead("MemFree:", &this->freeMem);
          break;
       case 'B':
-         tryRead("Buffers:", &this->buffersMem);
+         tryRead("Buffers:", &((LinuxProcessList *)this)->buffers_size);
          break;
       case 'C':
          tryRead("Cached:", &this->cachedMem);

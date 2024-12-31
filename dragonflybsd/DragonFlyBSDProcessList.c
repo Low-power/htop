@@ -31,6 +31,7 @@ typedef struct DragonFlyBSDProcessList_ {
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
+   unsigned long long int buffers_size;
 
    CPUData* cpus;
 
@@ -291,13 +292,13 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    len = sizeof buffer.v_long;
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
-   pl->buffersMem = buffer.v_long / 1024;
+   dfpl->buffers_size = buffer.v_long / 1024;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
-   pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - pl->buffersMem;
+   pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - dfpl->buffers_size;
 
 
    struct kvm_swap swap[16];
@@ -315,11 +316,11 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
 fail:
    pl->totalMem = 0;
-   pl->buffersMem = 0;
    pl->cachedMem = 0;
    pl->usedMem = 0;
    pl->totalSwap = 0;
    pl->usedSwap = 0;
+   dfpl->buffers_size = 0;
 }
 
 static void DragonFlyBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int *argv0_len) {

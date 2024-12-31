@@ -208,7 +208,7 @@ void Platform_updateMemoryValues(Meter *meter) {
    const ProcessList *pl = meter->pl;
    meter->total = pl->totalMem;
    meter->values[0] = pl->usedMem;
-   meter->values[1] = pl->buffersMem;
+   meter->values[1] = 0;
    meter->values[2] = pl->cachedMem;
 }
 

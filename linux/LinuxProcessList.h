@@ -58,6 +58,7 @@ typedef struct TtyDriver_ {
 
 typedef struct LinuxProcessList_ {
    ProcessList super;
+   unsigned long long int buffers_size;
    CPUData* cpus;
    TtyDriver* ttyDrivers;
    #ifdef HAVE_DELAYACCT

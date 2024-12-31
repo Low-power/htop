@@ -15,6 +15,7 @@ in the source distribution for its full text.
 #define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 #define PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
 #endif
+#define PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
 }*/
 
 #include "Platform.h"
@@ -230,7 +231,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 void Platform_updateMemoryValues(Meter *meter) {
    const ProcessList *pl = meter->pl;
    unsigned long long int usedMem = pl->usedMem;
-   unsigned long long int buffersMem = pl->buffersMem;
+   unsigned long long int buffersMem = ((const LinuxProcessList *)pl)->buffers_size;
    unsigned long long int cachedMem = pl->cachedMem;
 #ifdef __NetBSD__
    usedMem -= cachedMem;

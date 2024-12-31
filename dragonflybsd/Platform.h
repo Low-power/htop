@@ -15,6 +15,8 @@ in the source distribution for its full text.
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
 
+#define PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
+
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif

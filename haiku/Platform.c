@@ -2,7 +2,7 @@
 htop - haiku/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -187,7 +187,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 void Platform_updateMemoryValues(Meter *meter) {
 	meter->total = meter->pl->totalMem;
 	meter->values[0] = meter->pl->usedMem;
-	meter->values[1] = meter->pl->buffersMem;
+	meter->values[1] = 0;
 	meter->values[2] = meter->pl->cachedMem;
 }
 

@@ -1,7 +1,7 @@
 /*
 htop - hurd/HurdProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -62,7 +62,6 @@ void ProcessList_delete(ProcessList* this) {
 }
 
 static void scan_memory_info(ProcessList *this) {
-	this->buffersMem = 0;
 	this->totalSwap = 0;
 	this->usedSwap = 0;
 
@@ -98,7 +97,6 @@ static void scan_memory_info(ProcessList *this) {
 fail:
 	this->totalMem = 0;
 	this->usedMem = 0;
-	this->buffersMem = 0;
 	this->cachedMem = 0;
 }
 

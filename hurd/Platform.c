@@ -163,7 +163,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 void Platform_updateMemoryValues(Meter *meter) {
 	meter->total = meter->pl->totalMem;
 	meter->values[0] = meter->pl->usedMem;
-	meter->values[1] = meter->pl->buffersMem;
+	meter->values[1] = 0;
 	meter->values[2] = meter->pl->cachedMem;
 }
 

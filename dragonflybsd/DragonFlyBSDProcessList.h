@@ -34,6 +34,7 @@ typedef struct DragonFlyBSDProcessList_ {
    unsigned long long int memActive;
    unsigned long long int memInactive;
    unsigned long long int memFree;
+   unsigned long long int buffers_size;
 
    CPUData* cpus;
 

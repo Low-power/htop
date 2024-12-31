@@ -38,6 +38,8 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "BatteryMeter.h"
 #include "SignalsPanel.h"
+
+#define PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
 }*/
 
 #ifndef CLAMP
@@ -164,7 +166,7 @@ void Platform_updateMemoryValues(Meter *meter) {
    const ProcessList *pl = meter->pl;
    meter->total = pl->totalMem;
    meter->values[0] = pl->usedMem;
-   meter->values[1] = pl->buffersMem;
+   meter->values[1] = ((const DragonFlyBSDProcessList *)pl)->buffers_size;
    meter->values[2] = pl->cachedMem;
 }
 

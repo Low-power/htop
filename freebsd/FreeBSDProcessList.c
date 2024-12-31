@@ -387,7 +387,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
 fail:
    pl->totalMem = 0;
-   pl->buffersMem = 0;
    pl->cachedMem = 0;
    pl->usedMem = 0;
    pl->totalSwap = 0;
