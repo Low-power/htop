@@ -75,7 +75,6 @@ static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
 static int *MIB_vm_stats_vm_v_cache_count;
 static int MIB_vm_stats_vm_v_inactive_count[4];
-static int MIB_vm_stats_vm_v_free_count[4];
 static int *v_laundry_count_mib;
 static int MIB_vfs_bufspace[2];
 static int MIB_kern_cp_time[2];
@@ -124,7 +123,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    }
 
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
+   //len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
@@ -367,12 +366,6 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    // ZFS ARC size is now handled in ProcessList.c
 
    pl->usedMem = fpl->memActive + fpl->memWire + fpl->memInactive + fpl->laundry_size - fpl->vfs_buffer_size;
-
-   // currently unused, same as with arc, custom meter perhaps
-   //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
-   //fpl->memFree = buffer.v_uint * CRT_page_size_kib;
-   //pl->freeMem = fpl->memInactive + fpl->memFree;
 
 #ifdef HAVE_LIBKVM
    struct kvm_swap swap[16];

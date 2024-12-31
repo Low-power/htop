@@ -68,7 +68,6 @@ static int MIB_vm_stats_vm_v_wire_count[4];
 static int MIB_vm_stats_vm_v_active_count[4];
 static int MIB_vm_stats_vm_v_cache_count[4];
 static int MIB_vm_stats_vm_v_inactive_count[4];
-static int MIB_vm_stats_vm_v_free_count[4];
 static int MIB_vfs_bufspace[2];
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
@@ -102,7 +101,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
    len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
+   //len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
 
    len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
@@ -300,11 +299,6 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - pl->buffersMem;
 
-   // currently unused, same as with arc, custom meter perhaps
-   //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
-   //dfpl->memFree = buffer.v_uint * CRT_page_size_kib;
-   //pl->freeMem = dfpl->memFree;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(dfpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
