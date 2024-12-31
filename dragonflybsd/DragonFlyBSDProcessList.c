@@ -2,6 +2,7 @@
 htop - dragonflybsd/DragonFlyBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -261,12 +262,12 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    } buffer;
    size_t len;
 
-   // @etosan:
    // memory counter relationships seem to be these:
    //  total = active + wired + inactive + cache + free
-   //  htop_used (unavail to anybody) = active + wired
-   //  htop_cache (for cache meter)   = buffers + cache
-   //  user_free (avail to procs)     = buffers + inactive + cache + free
+   //  htop_used (unavail to anybody) = active + wired + inactive - buffers
+   //  htop_buffers (for cache meter) = buffers
+   //  htop_cache (for cache meter)   = cache
+   //  user_free (avail to procs)     = buffers + cache + free
 
    // disabled for now, as it is always smaller than phycal amount of memory...
    // ...to avoid "where is my memory?" questions
@@ -285,6 +286,10 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
+   len = sizeof buffer.v_uint;
+   sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
+   dfpl->memInactive = buffer.v_uint * CRT_page_size_kib;
+
    len = sizeof buffer.v_long;
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->buffersMem = buffer.v_long / 1024;
@@ -293,16 +298,13 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
 
-   pl->usedMem = dfpl->memActive + dfpl->memWire;
+   pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - pl->buffersMem;
 
    // currently unused, same as with arc, custom meter perhaps
    //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
-   //dfpl->memInactive = buffer.v_uint * CRT_page_size_kib;
-   //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
    //dfpl->memFree = buffer.v_uint * CRT_page_size_kib;
-   //pl->freeMem = dfpl->memInactive + dfpl->memFree;
+   //pl->freeMem = dfpl->memFree;
 
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(dfpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
