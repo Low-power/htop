@@ -15,15 +15,13 @@ in the source distribution for its full text.
 #define __attribute__(A)
 #endif
 
-void __attribute__((__noreturn__)) xFail();
-
 void* xMalloc(size_t size);
 
 void* xCalloc(size_t nmemb, size_t size);
 
 void* xRealloc(void* ptr, size_t size);
 
-#define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) xFail(); } while(0)
+#define xSnprintf(fmt, len, ...) do { int _l=len; int _n=snprintf(fmt, _l, __VA_ARGS__); if (!(_n > -1 && _n < _l)) abort(); } while(0)
 
 #undef xStrdup
 #undef xStrdup_
