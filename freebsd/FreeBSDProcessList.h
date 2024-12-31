@@ -5,7 +5,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -41,6 +41,7 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memInactive;
    unsigned long long int memFree;
    unsigned long long int laundry_size;
+   unsigned long long int vfs_buffer_size;
 
    CPUData* cpus;
 

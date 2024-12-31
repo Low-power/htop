@@ -1,7 +1,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2024 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -38,6 +38,7 @@ typedef struct FreeBSDProcessList_ {
    unsigned long long int memInactive;
    unsigned long long int memFree;
    unsigned long long int laundry_size;
+   unsigned long long int vfs_buffer_size;
 
    CPUData* cpus;
 
@@ -305,18 +306,19 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    } buffer;
    size_t len;
 
-   // @etosan:
-   // memory counter relationships seem to be these:
+   // Memory counter relationships seem to be these:
    //  total = active + wired + inactive + cache + free
-   //  htop_used (unavail to anybody) = active + wired
-   //  htop_cache (for cache meter)   = buffers + cache
-   //  user_free (avail to procs)     = buffers + inactive + cache + free
+   //  htop_used (unavail to anybody) = active + wired + inactive + laundry - vfs_buffer
+   //  htop_cache (for cache meter)   = vfs_buffer + cache
+   //  user_free (avail to procs)     = vfs_buffer + cache + free
    //
    // with ZFS ARC situation becomes bit muddled, as ARC behaves like "user_free"
    // and belongs into cache, but is reported as wired by kernel
    //
-   // htop_used   = active + (wired - arc)
-   // htop_cache  = buffers + cache + arc
+   //  htop_used -= arc
+   //
+   // htop now have a separate value for ZFS ARC, it therefore no longer adds
+   // to 'htop_cache'
 
    //disabled for now, as it is always smaller than phycal amount of memory...
    //...to avoid "where is my memory?" questions
@@ -335,9 +337,13 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->memWire = buffer.v_uint * CRT_page_size_kib;
 
+   len = sizeof buffer.v_uint;
+   if(sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0) > 0) goto fail;
+   fpl->memInactive = buffer.v_uint * CRT_page_size_kib;
+
    len = sizeof buffer.v_long;
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
-   pl->buffersMem = buffer.v_long / 1024;
+   fpl->vfs_buffer_size = buffer.v_long / 1024;
 
    if(MIB_vm_stats_vm_v_cache_count) {
       len = sizeof buffer.v_uint;
@@ -360,12 +366,9 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    // ZFS ARC size is now handled in ProcessList.c
 
-   pl->usedMem = fpl->memActive + fpl->memWire + fpl->laundry_size;
+   pl->usedMem = fpl->memActive + fpl->memWire + fpl->memInactive + fpl->laundry_size - fpl->vfs_buffer_size;
 
    // currently unused, same as with arc, custom meter perhaps
-   //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
-   //fpl->memInactive = buffer.v_uint * CRT_page_size_kib;
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_free_count, 4, &buffer, &len, NULL, 0);
    //fpl->memFree = buffer.v_uint * CRT_page_size_kib;
