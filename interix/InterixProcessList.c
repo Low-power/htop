@@ -1,7 +1,7 @@
 /*
 htop - interix/InterixProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -102,8 +102,8 @@ void ProcessList_goThroughEntries(ProcessList *this, bool skip_processes) {
 			i_proc->native_sid = info.pr_natsid;
 			ruid = info.pr_uid;
 			euid = info.pr_euid;
-			proc->m_size = info.pr_size / CRT_page_size_kib;
-			proc->m_resident = info.pr_rssize / CRT_page_size_kib;
+			proc->m_size = info.pr_size / CRT_page_size_kibibyte;
+			proc->m_resident = info.pr_rssize / CRT_page_size_kibibyte;
 			proc->tty_nr = info.pr_ttydev;
 			t = info.pr_time;
 #if 0

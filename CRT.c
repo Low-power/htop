@@ -1,7 +1,7 @@
 /*
 htop - CRT.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -708,7 +708,7 @@ void CRT_restorePrivileges() {
 #endif
 
 unsigned int CRT_page_size;
-unsigned int CRT_page_size_kib;
+unsigned int CRT_page_size_kibibyte;
 
 static const char *CRT_getHomePath() {
 	const char *home = getenv("HOME");
@@ -1184,7 +1184,7 @@ void CRT_init(const Settings *settings) {
       CRT_treeStrAscii;
 
    CRT_page_size = sysconf(_SC_PAGESIZE);
-   CRT_page_size_kib = CRT_page_size / ONE_BINARY_K;
+   CRT_page_size_kibibyte = CRT_page_size / ONE_BINARY_K;
 }
 
 void CRT_done() {

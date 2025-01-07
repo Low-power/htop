@@ -2,7 +2,7 @@
 htop - solaris/SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -215,17 +215,17 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
       kstat_named_t *phys_pages    = kstat_data_lookup(meminfo, "physmem");
       kstat_named_t *free_pages    = kstat_data_lookup(meminfo, "freemem");
       kstat_named_t *avail_res_pages   = kstat_data_lookup(meminfo, "availrmem");
-      pl->totalMem   = phys_pages->value.ui32 * CRT_page_size_kib;
-      pl->usedMem    = (phys_pages->value.ui32 - avail_res_pages->value.ui32) * CRT_page_size_kib;
-      pl->cachedMem  = (avail_res_pages->value.ui32 - free_pages->value.ui32) * CRT_page_size_kib;
+      pl->totalMem   = phys_pages->value.ui32 * CRT_page_size_kibibyte;
+      pl->usedMem    = (phys_pages->value.ui32 - avail_res_pages->value.ui32) * CRT_page_size_kibibyte;
+      pl->cachedMem  = (avail_res_pages->value.ui32 - free_pages->value.ui32) * CRT_page_size_kibibyte;
 #else
    uint64_t phys_pages, free_pages, avail_res_pages;
    if(unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_PHYSMEM, &phys_pages) == 0 &&
      unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_FREEMEM, &free_pages) == 0 &&
      unsigned_variable_bit_read_kstat(KSTAT_UNIX_SYSTEM_PAGES, KSTAT_UNIX_SYSTEM_PAGES_AVAILRMEM, &avail_res_pages) == 0) {
-      pl->totalMem = phys_pages * CRT_page_size_kib;
-      pl->usedMem = (phys_pages - avail_res_pages) * CRT_page_size_kib;
-      pl->cachedMem = (avail_res_pages - free_pages) * CRT_page_size_kib;
+      pl->totalMem = phys_pages * CRT_page_size_kibibyte;
+      pl->usedMem = (phys_pages - avail_res_pages) * CRT_page_size_kibibyte;
+      pl->cachedMem = (avail_res_pages - free_pages) * CRT_page_size_kibibyte;
 #endif
    } else {
       // Fall back to basic sysconf if kstat isn't working
@@ -263,8 +263,8 @@ static inline void SolarisProcessList_scanMemoryInfo(ProcessList* pl) {
    }
    free(spathbase);
    free(sl);
-   pl->totalSwap = totalswap * CRT_page_size_kib;
-   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_page_size_kib);
+   pl->totalSwap = totalswap * CRT_page_size_kibibyte;
+   pl->usedSwap  = pl->totalSwap - (totalfree * CRT_page_size_kibibyte);
 }
 
 void ProcessList_delete(ProcessList* pl) {
@@ -297,8 +297,8 @@ static void fill_from_psinfo(Process *proc, const psinfo_t *_psinfo) {
    proc->pgrp               = _psinfo->pr_pgid;
    proc->nlwp               = _psinfo->pr_nlwp;
    proc->tty_nr             = _psinfo->pr_ttydev;
-   proc->m_resident         = _psinfo->pr_rssize / CRT_page_size_kib;
-   proc->m_size             = _psinfo->pr_size / CRT_page_size_kib;
+   proc->m_resident         = _psinfo->pr_rssize / CRT_page_size_kibibyte;
+   proc->m_size             = _psinfo->pr_size / CRT_page_size_kibibyte;
    sproc->argv_offset       = _psinfo->pr_argv > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_argv;
    sproc->envv_offset       = _psinfo->pr_envp > MAX_VALUE_OF(off_t) ? -1 : (off_t)_psinfo->pr_envp;
    sproc->data_model        = _psinfo->pr_dmodel;

@@ -139,7 +139,7 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "uvmexp sysctl call failed");
    }
 
-   pl->totalMem = uvmexp.npages * CRT_page_size_kib;
+   pl->totalMem = uvmexp.npages * CRT_page_size_kibibyte;
 
    // Taken from OpenBSD systat/iostat.c, top/machine.c and uvm_sysctl(9)
    static int bcache_mib[] = {CTL_VFS, VFS_GENERIC, VFS_BCACHESTAT};
@@ -150,9 +150,9 @@ static inline void OpenBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       err(1, "cannot get vfs.bcachestat");
    }
 
-   pl->cachedMem = bcstats.numbufpages * CRT_page_size_kib;
-   pl->freeMem = uvmexp.free * CRT_page_size_kib;
-   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_page_size_kib;
+   pl->cachedMem = bcstats.numbufpages * CRT_page_size_kibibyte;
+   pl->freeMem = uvmexp.free * CRT_page_size_kibibyte;
+   pl->usedMem = (uvmexp.npages - uvmexp.free - uvmexp.paging) * CRT_page_size_kibibyte;
 }
 
 static void OpenBSDProcessList_readProcessName(kvm_t* kd, struct kinfo_proc* kproc, char **name, char **command, int *argv0_len) {
@@ -314,7 +314,7 @@ static inline void OpenBSDProcessList_scanProcs(ProcessList *this) {
       proc->m_size = kproc->p_vm_dsize + kproc->p_vm_ssize + kproc->p_vm_tsize;
       proc->m_resident = kproc->p_vm_rssize;
       proc->percent_mem =
-         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kibibyte) * 100;
       proc->percent_cpu = CLAMP(getpcpu(kproc), 0.0, this->cpuCount*100.0);
       proc->nice = kproc->p_nice - NZERO;
       proc->time = kproc->p_rtime_sec * 100 + kproc->p_rtime_usec / 10000;

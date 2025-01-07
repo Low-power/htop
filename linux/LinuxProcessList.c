@@ -1,7 +1,7 @@
 /*
 htop - linux/LinuxProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -900,7 +900,7 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       float percent_cpu = (lp->utime + lp->stime - lasttimes) / period * 100.0;
       proc->percent_cpu = CLAMP(percent_cpu, 0.0, cpus * 100.0);
       if (isnan(proc->percent_cpu)) proc->percent_cpu = 0.0;
-      proc->percent_mem = (proc->m_resident * CRT_page_size_kib) / (double)(pl->totalMem) * 100.0;
+      proc->percent_mem = (proc->m_resident * CRT_page_size_kibibyte) / (double)(pl->totalMem) * 100.0;
 
       if(!preExisting) {
 

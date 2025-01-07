@@ -2,7 +2,7 @@
 htop - dragonflybsd/DragonFlyBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -91,7 +91,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
       // How can this happen?
       CRT_page_size = page_size;
-      CRT_page_size_kib = page_size / ONE_BINARY_K;
+      CRT_page_size_kibibyte = page_size / ONE_BINARY_K;
    }
 
    // usable page count vm.stats.vm.v_page_count
@@ -273,22 +273,22 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    // ...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
-   //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
+   //pl->totalMem = buffer.v_uint * CRT_page_size_kibibyte;
    len = sizeof buffer.v_ulong;
    if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   dfpl->memActive = buffer.v_uint * CRT_page_size_kib;
+   dfpl->memActive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   dfpl->memWire = buffer.v_uint * CRT_page_size_kib;
+   dfpl->memWire = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
    sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
-   dfpl->memInactive = buffer.v_uint * CRT_page_size_kib;
+   dfpl->memInactive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_long;
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
@@ -296,7 +296,7 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
+   pl->cachedMem = buffer.v_uint * CRT_page_size_kibibyte;
 
    pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - dfpl->buffers_size;
 
@@ -309,8 +309,8 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= CRT_page_size_kib;
-   pl->usedSwap *= CRT_page_size_kib;
+   pl->totalSwap *= CRT_page_size_kibibyte;
+   pl->usedSwap *= CRT_page_size_kibibyte;
 
    return;
 
@@ -478,7 +478,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->m_size = kproc->kp_vm_map_size / CRT_page_size;
       proc->m_resident = kproc->kp_vm_rssize;
       proc->percent_mem =
-         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kibibyte) * 100;
       proc->nlwp = kproc->kp_nthreads;		// number of lwp thread
       proc->time = 
          (kproc->kp_lwp.kl_uticks + kproc->kp_lwp.kl_sticks + kproc->kp_lwp.kl_iticks) / 10000;

@@ -5,7 +5,7 @@
 /*
 htop - CRT.h
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -205,7 +205,7 @@ void CRT_restorePrivileges();
 #endif
 
 extern unsigned int CRT_page_size;
-extern unsigned int CRT_page_size_kib;
+extern unsigned int CRT_page_size_kibibyte;
 
 char *CRT_getConfigDirPath(const char **home_path_p);
 

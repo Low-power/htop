@@ -343,19 +343,19 @@ void LinuxProcess_writeField(const Process *this, RichString* str, ProcessField 
          Process_colorNumber(str, lp->cmajflt, coloring);
          return;
       case HTOP_M_DRS_FIELD:
-         Process_humanNumber(str, lp->m_drs * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, lp->m_drs * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_DT_FIELD:
-         Process_humanNumber(str, lp->m_dt * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, lp->m_dt * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_LRS_FIELD:
-         Process_humanNumber(str, lp->m_lrs * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, lp->m_lrs * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_TRS_FIELD:
-         Process_humanNumber(str, lp->m_trs * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, lp->m_trs * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_SHARE_FIELD:
-         Process_humanNumber(str, lp->m_share * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, lp->m_share * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_UTIME_FIELD:
          CRT_printTime(str, lp->utime);

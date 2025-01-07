@@ -250,7 +250,7 @@ void ProcessList_goThroughEntries(ProcessList* super, bool skip_processes) {
 		proc->m_resident = pe->pi_drss + pe->pi_trss;
 		proc->m_size = pe->pi_size + pe->pi_dvm;
 		proc->percent_mem =
-			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kib) * 100;
+			(double)proc->m_resident / (double)(super->totalMem / CRT_page_size_kibibyte) * 100;
 
 		/* WARNING: The AIX C library is broken:
 		 * Despite their name, 'ru_utime.tv_usec' and

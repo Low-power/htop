@@ -460,10 +460,10 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          Process_colorNumber(str, this->minflt, coloring);
          return;
       case HTOP_M_RESIDENT_FIELD:
-         Process_humanNumber(str, this->m_resident * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, this->m_resident * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_SIZE_FIELD:
-         Process_humanNumber(str, this->m_size * CRT_page_size_kib, coloring);
+         Process_humanNumber(str, this->m_size * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_NICE_FIELD:
          n = snprintf(buffer, n, "%3ld", this->nice);

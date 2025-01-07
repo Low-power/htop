@@ -1,7 +1,7 @@
 /*
 htop - hurd/HurdProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -73,11 +73,11 @@ static void scan_memory_info(ProcessList *this) {
 	struct vm_statistics vm_stat;
 	e = vm_statistics(mach_task_self(), &vm_stat);
 	if(e) goto fail;
-	this->usedMem = (vm_stat.active_count + vm_stat.wire_count) * CRT_page_size_kib;
+	this->usedMem = (vm_stat.active_count + vm_stat.wire_count) * CRT_page_size_kibibyte;
 	struct vm_cache_statistics vm_cache_stat;
 	e = vm_cache_statistics(mach_task_self(), &vm_cache_stat);
 	if(e) goto fail;
-	this->cachedMem = vm_cache_stat.cache_count * CRT_page_size_kib;
+	this->cachedMem = vm_cache_stat.cache_count * CRT_page_size_kibibyte;
 
 #ifdef _SERVERS_DEFPAGER
 	mach_port_t defpager = file_name_lookup(_SERVERS_DEFPAGER, O_READ, 0);
@@ -224,7 +224,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		proc->m_size = info->taskinfo.virtual_size / CRT_page_size;
 		proc->m_resident = info->taskinfo.resident_size / CRT_page_size;
 		proc->percent_mem =
-			(double)proc->m_resident / (super->totalMem / CRT_page_size_kib) * 100;
+			(double)proc->m_resident / (super->totalMem / CRT_page_size_kibibyte) * 100;
 		struct timeval tv = {
 			.tv_sec = info->taskinfo.user_time.seconds + info->taskinfo.system_time.seconds,
 			.tv_usec = info->taskinfo.user_time.microseconds + info->taskinfo.system_time.microseconds

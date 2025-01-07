@@ -1,7 +1,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -103,7 +103,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
       // How can this happen?
       CRT_page_size = page_size;
-      CRT_page_size_kib = page_size / ONE_BINARY_K;
+      CRT_page_size_kibibyte = page_size / ONE_BINARY_K;
    }
 
    int mib[4];
@@ -323,22 +323,22 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
    //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
-   //pl->totalMem = buffer.v_uint * CRT_page_size_kib;
+   //pl->totalMem = buffer.v_uint * CRT_page_size_kibibyte;
    len = sizeof buffer.v_ulong;
    if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   fpl->memActive = buffer.v_uint * CRT_page_size_kib;
+   fpl->memActive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
-   fpl->memWire = buffer.v_uint * CRT_page_size_kib;
+   fpl->memWire = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
    if(sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0) > 0) goto fail;
-   fpl->memInactive = buffer.v_uint * CRT_page_size_kib;
+   fpl->memInactive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_long;
    if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
@@ -349,7 +349,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) {
          pl->cachedMem = 0;
       } else {
-         pl->cachedMem = buffer.v_uint * CRT_page_size_kib;
+         pl->cachedMem = buffer.v_uint * CRT_page_size_kibibyte;
       }
    }
 
@@ -359,7 +359,7 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       if(sysctl(v_laundry_count_mib, 4, &buffer, &len, NULL, 0) < 0) {
          fpl->laundry_size = 0;
       } else {
-         fpl->laundry_size = buffer.v_uint * CRT_page_size_kib;
+         fpl->laundry_size = buffer.v_uint * CRT_page_size_kibibyte;
       }
    }
 
@@ -376,8 +376,8 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
    }
-   pl->totalSwap *= CRT_page_size_kib;
-   pl->usedSwap *= CRT_page_size_kib;
+   pl->totalSwap *= CRT_page_size_kibibyte;
+   pl->usedSwap *= CRT_page_size_kibibyte;
 #else
    pl->totalSwap = 0;
    pl->usedSwap = 0;
@@ -553,7 +553,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->m_size = kproc->ki_size / CRT_page_size;
       proc->m_resident = kproc->ki_rssize;
       proc->percent_mem =
-         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kib) * 100;
+         (double)proc->m_resident / (double)(this->totalMem / CRT_page_size_kibibyte) * 100;
       proc->nlwp = kproc->ki_numthreads;
       proc->time = kproc->ki_runtime / 10000;
       proc->percent_cpu = (double)kproc->ki_pctcpu / (double)kernelFScale * 100;

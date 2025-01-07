@@ -1,7 +1,7 @@
 /*
 htop - haiku/HaikuProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -203,7 +203,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		}
 	}
 
-	super->usedMem = si.used_pages * CRT_page_size_kib;
+	super->usedMem = si.used_pages * CRT_page_size_kibibyte;
 
 #if !defined HAVE_SYSTEM_INFO_CACHED_PAGES || !defined HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
 	struct vm_stat vm_stat;
@@ -211,7 +211,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		// Is this correct?
 		long int cache_page_count =
 			si.max_pages - (si.used_pages + vm_stat.free_memory / CRT_page_size);
-		super->cachedMem = cache_page_count > 0 ? cache_page_count * CRT_page_size_kib : 0;
+		super->cachedMem = cache_page_count > 0 ? cache_page_count * CRT_page_size_kibibyte : 0;
 		super->totalSwap = vm_stat.max_swap_space / 1024;
 		super->usedSwap = (vm_stat.max_swap_space - vm_stat.free_swap_space) / 1024;
 	} else {
@@ -219,11 +219,11 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	}
 #endif
 #ifdef HAVE_SYSTEM_INFO_CACHED_PAGES
-	super->cachedMem = si.cached_pages * CRT_page_size_kib;
+	super->cachedMem = si.cached_pages * CRT_page_size_kibibyte;
 #endif
 #ifdef HAVE_SYSTEM_INFO_MAX_SWAP_PAGES
-	super->totalSwap = si.max_swap_pages * CRT_page_size_kib;
-	super->usedSwap = (si.max_swap_pages - si.free_swap_pages) * CRT_page_size_kib;
+	super->totalSwap = si.max_swap_pages * CRT_page_size_kibibyte;
+	super->usedSwap = (si.max_swap_pages - si.free_swap_pages) * CRT_page_size_kibibyte;
 #endif
 
 	if(skip_processes) return;
