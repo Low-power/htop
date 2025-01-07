@@ -55,6 +55,8 @@ typedef struct FreeBSDProcessList_ {
 } FreeBSDProcessList;
 
 
+#ifndef HAVE_LIBKVM
+#endif
 #ifdef __GLIBC__
 // GNU C Library defines NZERO to 20, which is incorrect for kFreeBSD
 #undef NZERO

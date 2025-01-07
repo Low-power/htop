@@ -79,6 +79,9 @@ static int *v_laundry_count_mib;
 static int MIB_vfs_bufspace[2];
 static int MIB_kern_cp_time[2];
 static int MIB_kern_cp_times[2];
+#ifndef HAVE_LIBKVM
+static int *swap_info_mib;
+#endif
 static int kernelFScale;
 
 #ifdef __GLIBC__
@@ -133,6 +136,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       v_laundry_count_mib = xMalloc(sizeof mib);
       memcpy(v_laundry_count_mib, mib, sizeof mib);
    }
+
+#ifndef HAVE_LIBKVM
+   len = 2;
+   if(sysctlnametomib("vm.swap_info", mib, &len) == 0) {
+      assert(len == 2);
+      swap_info_mib = xMalloc(sizeof(int) * 3);
+      memcpy(swap_info_mib, mib, sizeof(int) * 2);
+   }
+#endif
 
    int smp = 0;
    len = sizeof(smp);
@@ -367,11 +379,11 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
 
    pl->usedMem = fpl->memActive + fpl->memWire + fpl->memInactive + fpl->laundry_size - fpl->vfs_buffer_size;
 
+   pl->totalSwap = 0;
+   pl->usedSwap = 0;
 #ifdef HAVE_LIBKVM
    struct kvm_swap swap[16];
    int nswap = kvm_getswapinfo(fpl->kd, swap, sizeof(swap)/sizeof(swap[0]), 0);
-   pl->totalSwap = 0;
-   pl->usedSwap = 0;
    for (int i = 0; i < nswap; i++) {
       pl->totalSwap += swap[i].ksw_total;
       pl->usedSwap += swap[i].ksw_used;
@@ -379,8 +391,17 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalSwap *= CRT_page_size_kibibyte;
    pl->usedSwap *= CRT_page_size_kibibyte;
 #else
-   pl->totalSwap = 0;
-   pl->usedSwap = 0;
+   if(swap_info_mib) {
+      struct xswdev swd;
+      swap_info_mib[2] = 0;
+      while(len = sizeof swd, sysctl(swap_info_mib, 3, &swd, &len, NULL, 0) == 0) {
+         pl->totalSwap += swd.xsw_nblks;
+         pl->usedSwap += swd.xsw_used;
+         swap_info_mib[2]++;
+      }
+      pl->totalSwap *= CRT_page_size_kibibyte;
+      pl->usedSwap *= CRT_page_size_kibibyte;
+   }
 #endif
 
    return;
