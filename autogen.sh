@@ -4,5 +4,5 @@ set -e
 autoreconf --install --force
 rm -f config.sub.new
 sed -E 's/( |\-)linux\-uclibc\*/\1linux\-uc\*/g' config.sub > config.sub.new
-chmod +x config.sub.new
-mv config.sub.new config.sub
+chmod a+x config.sub.new
+mv -f config.sub.new config.sub
