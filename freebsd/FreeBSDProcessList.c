@@ -580,14 +580,22 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->percent_cpu = (double)kproc->ki_pctcpu / (double)kernelFScale * 100;
 
       proc->priority = kproc->ki_pri.pri_level - PZERO;
-      if ((kproc->ki_flag & P_SYSTEM) && strcmp(kproc->ki_comm, "intr") == 0) {
-         proc->nice = 0; //@etosan: intr kernel process (not thread) has weird nice value
-      } else if (kproc->ki_pri.pri_class == PRI_TIMESHARE) {
-         proc->nice = kproc->ki_nice - NZERO;
-      } else if (PRI_IS_REALTIME(kproc->ki_pri.pri_class)) {
-         proc->nice = PRIO_MIN - 1 - (PRI_MAX_REALTIME - kproc->ki_pri.pri_level);
-      } else {
-         proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
+      switch(PRI_BASE(kproc->ki_pri.pri_class)) {
+         case PRI_ITHD:
+            proc->nice = LONG_MIN;
+            break;
+         case PRI_REALTIME:
+            proc->nice = PRIO_MIN - 1 - (PRI_MAX_REALTIME - kproc->ki_pri.pri_level);
+            break;
+         case PRI_TIMESHARE:
+            proc->nice = kproc->ki_nice - NZERO;
+            break;
+         case PRI_IDLE:
+            proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
+            break;
+         default:
+            proc->nice = LONG_MAX;
+            break;
       }
 
       int on_processor = -1;

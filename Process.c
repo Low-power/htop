@@ -1,6 +1,7 @@
 /*
 htop - Process.c
 (C) 2004-2015 Hisham H. Muhammad
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -466,14 +467,24 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          Process_humanNumber(str, this->m_size * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_NICE_FIELD:
-         n = snprintf(buffer, n, "%3ld", this->nice);
-         assert(n >= 3);
-         if(n == 3) {
-            buffer[3] = ' ';
-            buffer[4] = 0;
+         switch(this->nice) {
+            case LONG_MAX:
+               xSnprintf(buffer, n, "  ? ");
+               break;
+            case LONG_MIN:
+               xSnprintf(buffer, n, "  - ");
+               break;
+            default:
+               n = snprintf(buffer, n, "%3ld", this->nice);
+               assert(n >= 3);
+               if(n == 3) {
+                  buffer[3] = ' ';
+                  buffer[4] = 0;
+               }
+               if(this->nice < 0) attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
+               else if(this->nice > 0) attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
+               break;
          }
-         if(this->nice < 0) attr = CRT_colors[HTOP_PROCESS_HIGH_PRIORITY_COLOR];
-         else if(this->nice > 0) attr = CRT_colors[HTOP_PROCESS_LOW_PRIORITY_COLOR];
          break;
       case HTOP_NLWP_FIELD:
          xSnprintf(buffer, n, "%4ld ", this->nlwp);
@@ -704,7 +715,7 @@ long Process_compare(const void* v1, const void* v2) {
       case HTOP_M_SIZE_FIELD:
          return (p2->m_size - p1->m_size);
       case HTOP_NICE_FIELD:
-         return (p1->nice - p2->nice);
+         return uintcmp(p1->nice, p2->nice);
       case HTOP_NLWP_FIELD:
          return (p1->nlwp - p2->nlwp);
       case HTOP_PGRP_FIELD:
