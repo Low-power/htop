@@ -1,7 +1,7 @@
 /*
 htop - hurd/HurdProcess.c
 (C) 2015 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -65,7 +65,6 @@ FieldData Process_fields[] = {
    [HTOP_EFFECTIVE_USER_FIELD] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
    [HTOP_TIME_FIELD] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [HTOP_NLWP_FIELD] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
-   [HTOP_TGID_FIELD] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -73,7 +72,6 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = HTOP_PID_FIELD, .label = "PID" },
    { .id = HTOP_PPID_FIELD, .label = "PPID" },
    { .id = HTOP_TPGID_FIELD, .label = "TPGID" },
-   { .id = HTOP_TGID_FIELD, .label = "TGID" },
    { .id = HTOP_PGRP_FIELD, .label = "PGRP" },
    { .id = HTOP_SESSION_FIELD, .label = "SID" },
    { .id = 0, .label = NULL },

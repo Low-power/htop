@@ -154,11 +154,6 @@ FieldData Process_fields[] = {
       .title = "NLWP ",
       .description = "Number of threads in the process",
       .flags = 0, },
-   [HTOP_TGID_FIELD] = {
-      .name = "TGID",
-      .title = "   TGID ",
-      .description = "Thread group ID (i.e. process ID)",
-      .flags = 0, },
    [HTOP_WPAR_ID_FIELD] = {
       .name = "WPAR",
       .title = "   WPAR ",
@@ -175,7 +170,6 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = HTOP_PID_FIELD, .label = "PID" },
    { .id = HTOP_PPID_FIELD, .label = "PPID" },
    { .id = HTOP_TPGID_FIELD, .label = "TPGID" },
-   { .id = HTOP_TGID_FIELD, .label = "TGID" },
    { .id = HTOP_PGRP_FIELD, .label = "PGRP" },
    { .id = HTOP_SESSION_FIELD, .label = "SESN" },
    { .id = 0, .label = NULL },

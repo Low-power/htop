@@ -378,7 +378,8 @@ time (see UTIME, STIME above).
 The number of threads in the process.
 .TP
 .B TGID
-The thread group ID.
+The thread group ID. Available on platforms where threads are presented as
+processes.
 .TP
 .B CTID
 OpenVZ container ID, a.k.a virtual environment ID.

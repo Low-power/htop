@@ -117,7 +117,6 @@ FieldData Process_fields[] = {
    [HTOP_EFFECTIVE_USER_FIELD] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
    [HTOP_TIME_FIELD] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [HTOP_NLWP_FIELD] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
-   [HTOP_TGID_FIELD] = { .name = "TGID", .title = "   TGID ", .description = "Thread group ID (i.e. process ID)", .flags = 0, },
 #ifdef HAVE_ZONE_H
    [HTOP_ZONEID_FIELD] = { .name = "ZONEID", .title = " ZONEID ", .description = "Zone ID", .flags = 0, },
    [HTOP_ZONE_FIELD] = { .name = "ZONE", .title = "ZONE             ", .description = "Zone name", .flags = 0, },
@@ -154,7 +153,6 @@ ProcessPidColumn Process_pidColumns[] = {
    { .id = HTOP_LWPID_FIELD, .label = "LWPID" },
 #endif
    { .id = HTOP_TPGID_FIELD, .label = "TPGID" },
-   { .id = HTOP_TGID_FIELD, .label = "TGID" },
    { .id = HTOP_PGRP_FIELD, .label = "PGRP" },
    { .id = HTOP_SESSION_FIELD, .label = "SID" },
    { .id = 0, .label = NULL }
