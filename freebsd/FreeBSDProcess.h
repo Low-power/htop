@@ -5,10 +5,12 @@
 /*
 htop - freebsd/FreeBSDProcess.h
 (C) 2015 Hisham H. Muhammad
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include "config.h"
 #include "Settings.h"
 #include <stdbool.h>
 
@@ -20,12 +22,16 @@ typedef enum {
    HTOP_JID_FIELD = 100,
    HTOP_JAIL_FIELD,
    HTOP_EMULATION_FIELD,
+   HTOP_FIB_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
 typedef struct FreeBSDProcess_ {
    Process super;
    bool kernel;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+   int fib;
+#endif
    int   jid;
    char* jname;
    char *emulation;

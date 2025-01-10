@@ -646,6 +646,10 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
          fp->emulation = xStrdup(kproc->ki_emul);
       }
 
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+      fp->fib = kproc->ki_fibnum;
+#endif
+
       this->totalTasks++;
       this->thread_count += proc->nlwp;
       if (Process_isKernelProcess(proc)) {

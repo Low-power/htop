@@ -1,6 +1,7 @@
 /*
 htop - freebsd/FreeBSDProcess.c
 (C) 2015 Hisham H. Muhammad
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -20,6 +21,7 @@ in the source distribution for its full text.
 #include <errno.h>
 
 /*{
+#include "config.h"
 #include "Settings.h"
 #include <stdbool.h>
 
@@ -31,12 +33,16 @@ typedef enum {
    HTOP_JID_FIELD = 100,
    HTOP_JAIL_FIELD,
    HTOP_EMULATION_FIELD,
+   HTOP_FIB_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
 typedef struct FreeBSDProcess_ {
    Process super;
    bool kernel;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+   int fib;
+#endif
    int   jid;
    char* jname;
    char *emulation;
@@ -84,6 +90,9 @@ FieldData Process_fields[] = {
    [HTOP_JID_FIELD] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
    [HTOP_JAIL_FIELD] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = PROCESS_FLAG_JAIL },
    [HTOP_EMULATION_FIELD] = { .name = "EMULATION", .title = "EMULATION        ", .description = "Binary format emulation type", .flags = PROCESS_FLAG_EMULATION },
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+   [HTOP_FIB_FIELD] = { .name = "FIB", .title = "  FIB ", .description = "Routing table ID", .flags = 0 },
+#endif
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -136,6 +145,11 @@ void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessFie
             buffer[17] = 0;
          }
          break;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+      case HTOP_FIB_FIELD:
+         xSnprintf(buffer, n, "%5d ", this->fib);
+         break;
+#endif
       default:
          BSDProcess_writeField(super, str, field);
          return;
@@ -162,6 +176,10 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
          return settings->sort_strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
       case HTOP_EMULATION_FIELD:
          return settings->sort_strcmp(p1->emulation, p2->emulation);
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
+      case HTOP_FIB_FIELD:
+         return p1->fib - p2->fib;
+#endif
       default:
          return Process_compare(v1, v2);
    }
