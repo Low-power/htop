@@ -31,8 +31,8 @@ in the source distribution for its full text.
 #elif defined MAJOR_IN_SYSMACROS
 #include <sys/sysmacros.h>
 #endif
-#ifdef HAVE_LIBNCURSESW
 #include <limits.h>
+#ifdef HAVE_LIBNCURSESW
 #include <wchar.h>
 #endif
 
