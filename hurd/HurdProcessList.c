@@ -20,6 +20,7 @@ in the source distribution for its full text.
 #include <mach/default_pager.h>
 #include <mach/gnumach.h>
 #include <hurd/paths.h>
+#include <hurd/resource.h>
 #include <hurd.h>
 #include <error.h>
 #include <unistd.h>
@@ -221,6 +222,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		proc->pgrp = info->pgrp;
 		proc->session = info->session;
 		proc->priority = info->taskinfo.base_priority;
+		proc->nice = MACH_PRIORITY_TO_NICE(info->taskinfo.base_priority);
 		proc->m_size = info->taskinfo.virtual_size / CRT_page_size;
 		proc->m_resident = info->taskinfo.resident_size / CRT_page_size;
 		proc->percent_mem =
