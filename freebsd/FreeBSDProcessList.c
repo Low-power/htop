@@ -515,6 +515,8 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    if(fpl->kip_buffer_size < buffer_size) {
       fpl->kip_buffer = xRealloc(fpl->kip_buffer, buffer_size);
       fpl->kip_buffer_size = buffer_size;
+   } else {
+      buffer_size = fpl->kip_buffer_size;
    }
    if(sysctl(mib, 3, fpl->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) return;
    struct kinfo_proc *kprocs = fpl->kip_buffer;

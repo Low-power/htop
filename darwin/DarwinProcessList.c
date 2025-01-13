@@ -1,7 +1,7 @@
 /*
 htop - darwin/DarwinProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -115,6 +115,8 @@ static size_t ProcessList_updateProcessList(DarwinProcessList *this) {
       free(this->kip_buffer);
       this->kip_buffer = xMalloc(buffer_size);
       this->kip_buffer_size = buffer_size;
+   } else {
+      buffer_size = this->kip_buffer_size;
    }
    if (sysctl(mib, 3, this->kip_buffer, &buffer_size, NULL, 0) < 0 && errno != ENOMEM) {
       CRT_fatalError("Unable to get process list", 0);
