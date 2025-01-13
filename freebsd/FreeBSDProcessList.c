@@ -461,8 +461,8 @@ static void FreeBSDProcessList_readProcessName(FreeBSDProcessList *this, struct 
 
 #define JAIL_ERRMSGLEN 1024
 
-static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
+static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
    if (kproc->ki_jid != 0) {
       struct iovec jiov[6];
       char jnamebuf[MAXHOSTNAMELEN];
@@ -491,9 +491,9 @@ static char *FreeBSDProcessList_readJailName(struct kinfo_proc* kproc) {
       }
       return jid == kproc->ki_jid ? xStrdup(jnamebuf) : NULL;
    }
-#endif
    return xStrdup("-");
 }
+#endif
 
 void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
    FreeBSDProcessList* fpl = (FreeBSDProcessList*) this;
@@ -637,10 +637,10 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
 
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
       fp->jid = kproc->ki_jid;
-#endif
       if((this->settings->flags & PROCESS_FLAG_JAIL) && !fp->jname) {
          fp->jname = FreeBSDProcessList_readJailName(kproc);
       }
+#endif
 
       if((this->settings->flags & PROCESS_FLAG_EMULATION) && !fp->emulation) {
          fp->emulation = xStrdup(kproc->ki_emul);

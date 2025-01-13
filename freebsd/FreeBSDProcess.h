@@ -32,8 +32,10 @@ typedef struct FreeBSDProcess_ {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
    int fib;
 #endif
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
    int   jid;
    char* jname;
+#endif
    char *emulation;
 } FreeBSDProcess;
 

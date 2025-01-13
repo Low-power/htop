@@ -69,6 +69,9 @@ void ProcessList_delete(ProcessList* this);
 
 #define JAIL_ERRMSGLEN 1024
 
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
+#endif
+
 void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes);
 
 #endif

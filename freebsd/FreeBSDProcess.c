@@ -43,8 +43,10 @@ typedef struct FreeBSDProcess_ {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
    int fib;
 #endif
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
    int   jid;
    char* jname;
+#endif
    char *emulation;
 } FreeBSDProcess;
 }*/
@@ -87,8 +89,10 @@ FieldData Process_fields[] = {
    [HTOP_EFFECTIVE_USER_FIELD] = { .name = "EFFECTIVE_USER", .title = "EFFE_USER ", .description = "Effective user (or numeric user ID if name cannot be determined)", .flags = 0, },
    [HTOP_TIME_FIELD] = { .name = "TIME", .title = "  TIME+  ", .description = "Total time the process has spent in user and system time", .flags = 0, },
    [HTOP_NLWP_FIELD] = { .name = "NLWP", .title = "NLWP ", .description = "Number of threads in the process", .flags = 0, },
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
    [HTOP_JID_FIELD] = { .name = "JID", .title = "    JID ", .description = "Jail prison ID", .flags = 0, },
    [HTOP_JAIL_FIELD] = { .name = "JAIL", .title = "JAIL        ", .description = "Jail prison name", .flags = PROCESS_FLAG_JAIL },
+#endif
    [HTOP_EMULATION_FIELD] = { .name = "EMULATION", .title = "EMULATION        ", .description = "Binary format emulation type", .flags = PROCESS_FLAG_EMULATION },
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
    [HTOP_FIB_FIELD] = { .name = "FIB", .title = "  FIB ", .description = "Routing table ID", .flags = 0 },
@@ -97,7 +101,9 @@ FieldData Process_fields[] = {
 };
 
 ProcessPidColumn Process_pidColumns[] = {
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
    { .id = HTOP_JID_FIELD, .label = "JID" },
+#endif
    { .id = HTOP_PID_FIELD, .label = "PID" },
    { .id = HTOP_PPID_FIELD, .label = "PPID" },
    { .id = HTOP_TPGID_FIELD, .label = "TPGID" },
@@ -116,7 +122,9 @@ FreeBSDProcess* FreeBSDProcess_new(Settings* settings) {
 void Process_delete(Object* cast) {
    FreeBSDProcess* this = (FreeBSDProcess*) cast;
    Process_done((Process*)cast);
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
    free(this->jname);
+#endif
    free(this->emulation);
    free(this);
 }
@@ -128,6 +136,7 @@ void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessFie
    int n = sizeof buffer;
    switch ((int) field) {
       // add FreeBSD-specific fields here
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
       case HTOP_JID_FIELD:
          xSnprintf(buffer, n, Process_pidFormat, this->jid);
          break;
@@ -138,6 +147,7 @@ void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessFie
             buffer[12] = '\0';
          }
          break;
+#endif
       case HTOP_EMULATION_FIELD:
          xSnprintf(buffer, n, "%-16s ", this->emulation);
          if(buffer[17]) {
@@ -169,11 +179,13 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
    }
    switch ((int) settings->sortKey) {
       // add FreeBSD-specific fields here
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_JID
       case HTOP_JID_FIELD:
          return (p1->jid - p2->jid);
       case HTOP_JAIL_FIELD:
          if(!p1->jname && !p2->jname) return p1->jid - p2->jid;
          return settings->sort_strcmp(p1->jname ? p1->jname : "", p2->jname ? p2->jname : "");
+#endif
       case HTOP_EMULATION_FIELD:
          return settings->sort_strcmp(p1->emulation, p2->emulation);
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
