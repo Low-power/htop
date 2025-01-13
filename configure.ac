@@ -414,7 +414,8 @@ if test "$my_htop_platform" = "freebsd"; then
 				], [test "x$with_kvm" != xcheck && missing_headers="$missing_headers kvm.h"])
 		])
 	AC_CHECK_MEMBERS(
-		[struct kinfo_proc.ki_jid, struct kinfo_proc.ki_fibnum],
+		dnl Don't break this argument into multiple lines
+		[struct kinfo_proc.ki_jid, struct kinfo_proc.ki_fibnum, struct kinfo_proc.ki_rusage_ch],
 		[], [],
 		[
 			#include <sys/param.h>

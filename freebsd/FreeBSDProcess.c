@@ -34,6 +34,8 @@ typedef enum {
    HTOP_JAIL_FIELD,
    HTOP_EMULATION_FIELD,
    HTOP_FIB_FIELD,
+   HTOP_CMINFLT_FIELD,
+   HTOP_CMAJFLT_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
@@ -48,6 +50,10 @@ typedef struct FreeBSDProcess_ {
    char* jname;
 #endif
    char *emulation;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+   unsigned long int cminflt;
+   unsigned long int cmajflt;
+#endif
 } FreeBSDProcess;
 }*/
 
@@ -74,6 +80,10 @@ FieldData Process_fields[] = {
    [HTOP_TPGID_FIELD] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [HTOP_MINFLT_FIELD] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
    [HTOP_MAJFLT_FIELD] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+   [HTOP_CMINFLT_FIELD] = { .name = "CMINFLT", .title = "    CMINFLT ", .description = "Children processes' minor faults", .flags = 0, },
+   [HTOP_CMAJFLT_FIELD] = { .name = "CMAJFLT", .title = "    CMAJFLT ", .description = "Children processes' major faults", .flags = 0, },
+#endif
    [HTOP_PRIORITY_FIELD] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
    [HTOP_NICE_FIELD] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
    [HTOP_STARTTIME_FIELD] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
@@ -131,6 +141,9 @@ void Process_delete(Object* cast) {
 
 void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessField field) {
    const FreeBSDProcess *this = (const FreeBSDProcess *)super;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+   bool coloring = super->settings->highlightMegabytes;
+#endif
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof buffer;
@@ -159,6 +172,14 @@ void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessFie
       case HTOP_FIB_FIELD:
          xSnprintf(buffer, n, "%5d ", this->fib);
          break;
+#endif
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+      case HTOP_CMINFLT_FIELD:
+         Process_colorNumber(str, this->cminflt, coloring);
+         return;
+      case HTOP_CMAJFLT_FIELD:
+         Process_colorNumber(str, this->cmajflt, coloring);
+         return;
 #endif
       default:
          BSDProcess_writeField(super, str, field);
@@ -191,6 +212,12 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
       case HTOP_FIB_FIELD:
          return p1->fib - p2->fib;
+#endif
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+      case HTOP_CMINFLT_FIELD:
+         return uintcmp(p2->cminflt, p1->cminflt);
+      case HTOP_CMAJFLT_FIELD:
+         return uintcmp(p2->cmajflt, p1->cmajflt);
 #endif
       default:
          return Process_compare(v1, v2);

@@ -652,6 +652,13 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       fp->fib = kproc->ki_fibnum;
 #endif
 
+      proc->minflt = kproc->ki_rusage.ru_minflt;
+      proc->majflt = kproc->ki_rusage.ru_majflt;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+      fp->cminflt = kproc->ki_rusage_ch.ru_minflt;
+      fp->cmajflt = kproc->ki_rusage_ch.ru_majflt;
+#endif
+
       this->totalTasks++;
       this->thread_count += proc->nlwp;
       if (Process_isKernelProcess(proc)) {

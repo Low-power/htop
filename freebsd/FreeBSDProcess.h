@@ -23,6 +23,8 @@ typedef enum {
    HTOP_JAIL_FIELD,
    HTOP_EMULATION_FIELD,
    HTOP_FIB_FIELD,
+   HTOP_CMINFLT_FIELD,
+   HTOP_CMAJFLT_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
@@ -37,6 +39,10 @@ typedef struct FreeBSDProcess_ {
    char* jname;
 #endif
    char *emulation;
+#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
+   unsigned long int cminflt;
+   unsigned long int cmajflt;
+#endif
 } FreeBSDProcess;
 
 extern ProcessClass FreeBSDProcess_class;
