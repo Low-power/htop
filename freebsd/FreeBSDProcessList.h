@@ -51,9 +51,16 @@ typedef struct FreeBSDProcessList_ {
    long int *cp_times_o;
    long int *cp_times_n;
 
+   // For calculating I/O rate only
+   struct timespec last_updated;
+
    int arg_max;
 } FreeBSDProcessList;
 
+
+#ifdef HAVE_LROUND
+#else
+#endif
 
 #ifndef HAVE_LIBKVM
 #endif

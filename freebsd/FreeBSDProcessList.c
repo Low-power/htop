@@ -48,6 +48,9 @@ typedef struct FreeBSDProcessList_ {
    long int *cp_times_o;
    long int *cp_times_n;
 
+   // For calculating I/O rate only
+   struct timespec last_updated;
+
    int arg_max;
 } FreeBSDProcessList;
 
@@ -68,6 +71,18 @@ typedef struct FreeBSDProcessList_ {
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+
+#ifdef HAVE_LROUND
+#include <math.h>
+#else
+static long int lround(double v) {
+	long int n = v;
+	v -= (double)n;
+	if(v < -0.5) n--;
+	else if(v > 0.5) n++;
+	return n;
+}
+#endif
 
 static int MIB_hw_physmem[2];
 static int MIB_vm_stats_vm_v_page_count[4];
@@ -204,6 +219,8 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    int arg_max_mib[] = { CTL_KERN, KERN_ARGMAX };
    len = sizeof fpl->arg_max;
    if(sysctl(arg_max_mib, 2, &fpl->arg_max, &len, NULL, 0) < 0) fpl->arg_max = ARG_MAX;
+
+   fpl->last_updated.tv_sec = -1;
 
    return pl;
 }
@@ -504,6 +521,9 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
 
    if(skip_processes) return;
 
+   struct timespec now;
+   if(!(this->settings->flags & PROCESS_FLAG_IO_RATE) || clock_gettime(CLOCK_MONOTONIC, &now) < 0) now.tv_sec = -1;
+
 #ifdef HAVE_LIBKVM
    int count = 0;
    struct kinfo_proc* kprocs = kvm_getprocs(fpl->kd, KERN_PROC_PROC, 0, &count);
@@ -659,6 +679,27 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       fp->cmajflt = kproc->ki_rusage_ch.ru_majflt;
 #endif
 
+      if(this->settings->flags & (PROCESS_FLAG_IO|PROCESS_FLAG_IO_RATE)) {
+         if(this->settings->flags & PROCESS_FLAG_IO_RATE) {
+            if(now.tv_sec == (time_t)-1) {
+               fp->read_blocks_per_sec = -1;
+               fp->write_blocks_per_sec = -1;
+            } else if(fpl->last_updated.tv_sec == (time_t)-1) {
+               fp->read_blocks_per_sec = 0;
+               fp->write_blocks_per_sec = 0;
+            } else {
+               double interval = (double)(now.tv_sec - fpl->last_updated.tv_sec) +
+                  (double)(now.tv_nsec - fpl->last_updated.tv_nsec) / 1000000000;
+               fp->read_blocks_per_sec =
+                  lround((kproc->ki_rusage.ru_inblock - fp->read_block_count) / interval);
+               fp->write_blocks_per_sec =
+                  lround((kproc->ki_rusage.ru_oublock - fp->write_block_count) / interval);
+            }
+         }
+         fp->read_block_count = kproc->ki_rusage.ru_inblock;
+         fp->write_block_count = kproc->ki_rusage.ru_oublock;
+      }
+
       this->totalTasks++;
       this->thread_count += proc->nlwp;
       if (Process_isKernelProcess(proc)) {
@@ -674,4 +715,6 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
 
       proc->updated = true;
    }
+
+   fpl->last_updated = now;
 }

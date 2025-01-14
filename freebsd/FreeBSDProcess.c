@@ -27,6 +27,7 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_JAIL 0x100
 #define PROCESS_FLAG_EMULATION 0x200
+#define PROCESS_FLAG_IO_RATE 0x400
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -36,6 +37,11 @@ typedef enum {
    HTOP_FIB_FIELD,
    HTOP_CMINFLT_FIELD,
    HTOP_CMAJFLT_FIELD,
+   HTOP_READ_BLOCKS_FIELD,
+   HTOP_WRITE_BLOCKS_FIELD,
+   HTOP_READ_BLOCK_RATE_FIELD,
+   HTOP_WRITE_BLOCK_RATE_FIELD,
+   HTOP_IO_RATE_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
@@ -54,6 +60,10 @@ typedef struct FreeBSDProcess_ {
    unsigned long int cminflt;
    unsigned long int cmajflt;
 #endif
+   long int read_block_count;
+   long int write_block_count;
+   long int read_blocks_per_sec;
+   long int write_blocks_per_sec;
 } FreeBSDProcess;
 }*/
 
@@ -107,6 +117,11 @@ FieldData Process_fields[] = {
 #ifdef HAVE_STRUCT_KINFO_PROC_KI_FIBNUM
    [HTOP_FIB_FIELD] = { .name = "FIB", .title = "  FIB ", .description = "Routing table ID", .flags = 0 },
 #endif
+   [HTOP_READ_BLOCKS_FIELD] = { .name = "READ_BLOCKS", .title = "   R_BLOCKS ", .description = "Number of blocks the process has read", .flags = PROCESS_FLAG_IO },
+   [HTOP_WRITE_BLOCKS_FIELD] = { .name = "WRITE_BLOCKS", .title = "   W_BLOCKS ", .description = "Number of blocks the process has written", .flags = PROCESS_FLAG_IO },
+   [HTOP_READ_BLOCK_RATE_FIELD] = { .name = "READ_BLOCK_RATE", .title = "  RBLK/S ", .description = "Read rate in blocks per second for the process", .flags = PROCESS_FLAG_IO_RATE },
+   [HTOP_WRITE_BLOCK_RATE_FIELD] = { .name = "WRITE_BLOCK_RATE", .title = "  WBLK/S ", .description = "Write rate in blocks per second for the process", .flags = PROCESS_FLAG_IO_RATE },
+   [HTOP_IO_RATE_FIELD] = { .name = "IO_RATE", .title = " RWBLK/S ", .description = "Total I/O rate in blocks per second for the process", .flags = PROCESS_FLAG_IO_RATE },
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -141,9 +156,7 @@ void Process_delete(Object* cast) {
 
 void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessField field) {
    const FreeBSDProcess *this = (const FreeBSDProcess *)super;
-#ifdef HAVE_STRUCT_KINFO_PROC_KI_RUSAGE_CH
    bool coloring = super->settings->highlightMegabytes;
-#endif
    char buffer[256]; buffer[255] = '\0';
    int attr = CRT_colors[HTOP_DEFAULT_COLOR];
    int n = sizeof buffer;
@@ -181,6 +194,21 @@ void FreeBSDProcess_writeField(const Process *super, RichString* str, ProcessFie
          Process_colorNumber(str, this->cmajflt, coloring);
          return;
 #endif
+      case HTOP_READ_BLOCKS_FIELD:
+         Process_colorNumber(str, this->read_block_count, coloring);
+         return;
+      case HTOP_WRITE_BLOCKS_FIELD:
+         Process_colorNumber(str, this->write_block_count, coloring);
+         return;
+      case HTOP_READ_BLOCK_RATE_FIELD:
+         xSnprintf(buffer, sizeof buffer, "%8ld ", this->read_blocks_per_sec);
+         break;
+      case HTOP_WRITE_BLOCK_RATE_FIELD:
+         xSnprintf(buffer, sizeof buffer, "%8ld ", this->write_blocks_per_sec);
+         break;
+      case HTOP_IO_RATE_FIELD:
+         xSnprintf(buffer, sizeof buffer, "%8ld ", this->read_blocks_per_sec + this->write_blocks_per_sec);
+         break;
       default:
          BSDProcess_writeField(super, str, field);
          return;
@@ -219,6 +247,16 @@ long FreeBSDProcess_compare(const void* v1, const void* v2) {
       case HTOP_CMAJFLT_FIELD:
          return uintcmp(p2->cmajflt, p1->cmajflt);
 #endif
+      case HTOP_READ_BLOCKS_FIELD:
+         return p2->read_block_count - p1->read_block_count;
+      case HTOP_WRITE_BLOCKS_FIELD:
+         return p2->write_block_count - p1->write_block_count;
+      case HTOP_READ_BLOCK_RATE_FIELD:
+         return p2->read_blocks_per_sec - p1->read_blocks_per_sec;
+      case HTOP_WRITE_BLOCK_RATE_FIELD:
+         return p2->write_blocks_per_sec - p1->write_blocks_per_sec;
+      case HTOP_IO_RATE_FIELD:
+         return (p2->read_blocks_per_sec + p2->write_blocks_per_sec) - (p1->read_blocks_per_sec + p1->write_blocks_per_sec);
       default:
          return Process_compare(v1, v2);
    }

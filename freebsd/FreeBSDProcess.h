@@ -16,6 +16,7 @@ in the source distribution for its full text.
 
 #define PROCESS_FLAG_JAIL 0x100
 #define PROCESS_FLAG_EMULATION 0x200
+#define PROCESS_FLAG_IO_RATE 0x400
 
 typedef enum {
    // Add platform-specific fields here, with ids >= 100
@@ -25,6 +26,11 @@ typedef enum {
    HTOP_FIB_FIELD,
    HTOP_CMINFLT_FIELD,
    HTOP_CMAJFLT_FIELD,
+   HTOP_READ_BLOCKS_FIELD,
+   HTOP_WRITE_BLOCKS_FIELD,
+   HTOP_READ_BLOCK_RATE_FIELD,
+   HTOP_WRITE_BLOCK_RATE_FIELD,
+   HTOP_IO_RATE_FIELD,
    HTOP_LAST_PROCESSFIELD
 } FreeBSDProcessField;
 
@@ -43,6 +49,10 @@ typedef struct FreeBSDProcess_ {
    unsigned long int cminflt;
    unsigned long int cmajflt;
 #endif
+   long int read_block_count;
+   long int write_block_count;
+   long int read_blocks_per_sec;
+   long int write_blocks_per_sec;
 } FreeBSDProcess;
 
 extern ProcessClass FreeBSDProcess_class;
