@@ -354,11 +354,11 @@ static inline void DragonFlyBSDProcessList_scanJails(DragonFlyBSDProcessList* df
    char *curpos;
    char *nextpos;
 
+retry:
    if (sysctlbyname("jail.list", NULL, &len, NULL, 0) == -1) {
       fprintf(stderr, "initial sysctlbyname / jail.list failed\n");
       exit(3);
    }
-retry:
    if (len == 0)
       return;
 

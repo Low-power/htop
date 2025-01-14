@@ -238,6 +238,7 @@ char **Process_getKernelStackTrace(const Process *this) {
 	unsigned int i = 0;
 	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_KSTACK, this->pid };
 	size_t len;
+retry_get_size:
 	if(sysctl(mib, 4, NULL, &len, NULL, 0) < 0) {
 ret_err_msg:
 		v[0] = strdup(strerror(errno));
@@ -257,7 +258,10 @@ ret_err_msg:
 	struct kinfo_kstack *kiks_buffer = malloc(len);
 	if(!kiks_buffer) goto ret_err_msg;
 	if(sysctl(mib, 4, kiks_buffer, &len, NULL, 0) < 0) {
+		int e = errno;
 		free(kiks_buffer);
+		if(e == ENOMEM) goto retry_get_size;
+		errno = e;
 		goto ret_err_msg;
 	}
 	len /= sizeof(struct kinfo_kstack);
