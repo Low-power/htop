@@ -552,6 +552,10 @@ long LinuxProcess_compare(const void* v1, const void* v2) {
    #endif
       case HTOP_IO_PRIORITY_FIELD:
          return LinuxProcess_effectiveIOPriority(p1) - LinuxProcess_effectiveIOPriority(p2);
+      case HTOP_CMINFLT_FIELD:
+         return uintcmp(p2->cminflt, p1->cminflt);
+      case HTOP_CMAJFLT_FIELD:
+         return uintcmp(p2->cmajflt, p1->cmajflt);
       default:
          return Process_compare(v1, v2);
       test_diff:
