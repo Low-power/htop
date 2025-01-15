@@ -201,7 +201,7 @@ void Process_setupColumnWidths() {
    xSnprintf(Process_pidFormat, sizeof(Process_pidFormat), "%%%dd ", digits);
 }
 
-void Process_humanNumber(RichString* str, unsigned long number, bool coloring) {
+void Process_humanReadableByteNumber(RichString* str, unsigned long number, bool coloring) {
    char buffer[11];
    int len;
    int largeNumberColor = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
@@ -321,7 +321,7 @@ static inline void Process_writeCommand(const Process *this, int attr, int basea
       RichString_setAttrn(str, baseattr, start, finish);
 }
 
-void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring) {
+void Process_writeByteRate(RichString* str, char* buffer, int n, double rate, int coloring) {
    int largeNumberColor = CRT_colors[HTOP_LARGE_NUMBER_COLOR];
    int processMegabytesColor = CRT_colors[HTOP_PROCESS_MEGABYTES_COLOR];
    int processColor = CRT_colors[HTOP_PROCESS_COLOR];
@@ -461,10 +461,10 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          Process_colorNumber(str, this->minflt, coloring);
          return;
       case HTOP_M_RESIDENT_FIELD:
-         Process_humanNumber(str, this->m_resident * CRT_page_size_kibibyte, coloring);
+         Process_humanReadableByteNumber(str, this->m_resident * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_M_SIZE_FIELD:
-         Process_humanNumber(str, this->m_size * CRT_page_size_kibibyte, coloring);
+         Process_humanReadableByteNumber(str, this->m_size * CRT_page_size_kibibyte, coloring);
          return;
       case HTOP_NICE_FIELD:
          switch(this->nice) {

@@ -164,11 +164,11 @@ extern char Process_pidFormat[20];
 
 void Process_setupColumnWidths();
 
-void Process_humanNumber(RichString* str, unsigned long number, bool coloring);
+void Process_humanReadableByteNumber(RichString* str, unsigned long number, bool coloring);
 
 void Process_colorNumber(RichString* str, unsigned long long number, bool coloring);
 
-void Process_outputRate(RichString* str, char* buffer, int n, double rate, int coloring);
+void Process_writeByteRate(RichString* str, char* buffer, int n, double rate, int coloring);
 
 void Process_writeField(const Process *this, RichString* str, ProcessField field);
 
