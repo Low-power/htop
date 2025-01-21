@@ -347,6 +347,13 @@ clean-htop-headers:
 target:
 	echo $(htop_SOURCES)
 
+.PHONY:	compile_commands
+
+compile_commands:	compile_commands.json
+
+compile_commands.json:	clean
+	bear --output $@ -- $(MAKE) all
+
 profile:
 	LOCAL_CPPFLAGS="-D NDEBUG=1" LOCAL_CFLAGS=-pg $(MAKE) all
 
