@@ -39,6 +39,7 @@ dragonfly*)
    ;;
 darwin*)
    my_htop_platform=darwin
+   LIBS="$LIBS -framework Security"
    ;;
 solaris*)
    my_htop_platform=solaris

@@ -25,6 +25,8 @@ typedef union {
 
 typedef bool(*MainPanel_ForeachProcessFn)(Process*, Arg);
 
+typedef Htop_Reaction (*Htop_Action)(State* st);
+
 #define MainPanel_getFunctionBar(this_) (((Panel*)(this_))->defaultBar)
 
 }*/

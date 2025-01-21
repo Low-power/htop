@@ -168,18 +168,20 @@ darwin_platform_headers = \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
+	darwin/DarwinPrivilegeCheck.h \
 	darwin/Battery.h
 
 all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
-AM_LDFLAGS += -framework IOKit -framework CoreFoundation
+AM_LDFLAGS += -framework CoreFoundation -framework IOKit
 myhtopplatsources = \
 	bsd/Platform.c \
 	bsd/BSDProcess.c \
 	darwin/Platform.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \
+	darwin/DarwinPrivilegeCheck.c \
 	darwin/Battery.c
 
 myhtopplatheaders = $(darwin_platform_headers)

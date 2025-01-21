@@ -13,6 +13,8 @@ in the source distribution for its full text.
 #include "Action.h"
 #include "IncSet.h"
 
+typedef Htop_Reaction (*Htop_Action)(State* st);
+
 typedef struct MainPanel_ {
    Panel super;
    State* state;
