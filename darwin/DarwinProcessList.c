@@ -9,6 +9,7 @@ in the source distribution for its full text.
 #include "DarwinProcess.h"
 #include "DarwinProcessList.h"
 #include "CRT.h"
+#include "DarwinPrivilegeCheck.h"
 #include <mach/mach_init.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -72,6 +73,13 @@ typedef struct DarwinProcessList_ {
 }*/
 
 static void ProcessList_getHostInfo(struct host_basic_info *p) {
+   // 检查权限并尝试提权
+   if (!DarwinPrivilegeCheck_isRoot()) {
+      if (!DarwinPrivilegeCheck_requestRoot()) {
+         CRT_fatalError("需要root权限来获取完整的系统信息", 0);
+      }
+   }
+
    mach_msg_type_number_t info_size = HOST_BASIC_INFO_COUNT;
    int e = host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)p, &info_size);
    if(e) CRT_fatalError("Unable to retrieve host info", e << 8);

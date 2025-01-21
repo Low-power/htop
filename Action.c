@@ -448,7 +448,7 @@ static const struct key_help_entry helpLeft[] = {
    { "  P M T: ", "sort by CPU%, MEM% or TIME", KEY_VI_MODE_COMPATIBLE },
    { "      I: ", "invert sort order", KEY_VI_MODE_COMPATIBLE },
    { " F6 > .: ", "select sort column", KEY_VI_MODE_COMPATIBLE },
-   { NULL }
+   { NULL, NULL, 0 }
 };
 
 static const struct key_help_entry helpRight[] = {
@@ -474,7 +474,7 @@ static const struct key_help_entry helpRight[] = {
    { " F1 h ?: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
    { "   F1 ?: ", "show this help screen", KEY_VI_MODE_ONLY },
    { "  F10 q: ", "quit", KEY_VI_MODE_COMPATIBLE },
-   { NULL }
+   { NULL, NULL, 0 }
 };
 
 static Htop_Reaction actionHelp(State* st) {

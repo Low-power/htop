@@ -19,6 +19,18 @@ AM_INIT_AUTOMAKE([1.11 no-dependencies])
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
+# Enable compile_commands.json generation
+AC_ARG_ENABLE([compile-commands],
+  [AS_HELP_STRING([--enable-compile-commands], [enable compile_commands.json generation])],
+  [], [enable_compile_commands=no])
+if test "x$enable_compile_commands" = xyes; then
+  AC_CHECK_PROG([HAVE_BEAR], [bear], [yes], [no])
+  if test "x$HAVE_BEAR" = xno; then
+    AC_MSG_ERROR([bear command not found. Please install bear to generate compile_commands.json])
+  fi
+fi
+AM_CONDITIONAL([COMPILE_COMMANDS], [test "x$enable_compile_commands" = xyes])
+
 # Required by hwloc scripts
 AC_USE_SYSTEM_EXTENSIONS
 
@@ -39,6 +51,7 @@ dragonfly*)
    ;;
 darwin*)
    my_htop_platform=darwin
+   LIBS="$LIBS -framework Security"
    ;;
 solaris*)
    my_htop_platform=solaris

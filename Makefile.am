@@ -4,6 +4,15 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = htop
 
+# Generate compile_commands.json if enabled
+if COMPILE_COMMANDS
+compile_commands:
+	$(MAKE) clean
+	bear --output compile_commands.json -- $(MAKE) all
+endif
+
+.PHONY: compile_commands
+
 dist_man_MANS = htop.1 htop.colorscheme.5
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.sh \
 install-sh autogen.sh missing
@@ -168,18 +177,20 @@ darwin_platform_headers = \
 	darwin/Platform.h \
 	darwin/DarwinProcess.h \
 	darwin/DarwinProcessList.h \
+	darwin/DarwinPrivilegeCheck.h \
 	darwin/Battery.h
 
 all_platform_headers += $(darwin_platform_headers)
 
 if HTOP_DARWIN
-AM_LDFLAGS += -framework IOKit -framework CoreFoundation
+AM_LDFLAGS += -framework CoreFoundation -framework IOKit
 myhtopplatsources = \
 	bsd/Platform.c \
 	bsd/BSDProcess.c \
 	darwin/Platform.c \
 	darwin/DarwinProcess.c \
 	darwin/DarwinProcessList.c \
+	darwin/DarwinPrivilegeCheck.c \
 	darwin/Battery.c
 
 myhtopplatheaders = $(darwin_platform_headers)
