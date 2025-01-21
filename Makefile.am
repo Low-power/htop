@@ -4,6 +4,15 @@ AUTOMAKE_OPTIONS = subdir-objects
 
 bin_PROGRAMS = htop
 
+# Generate compile_commands.json if enabled
+if COMPILE_COMMANDS
+compile_commands:
+	$(MAKE) clean
+	bear --output compile_commands.json -- $(MAKE) all
+endif
+
+.PHONY: compile_commands
+
 dist_man_MANS = htop.1 htop.colorscheme.5
 EXTRA_DIST = $(dist_man_MANS) htop.desktop htop.png scripts/MakeHeader.sh \
 install-sh autogen.sh missing
