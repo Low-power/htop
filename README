@@ -36,7 +36,7 @@ Changes from original version
   environment screen (key `e`)
 * Processor times meter improvements for OpenBSD, by Antoine Motet
   <antoine.motet@gmail.com>
-* (hopefully bug-free) **vi(1)**-style key bindings support
+* **vi(1)**-style key bindings support
 * Support showing process start time for all supported platforms except Haiku
 * Mouse support can now be disabled in setup
 * Handle circularized process tree(s) that may happening with some kernels
@@ -49,6 +49,10 @@ Changes from original version
 * Haiku support
 * Disk statistics mode for Linux-based and kFreeBSD-based platforms (option `--disk`)
 * Mac OS X Tiger powerpc support
+* Meter bars can display overlapped values correctly
+* User session count meter
+* Improved columns selection panel without interaction issues
+* Accurate memory usage reporting for kFreeBSD-based platforms
 
 See the commit log for more.
 
@@ -108,9 +112,11 @@ currently not supported.
 
 ### GNU/Hurd
 
-Currently only tested with **GNU C Library 2.19**, **GNU HURD 0.5** and
-**GNU Mach 1.4**. Although unsupported, it is expected to work with newer
-versions of operating system components.
+Currently tested on following versions of operating system components:
+ * **GNU C Library 2.19**, **GNU HURD 0.5**, **GNU Mach 1.4**
+ * **GNU C Library 2.26**, **GNU HURD 0.9**, **GNU Mach 1.8**
+
+It is expected to work with newer versions of operating system components.
 
 ### AIX
 
