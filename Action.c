@@ -1,6 +1,7 @@
 /*
 htop - Action.c
 (C) 2015 Hisham H. Muhammad
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -265,13 +266,13 @@ static Htop_Reaction actionIncPrev(State* st) {
 }
 
 static Htop_Reaction actionHigherPriority(State* st) {
-   bool changed = changePriority((MainPanel*)st->panel, -st->repeat);
-   return changed ? HTOP_REFRESH : HTOP_OK;
+   bool tagged = changePriority((MainPanel*)st->panel, -st->repeat);
+   return tagged ? HTOP_REFRESH : HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionLowerPriority(State* st) {
-   bool changed = changePriority((MainPanel*)st->panel, st->repeat);
-   return changed ? HTOP_REFRESH : HTOP_OK;
+   bool tagged = changePriority((MainPanel*)st->panel, st->repeat);
+   return tagged ? HTOP_REFRESH : HTOP_KEEP_FOLLOWING;
 }
 
 static Htop_Reaction actionInvertSortOrder(State* st) {
