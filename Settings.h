@@ -5,7 +5,7 @@
 /*
 htop - Settings.h
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -70,6 +70,7 @@ typedef struct Settings_ {
    bool explicit_delay;
    bool highlight_new_processes;
    bool tasks_meter_show_kernel_process_count;
+   bool sort_environment_variables;
    bool vi_mode;
    bool use_mouse;
    bool update_process_names_on_ctrl_l;

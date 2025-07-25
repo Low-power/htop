@@ -1,7 +1,7 @@
 /*
 htop - Settings.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2025 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -67,6 +67,7 @@ typedef struct Settings_ {
    bool explicit_delay;
    bool highlight_new_processes;
    bool tasks_meter_show_kernel_process_count;
+   bool sort_environment_variables;
    bool vi_mode;
    bool use_mouse;
    bool update_process_names_on_ctrl_l;
@@ -274,6 +275,8 @@ static bool Settings_read(Settings* this, const char* fileName, bool should_pres
          this->highlight_new_processes = atoi(option[1]);
       } else if(String_eq(option[0], "tasks_meter_show_kernel_process_count")) {
          this->tasks_meter_show_kernel_process_count = atoi(option[1]);
+      } else if(String_eq(option[0], "sort_environment_variables")) {
+         this->sort_environment_variables = atoi(option[1]);
       } else if(String_eq(option[0], "vi_mode")) {
          this->vi_mode = atoi(option[1]);
       } else if(String_eq(option[0], "use_mouse")) {
@@ -384,6 +387,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "explicit_delay=%d\n", (int)this->explicit_delay);
    fprintf(f, "highlight_new_processes=%d\n", (int)this->highlight_new_processes);
    fprintf(f, "tasks_meter_show_kernel_process_count=%d\n", (int)this->tasks_meter_show_kernel_process_count);
+   fprintf(f, "sort_environment_variables=%d\n", (int)this->sort_environment_variables);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
    fprintf(f, "update_process_names_on_ctrl_l=%d", (int)this->update_process_names_on_ctrl_l);
@@ -493,6 +497,7 @@ Settings* Settings_new(int cpuCount, bool have_swap) {
    this->explicit_delay = false;
    this->highlight_new_processes = false;
    this->tasks_meter_show_kernel_process_count = true;
+   this->sort_environment_variables = true;
    this->vi_mode = false;
    this->use_mouse = true;
    this->update_process_names_on_ctrl_l = false;
