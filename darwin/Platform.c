@@ -215,11 +215,11 @@ double Platform_updateCPUValues(Meter *mtr, int cpu) {
 void Platform_updateMemoryValues(Meter *mtr) {
    const DarwinProcessList *dpl = (const DarwinProcessList *)mtr->pl;
    const struct vm_statistics *vm = &dpl->vm_stats;
-   double page_size_ki = (double)vm_page_size / (double)1024;
+   double page_size_kibibyte = (double)vm_page_size / (double)1024;
    mtr->total = dpl->host_info.max_mem / 1024;
-   mtr->values[0] = (double)(vm->active_count + vm->wire_count) * page_size_ki;
-   mtr->values[1] = (double)vm->purgeable_count * page_size_ki;
-   mtr->values[2] = (double)vm->inactive_count * page_size_ki;
+   mtr->values[0] = (double)(vm->active_count + vm->wire_count + vm->inactive_count) * page_size_kibibyte;
+   mtr->values[1] = 0;
+   mtr->values[2] = (double)vm->purgeable_count * page_size_kibibyte;
 }
 
 void Platform_updateSwapValues(Meter *mtr) {
