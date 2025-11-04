@@ -390,7 +390,7 @@ bool Settings_write(Settings* this) {
    fprintf(f, "sort_environment_variables=%d\n", (int)this->sort_environment_variables);
    fprintf(f, "vi_mode=%d\n", (int)this->vi_mode);
    fprintf(f, "use_mouse=%d\n", (int)this->use_mouse);
-   fprintf(f, "update_process_names_on_ctrl_l=%d", (int)this->update_process_names_on_ctrl_l);
+   fprintf(f, "update_process_names_on_ctrl_l=%d\n", (int)this->update_process_names_on_ctrl_l);
    fprintf(f, "account_guest_in_cpu_meter=%d\n", (int) this->accountGuestInCPUMeter);
    fprintf(f, "color_scheme=%s\n", CRT_color_scheme_names[this->colorScheme]);
    fprintf(f, "delay=%d\n", this->delay);
