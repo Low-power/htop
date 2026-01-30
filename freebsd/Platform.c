@@ -1,6 +1,7 @@
 /*
 htop - freebsd/Platform.c
 (C) 2014 Hisham H. Muhammad
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -217,7 +218,7 @@ static char **get_process_vector_from_sysctl(const Process *proc, int v_type) {
 	char *end_p = p + len;
 	char **v = xMalloc(sizeof(char *));
 	unsigned int i = 0;
-	while(p < end_p && *p) {
+	while(p < end_p) {
 		len = strlen(p) + 1;
 		v[i] = xMalloc(len);
 		memcpy(v[i], p, len);

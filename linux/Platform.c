@@ -1,6 +1,7 @@
 /*
 htop - linux/Platform.c
 (C) 2014 Hisham H. Muhammad
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -260,21 +261,22 @@ static char **get_process_vector(const Process *proc, const char *v_type) {
    char **v = xMalloc(sizeof(char *));
    unsigned int i = 0;
    char buffer[4096];
-   int c;
-   do {
+   while(true) {
+      int c;
       size_t len = 0;
-      while((c = fgetc(f)) != EOF && c) {
+      while((c = fgetc(f))) {
+         if(c == EOF) {
+            fclose(f);
+            v[i] = NULL;
+            return v;
+         }
          if(len < sizeof buffer) buffer[len++] = c;
       }
-      if(!len) continue;
       v[i] = xMalloc(len + 1);
       memcpy(v[i], buffer, len);
       v[i][len] = 0;
       v = xRealloc(v, (++i + 1) * sizeof(char *));
-   } while(c != EOF);
-   fclose(f);
-   v[i] = NULL;
-   return v;
+   }
 }
 
 char **Platform_getProcessArgv(const Process *proc) {

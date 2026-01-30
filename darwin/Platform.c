@@ -2,6 +2,7 @@
 htop - darwin/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -270,11 +271,13 @@ static char **get_process_vector(const Process *proc, bool is_env) {
       while(!*p && p < endp) ++p;
    }
 
-   while(p < endp && *p && (is_env || argc-- > 0)) {
+   while(p < endp && (is_env || argc-- > 0)) {
       size_t len = strlen(p) + 1;
-      v[i] = xMalloc(len);
-      memcpy(v[i], p, len);
-      v = xRealloc(v, (++i + 1) * sizeof(char *));
+      if(!is_env || len > 1) {
+         v[i] = xMalloc(len);
+         memcpy(v[i], p, len);
+         v = xRealloc(v, (++i + 1) * sizeof(char *));
+      }
       p += len;
    }
 

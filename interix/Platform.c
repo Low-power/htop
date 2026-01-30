@@ -2,7 +2,7 @@
 htop - interix/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -129,24 +129,25 @@ static char **get_process_vector(const Process *proc, const char *v_type) {
    xSnprintf(path, sizeof path, "/proc/%d/%s", (int)proc->pid, v_type);
    FILE *f = fopen(path, "r");
    if(!f) return NULL;
-   char **env = xMalloc(sizeof(char *));
+   char **v = xMalloc(sizeof(char *));
    unsigned int i = 0;
    char buffer[4096];
-   int c;
-   do {
+   while(true) {
+      int c;
       size_t len = 0;
-      while((c = fgetc(f)) != EOF && c) {
+      while((c = fgetc(f))) {
+         if(c == EOF) {
+            fclose(f);
+            v[i] = NULL;
+            return v;
+         }
          if(len < sizeof buffer) buffer[len++] = c;
       }
-      if(!len) continue;
-      env[i] = xMalloc(len + 1);
-      memcpy(env[i], buffer, len);
-      env[i][len] = 0;
-      env = xRealloc(env, (++i + 1) * sizeof(char *));
-   } while(c != EOF);
-   fclose(f);
-   env[i] = NULL;
-   return env;
+      v[i] = xMalloc(len + 1);
+      memcpy(v[i], buffer, len);
+      v[i][len] = 0;
+      v = xRealloc(v, (++i + 1) * sizeof(char *));
+   }
 }
 
 char **Platform_getProcessArgv(const Process *proc) {
