@@ -206,7 +206,7 @@ double Platform_updateCPUValues(Meter *mtr, int cpu) {
    mtr->values[CPU_METER_KERNEL] =
       ((double)curr->cpu_ticks[CPU_STATE_SYSTEM] - (double)prev->cpu_ticks[CPU_STATE_SYSTEM]) * 100 / total;
 
-   Meter_setItems(mtr, 3);
+   Meter_setItemCount(mtr, 3);
 
    /* Convert to percent and return */
    total = mtr->values[CPU_METER_NICE] + mtr->values[CPU_METER_NORMAL] + mtr->values[CPU_METER_KERNEL];

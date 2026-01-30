@@ -6,6 +6,7 @@
 htop - dragonflybsd/Platform.h
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */

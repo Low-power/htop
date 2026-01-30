@@ -3,6 +3,7 @@ htop - aix/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
 (C) 2018 Calvin Buckley
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -178,11 +179,11 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
    if (meter->pl->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->stime_p;
       v[CPU_METER_IRQ]     = cpuData->wtime_p;
-      Meter_setItems(meter, 4);
+      Meter_setItemCount(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->stime_p + cpuData->wtime_p;
-      Meter_setItems(meter, 3);
+      Meter_setItemCount(meter, 3);
       percent = v[0]+v[1]+v[2];
    }
    percent = CLAMP(percent, 0.0, 100.0);

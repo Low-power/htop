@@ -2,6 +2,7 @@
 htop - openbsd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 Michael McConville
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -169,13 +170,13 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
       v[CPU_METER_STEAL]   = 0.0;
       v[CPU_METER_GUEST]   = 0.0;
       v[CPU_METER_IOWAIT]  = 0.0;
-      Meter_setItems(meter, 8);
+      Meter_setItemCount(meter, 8);
       totalPercent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->sysAllPeriod / total * 100.0;
       v[3] = 0.0; // No steal nor guest on OpenBSD
       totalPercent = v[0]+v[1]+v[2];
-      Meter_setItems(meter, 4);
+      Meter_setItemCount(meter, 4);
    }
 
    totalPercent = CLAMP(totalPercent, 0.0, 100.0);

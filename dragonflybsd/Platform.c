@@ -2,6 +2,7 @@
 htop - dragonflybsd/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
+Copyright 2022-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -149,11 +150,11 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
    if (meter->pl->settings->detailedCPUTime) {
       v[CPU_METER_KERNEL]  = cpuData->systemPercent;
       v[CPU_METER_IRQ]     = cpuData->irqPercent;
-      Meter_setItems(meter, 4);
+      Meter_setItemCount(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    } else {
       v[2] = cpuData->systemAllPercent;
-      Meter_setItems(meter, 3);
+      Meter_setItemCount(meter, 3);
       percent = v[0]+v[1]+v[2];
    }
 

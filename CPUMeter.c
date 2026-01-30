@@ -1,7 +1,7 @@
 /*
 htop - CPUMeter.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -66,6 +66,11 @@ static void CPUMeter_init(Meter* this) {
 
 static int CPUMeter_getAttribute(Meter *this, int i) {
 	return (this->pl->settings->detailedCPUTime ? CPUMeter_detailed_attributes : CPUMeter_attributes)[i];
+}
+
+static int CPUMeter_getItemCount(Meter *this) {
+	int limit = this->pl->settings->detailedCPUTime ? 8 : 4;
+	return MIN(limit, this->nitems);
 }
 
 static void CPUMeter_updateValues(Meter* this, char* buffer, int size) {
@@ -226,6 +231,7 @@ MeterClass CPUMeter_class = {
    .maxItems = CPU_METER_ITEMCOUNT,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "CPU",
    .uiName = "CPU",
    .caption = "CPU",
@@ -241,6 +247,7 @@ MeterClass AllCPUsMeter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "AllCPUs",
    .uiName = "CPUs (1/1)",
    .description = "CPUs (1/1): all CPUs",
@@ -260,6 +267,7 @@ MeterClass AllCPUs2Meter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "AllCPUs2",
    .uiName = "CPUs (1&2/2)",
    .description = "CPUs (1&2/2): all CPUs in 2 shorter columns",
@@ -279,6 +287,7 @@ MeterClass LeftCPUsMeter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "LeftCPUs",
    .uiName = "CPUs (1/2)",
    .description = "CPUs (1/2): first half of list",
@@ -298,6 +307,7 @@ MeterClass RightCPUsMeter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "RightCPUs",
    .uiName = "CPUs (2/2)",
    .description = "CPUs (2/2): second half of list",
@@ -317,6 +327,7 @@ MeterClass LeftCPUs2Meter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "LeftCPUs2",
    .uiName = "CPUs (1&2/4)",
    .description = "CPUs (1&2/4): first half in 2 shorter columns",
@@ -336,6 +347,7 @@ MeterClass RightCPUs2Meter_class = {
    .defaultMode = CUSTOM_METERMODE,
    .total = 100.0,
    .getAttribute = CPUMeter_getAttribute,
+   .getItemCount = CPUMeter_getItemCount,
    .name = "RightCPUs2",
    .uiName = "CPUs (3&4/4)",
    .description = "CPUs (3&4/4): second half in 2 shorter columns",

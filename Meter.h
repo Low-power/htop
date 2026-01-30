@@ -5,7 +5,7 @@
 /*
 htop - Meter.h
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -25,6 +25,8 @@ typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef double (*MeterGetDoubleFunction)(Meter *);
 typedef int (*MeterGetAttributeFunction)(Meter *, int);
+typedef int (*MeterGetIntFunction)(Meter *);
+typedef void (*MeterSetIntFunction)(Meter *, int);
 
 typedef struct MeterClass_ {
    ObjectClass super;
@@ -35,6 +37,8 @@ typedef struct MeterClass_ {
    Meter_UpdateValues updateValues;
    MeterGetDoubleFunction getMaximum;
    MeterGetAttributeFunction getAttribute;
+   MeterGetIntFunction getItemCount;
+   MeterSetIntFunction setItemCount;
    int defaultMode;
    double total;
    const int* attributes;
@@ -47,8 +51,7 @@ typedef struct MeterClass_ {
    // For Bar mode and Graph mode display, default to caption if NULL
    const char *short_caption;
    const char* description;
-   const char maxItems;
-   char curItems;
+   int maxItems;
    bool values_are_overlapped;
 } MeterClass;
 
@@ -63,8 +66,8 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_, buf_, sz_) \
                                        As_Meter(this_)->updateValues((Meter*)(this_), (buf_), (sz_))
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
-#define Meter_getItems(this_)          As_Meter(this_)->curItems
-#define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
+#define Meter_getItemCount(this_)      As_Meter(this_)->getItemCount(this_)
+#define Meter_setItemCount(this_, n_)  As_Meter(this_)->setItemCount((this_), (n_))
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
@@ -81,6 +84,7 @@ struct Meter_ {
    void* drawData;
    int h;
    ProcessList *pl;
+   int nitems;
    double* values;
    double total;
 };

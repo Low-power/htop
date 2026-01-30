@@ -212,7 +212,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
       v[CPU_METER_STEAL]   = cpuData->stealPeriod / total * 100.0;
       v[CPU_METER_GUEST]   = cpuData->guestPeriod / total * 100.0;
       v[CPU_METER_IOWAIT]  = cpuData->ioWaitPeriod / total * 100.0;
-      Meter_setItems(meter, 8);
+      Meter_setItemCount(meter, 8);
       if (meter->pl->settings->accountGuestInCPUMeter) {
          percent = v[0]+v[1]+v[2]+v[3]+v[4]+v[5]+v[6];
       } else {
@@ -221,7 +221,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
    } else {
       v[2] = cpuData->systemAllPeriod / total * 100.0;
       v[3] = (cpuData->stealPeriod + cpuData->guestPeriod) / total * 100.0;
-      Meter_setItems(meter, 4);
+      Meter_setItemCount(meter, 4);
       percent = v[0]+v[1]+v[2]+v[3];
    }
    percent = CLAMP(percent, 0.0, 100.0);

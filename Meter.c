@@ -1,7 +1,7 @@
 /*
 htop - Meter.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -22,6 +22,8 @@ typedef void(*Meter_UpdateValues)(Meter*, char*, int);
 typedef void(*Meter_Draw)(Meter*, int, int, int);
 typedef double (*MeterGetDoubleFunction)(Meter *);
 typedef int (*MeterGetAttributeFunction)(Meter *, int);
+typedef int (*MeterGetIntFunction)(Meter *);
+typedef void (*MeterSetIntFunction)(Meter *, int);
 
 typedef struct MeterClass_ {
    ObjectClass super;
@@ -32,6 +34,8 @@ typedef struct MeterClass_ {
    Meter_UpdateValues updateValues;
    MeterGetDoubleFunction getMaximum;
    MeterGetAttributeFunction getAttribute;
+   MeterGetIntFunction getItemCount;
+   MeterSetIntFunction setItemCount;
    int defaultMode;
    double total;
    const int* attributes;
@@ -44,8 +48,7 @@ typedef struct MeterClass_ {
    // For Bar mode and Graph mode display, default to caption if NULL
    const char *short_caption;
    const char* description;
-   const char maxItems;
-   char curItems;
+   int maxItems;
    bool values_are_overlapped;
 } MeterClass;
 
@@ -60,8 +63,8 @@ typedef struct MeterClass_ {
 #define Meter_updateValues(this_, buf_, sz_) \
                                        As_Meter(this_)->updateValues((Meter*)(this_), (buf_), (sz_))
 #define Meter_defaultMode(this_)       As_Meter(this_)->defaultMode
-#define Meter_getItems(this_)          As_Meter(this_)->curItems
-#define Meter_setItems(this_, n_)      As_Meter(this_)->curItems = (n_)
+#define Meter_getItemCount(this_)      As_Meter(this_)->getItemCount(this_)
+#define Meter_setItemCount(this_, n_)  As_Meter(this_)->setItemCount((this_), (n_))
 #define Meter_attributes(this_)        As_Meter(this_)->attributes
 #define Meter_name(this_)              As_Meter(this_)->name
 #define Meter_uiName(this_)            As_Meter(this_)->uiName
@@ -78,6 +81,7 @@ struct Meter_ {
    void* drawData;
    int h;
    ProcessList *pl;
+   int nitems;
    double* values;
    double total;
 };
@@ -146,10 +150,21 @@ static int base_Meter_getAttribute(Meter *this, int i) {
 	return Meter_attributes(this)[i];
 }
 
+static int base_Meter_getItemCount(Meter *this) {
+	return this->nitems;
+}
+
+static void base_Meter_setItemCount(Meter *this, int count) {
+	assert(count <= As_Meter(this)->maxItems);
+	this->nitems = count;
+}
+
 static void Meter_inherit(ObjectClass *super_class) {
 	MeterClass *class = (MeterClass *)super_class;
 	if(!class->getMaximum) class->getMaximum = base_Meter_getMaximum;
 	if(!class->getAttribute) class->getAttribute = base_Meter_getAttribute;
+	if(!class->getItemCount) class->getItemCount = base_Meter_getItemCount;
+	if(!class->setItemCount) class->setItemCount = base_Meter_setItemCount;
 }
 
 MeterClass Meter_class = {
@@ -165,7 +180,7 @@ Meter* Meter_new(ProcessList *pl, int param, MeterClass* type) {
    this->h = 1;
    this->param = param;
    this->pl = pl;
-   type->curItems = type->maxItems;
+   type->setItemCount(this, type->maxItems);
    this->values = xCalloc(type->maxItems, sizeof(double));
    this->total = type->total;
    this->caption = xStrdup(type->caption);
@@ -329,7 +344,7 @@ static void BarMeterMode_draw(Meter* this, int x, int y, int w) {
 
    // First draw in the bar[] buffer...
    double total = Meter_getMaximum(this);
-   int nitems = Meter_getItems(this);
+   int nitems = Meter_getItemCount(this);
    assert((size_t)nitems < sizeof BarMeterMode_characters);
    int blockSizes[nitems];
    int indexes[nitems];
@@ -467,7 +482,7 @@ static void GraphMeterMode_draw(Meter* this, int x, int y, int w) {
       char buffer[nValues];
       Meter_updateValues(this, buffer, nValues);
       double value = 0.0;
-      int nitems = Meter_getItems(this);
+      int nitems = Meter_getItemCount(this);
       for (int i = 0; i < nitems; i++) value += this->values[i];
       value /= Meter_getMaximum(this);
       data->values[nValues - 1] = value;
