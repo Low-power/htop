@@ -122,7 +122,7 @@ dragonflybsd_platform_headers = \
 all_platform_headers += $(dragonflybsd_platform_headers)
 
 if HTOP_DRAGONFLYBSD
-AM_LDFLAGS += -lkvm -lkinfo
+LDADD = -lkvm -lkinfo
 myhtopplatsources = \
 	bsd/Platform.c \
 	bsd/BSDProcess.c \
