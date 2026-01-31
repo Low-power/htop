@@ -1,7 +1,7 @@
 /*
 htop - Action.c
 (C) 2015 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -418,7 +418,7 @@ static Htop_Reaction actionRedraw(State *st) {
    Panel_resize(st->panel, COLS, LINES-(st->panel->y)-1);
 #endif
    if(st->settings->update_process_names_on_ctrl_l) st->pl->should_update_names = true;
-   return HTOP_REFRESH | HTOP_REDRAW_BAR;
+   return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
 struct key_help_entry {

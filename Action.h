@@ -5,7 +5,7 @@
 /*
 htop - Action.h
 (C) 2015 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
