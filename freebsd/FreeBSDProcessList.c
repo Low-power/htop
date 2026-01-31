@@ -1,7 +1,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -52,6 +52,7 @@ typedef struct FreeBSDProcessList_ {
    struct timespec last_updated;
 
    int arg_max;
+   bool support_kproc_flag;
 } FreeBSDProcessList;
 
 }*/
@@ -82,6 +83,10 @@ static long int lround(double v) {
 	else if(v > 0.5) n++;
 	return n;
 }
+#endif
+
+#ifndef P_KPROC
+#define P_KPROC 0x00004
 #endif
 
 static int MIB_hw_physmem[2];
@@ -219,6 +224,21 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    int arg_max_mib[] = { CTL_KERN, KERN_ARGMAX };
    len = sizeof fpl->arg_max;
    if(sysctl(arg_max_mib, 2, &fpl->arg_max, &len, NULL, 0) < 0) fpl->arg_max = ARG_MAX;
+
+   int version_mib[] = { CTL_KERN, KERN_VERSION };
+   char version[16];
+   len = sizeof version;
+   if((sysctl(version_mib, 2, version, &len, NULL, 0) == 0 || errno == ENOMEM) && len > 10 && strncmp(version, "FreeBSD ", 8) == 0) {
+      char *p = version + 8;
+      char *dot = memchr(p, '.', len - 8);
+      if(dot) {
+         *dot = 0;
+         char *end_p;
+         long int major_version = strtol(p, &end_p, 10);
+         // The P_KPROC flag didn't get properly set until kFreeBSD 11.0
+         fpl->support_kproc_flag = end_p > p && !*end_p && major_version >= 11;
+      }
+   }
 
    fpl->last_updated.tv_sec = -1;
 
@@ -557,7 +577,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->pgrp = kproc->ki_pgid;
 
       if (!is_existing) {
-         fp->kernel = kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM);
+         fp->kernel = fpl->support_kproc_flag ? (kproc->ki_flag & P_KPROC) : (kproc->ki_pid != 1 && (kproc->ki_flag & P_SYSTEM));
          proc->ruid = kproc->ki_ruid;
          proc->euid = kproc->ki_uid;
          proc->real_user = UsersTable_getRef(this->usersTable, proc->ruid);

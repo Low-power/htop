@@ -5,7 +5,7 @@
 /*
 htop - freebsd/FreeBSDProcessList.h
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -55,11 +55,16 @@ typedef struct FreeBSDProcessList_ {
    struct timespec last_updated;
 
    int arg_max;
+   bool support_kproc_flag;
 } FreeBSDProcessList;
 
 
 #ifdef HAVE_LROUND
 #else
+#endif
+
+#ifndef P_KPROC
+#define P_KPROC 0x00004
 #endif
 
 #ifndef HAVE_LIBKVM
