@@ -5,7 +5,7 @@
 /*
 htop - Process.h
 (C) 2004-2015 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -86,7 +86,7 @@ typedef struct Process_ {
    pid_t tgid;
    char *name;
    char* comm;
-   int commLen;
+   size_t comm_length;
    int argv0_length;
 
    unsigned int pgrp;

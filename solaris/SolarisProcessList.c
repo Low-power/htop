@@ -2,7 +2,7 @@
 htop - solaris/SolarisProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017,2018 Guy M. Broome
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -358,13 +358,13 @@ static int SolarisProcessList_walkproc(psinfo_t *_psinfo, lwpsinfo_t *_lwpsinfo,
 #endif
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
-      proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
+      proc->comm_length     = strnlen(_psinfo->pr_psargs, PRFNSZ);
    } else if(ProcessList_shouldUpdateProcessNames(pl)) {
       free(proc->name);
       free(proc->comm);
       proc->name            = xStrdup(_psinfo->pr_fname);
       proc->comm            = xStrdup(_psinfo->pr_psargs);
-      //proc->commLen         = strnlen(_psinfo->pr_psargs, PRFNSZ);
+      //proc->comm_length    = strnlen(_psinfo->pr_psargs, PRFNSZ);
    }
    if(!proc->real_user) {
       proc->real_user       = UsersTable_getRef(pl->usersTable, proc->ruid);
@@ -496,7 +496,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			proc->effective_user = UsersTable_getRef(super->usersTable, proc->euid);
 			proc->name = xStrdup(info.pr_fname);
 			proc->comm = xStrdup(info.pr_psargs);
-			//proc->commLen = strnlen(info.pr_psargs, PRFNSZ);
+			//proc->comm_length = strnlen(info.pr_psargs, PRFNSZ);
 			proc->starttime_ctime = info.pr_start.tv_sec;
 		} else if(ProcessList_shouldUpdateProcessNames(super)) {
 			free(proc->name);

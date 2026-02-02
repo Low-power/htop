@@ -1,7 +1,7 @@
 /*
 htop - linux/LinuxProcessList.c
 (C) 2014 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -331,7 +331,7 @@ static inline unsigned long long LinuxProcess_adjustTime(unsigned long long t) {
    return (unsigned long long) t * jiffytime * 100;
 }
 
-static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, int* commLen) {
+static bool LinuxProcessList_readStatFile(Process *process, const char* dirname, const char* name, char* command, size_t *comm_size) {
    LinuxProcess* lp = (LinuxProcess*) process;
    char filename[MAX_NAME];
    xSnprintf(filename, MAX_NAME, "%s/%s/stat", dirname, name);
@@ -353,10 +353,11 @@ static bool LinuxProcessList_readStatFile(Process *process, const char* dirname,
    location += 2;
    char *end = strrchr(location, ')');
    if (!end) return false;
-   int commsize = end - location;
-   memcpy(command, location, commsize);
-   command[commsize] = '\0';
-   *commLen = commsize;
+   size_t len = end - location;
+   if(len >= *comm_size) return false;
+   memcpy(command, location, len);
+   command[len] = 0;
+   *comm_size = len;
    location = end + 2;
 
    process->state = location[0];
@@ -745,14 +746,14 @@ static void LinuxProcessList_readDelayAcctData(LinuxProcessList* this, LinuxProc
 
 #endif
 
-static void setCommand(Process* process, const char* command, int len) {
-   if (process->comm && process->commLen >= len) {
+static void setCommand(Process* process, const char* command, size_t len) {
+   if (process->comm && process->comm_length >= len) {
       memcpy(process->comm, command, len + 1);
    } else {
       free(process->comm);
       process->comm = xStrdup(command);
    }
-   process->commLen = len;
+   process->comm_length = len;
 }
 
 static bool LinuxProcessList_readCmdlineFile(Process* process, const char* dirname, const char* name) {
@@ -881,9 +882,9 @@ static bool LinuxProcessList_recurseProcTree(LinuxProcessList* this, const char*
       if (! LinuxProcessList_readStatmFile(lp, dirname, name))
          goto errorReadingProcess;
 
-      char command[MAX_NAME+1];
+      char command[MAX_NAME];
       unsigned long long int lasttimes = (lp->utime + lp->stime);
-      int commLen = 0;
+      size_t commLen = sizeof command;
       dev_t tty_nr = proc->tty_nr;
       if (! LinuxProcessList_readStatFile(proc, dirname, name, command, &commLen)) {
          goto errorReadingProcess;
