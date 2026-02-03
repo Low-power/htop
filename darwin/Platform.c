@@ -250,35 +250,51 @@ static char **get_process_vector(const Process *proc, bool is_env) {
       return NULL;
    }
 
-   char **v = xMalloc(sizeof(char *));
-   unsigned int i = 0;
+   const char *p = buf;
+   const char *endp = buf + bufsz;
 
-   char *p = buf, *endp = buf + bufsz;
    int argc = *(int *)p;
    p += sizeof(int);
 
    // skip exe
-   p = strchr(p, 0)+1;
+   p = memchr(p, 0, endp - p);
+   if(!p) {
+      free(buf);
+      return NULL;
+   }
 
    // skip padding
    while(!*p && p < endp) ++p;
 
+   char **v = xMalloc(sizeof(char *));
+   unsigned int i = 0;
+
    if(is_env) {
       // skip argv
-      while(argc-- && p < endp) p = strrchr(p, 0) + 1;
+      while(argc-- > 0 && p < endp) {
+         p = memchr(p, 0, endp - p);
+         if(!p) {
+            free(buf);
+            free(v);
+            return NULL;
+         }
+         p++;
+      }
 
       // skip padding
       while(!*p && p < endp) ++p;
    }
 
    while(p < endp && (is_env || argc-- > 0)) {
-      size_t len = strlen(p) + 1;
-      if(!is_env || len > 1) {
+      const char *z = memchr(p, 0, endp - p);
+      if(!z) break;
+      if(!is_env || z > p) {
+         size_t len = z - p + 1;
          v[i] = xMalloc(len);
          memcpy(v[i], p, len);
          v = xRealloc(v, (++i + 1) * sizeof(char *));
       }
-      p += len;
+      p = z + 1;
    }
 
    free(buf);
