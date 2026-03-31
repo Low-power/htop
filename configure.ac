@@ -24,44 +24,62 @@ AC_USE_SYSTEM_EXTENSIONS
 
 # Checks for platform.
 # ----------------------------------------------------------------------
-case "$target_os" in
-linux*)
-   my_htop_platform=linux
-   ;;
-freebsd*|kfreebsd*-*)
-   my_htop_platform=freebsd
-   ;;
-openbsd*)
-   my_htop_platform=openbsd
-   ;;
-dragonfly*)
-   my_htop_platform=dragonflybsd
-   ;;
-darwin*)
-   my_htop_platform=darwin
-   ;;
-solaris*)
-   my_htop_platform=solaris
-   ;;
-aix*|os400*)
-   my_htop_platform=aix
-   ;;
-interix*)
-   my_htop_platform=interix
-   ;;
-cygwin)
-   my_htop_platform=cygwin
-   ;;
-gnu*)
-   my_htop_platform=hurd
-   ;;
-haiku*)
-   my_htop_platform=haiku
-   ;;
-*)
-   my_htop_platform=unsupported
-   ;;
-esac
+AC_ARG_WITH([vmkernel],
+	[AS_HELP_STRING([--with-vmkernel], [Configure htop for VMkernel])],
+	[], [with_vmkernel=no])
+AS_IF([test "x$with_vmkernel" = xno],
+	[
+		case "$target_os" in
+			linux*)
+			   my_htop_platform=linux
+			   ;;
+			freebsd*|kfreebsd*-*)
+			   my_htop_platform=freebsd
+			   ;;
+			openbsd*)
+			   my_htop_platform=openbsd
+			   ;;
+			dragonfly*)
+			   my_htop_platform=dragonflybsd
+			   ;;
+			darwin*)
+			   my_htop_platform=darwin
+			   ;;
+			solaris*)
+			   my_htop_platform=solaris
+			   ;;
+			aix*|os400*)
+			   my_htop_platform=aix
+			   ;;
+			interix*)
+			   my_htop_platform=interix
+			   ;;
+			cygwin)
+			   my_htop_platform=cygwin
+			   ;;
+			vmk-*)
+			   my_htop_platform=vmkernel
+			   ;;
+			gnu*)
+			   my_htop_platform=hurd
+			   ;;
+			haiku*)
+			   my_htop_platform=haiku
+			   ;;
+			*)
+			   my_htop_platform=unsupported
+			   ;;
+		esac
+	], [
+		case "$target_os" in
+			vmk-*|linux-gnu*)
+				my_htop_platform=vmkernel
+				;;
+			*)
+				AC_MSG_ERROR([Target operating system must be GNU/Linux to configure for VMkernel])
+				;;
+		esac
+	])
 
 m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG()], [
 		pkg_m4_absent=yes
@@ -719,8 +737,8 @@ if test ! -z "$missing_headers"; then
   AC_MSG_ERROR([missing headers: $missing_headers])
 fi
 
-AC_DEFINE_UNQUOTED(COPYRIGHT, ["Copyright 2004-2019 Hisham Muhammad\nCopyright 2015-2023 Rivoreo"], [Copyright notices.])
-AC_DEFINE_UNQUOTED(COPYRIGHT_ONE_LINE, ["Copyright 2004-2019 Hisham Muhammad.  Copyright 2023 Rivoreo."], [Copyright notices in a signal line.])
+AC_DEFINE_UNQUOTED(COPYRIGHT, ["Copyright 2004-2019 Hisham Muhammad\nCopyright 2015-2026 Rivoreo"], [Copyright notices.])
+AC_DEFINE_UNQUOTED(COPYRIGHT_ONE_LINE, ["Copyright 2004-2019 Hisham Muhammad.  Copyright 2026 Rivoreo."], [Copyright notices in a signal line.])
 
 # We're done, let's go!
 # ----------------------------------------------------------------------
@@ -735,6 +753,7 @@ AM_CONDITIONAL([HTOP_INTERIX], [test "$my_htop_platform" = interix])
 AM_CONDITIONAL([HTOP_CYGWIN], [test "$my_htop_platform" = cygwin])
 AM_CONDITIONAL([HTOP_HURD], [test "$my_htop_platform" = hurd])
 AM_CONDITIONAL([HTOP_HAIKU], [test "$my_htop_platform" = haiku])
+AM_CONDITIONAL([HTOP_VMKERNEL], [test "$my_htop_platform" = vmkernel])
 AM_CONDITIONAL([HTOP_UNSUPPORTED], [test "$my_htop_platform" = unsupported])
 AC_SUBST(my_htop_platform)
 AC_CONFIG_FILES([Makefile htop.1 htop.colorscheme.5])

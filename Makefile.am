@@ -207,7 +207,7 @@ myhtopplatheaders = $(solaris_platform_headers)
 endif
 
 # AIX
-# -------
+# ---
 
 aix_platform_headers = \
 	aix/Platform.h \
@@ -305,6 +305,25 @@ myhtopplatsources = \
 	haiku/HaikuProcessList.c \
 	haiku/Battery.c
 myhtopplatheaders = $(haiku_platform_headers)
+endif
+
+# VMkernel
+# --------
+
+vmkernel_platform_headers = \
+	vmkernel/Platform.h \
+	vmkernel/VMKernelProcess.h \
+	vmkernel/VMKernelProcessList.h \
+	vmkernel/Battery.h
+all_platform_headers += $(vmkernel_platform_headers)
+
+if HTOP_VMKERNEL
+myhtopplatsources = \
+	vmkernel/Platform.c \
+	vmkernel/VMKernelProcess.c \
+	vmkernel/VMKernelProcessList.c \
+	vmkernel/Battery.c
+myhtopplatheaders = $(vmkernel_platform_headers)
 endif
 
 # Unsupported
