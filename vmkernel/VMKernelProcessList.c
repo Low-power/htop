@@ -242,7 +242,7 @@ static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
 	list->type_or_version = 1;
 	list->allocated_count = 1;
 	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self = list;
+	list->self_ptr = (uintptr_t)list;
 	Platform_vsiListAddInt(list, proc->pid);
 	struct world_info info;
 	assert(this->world_info_size <= sizeof info);
@@ -268,7 +268,7 @@ static void get_world_name(const VMKernelProcessList *this, Process *proc) {
 	list->type_or_version = 1;
 	list->allocated_count = 1;
 	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self = list;
+	list->self_ptr = (uintptr_t)list;
 	Platform_vsiListAddInt(list, proc->pid);
 	char buffer[128];
 	int e = Platform_vsiGet(this->vsi_world_name_id, this->vsi_world_name_cksum,
@@ -285,7 +285,7 @@ static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 	list->type_or_version = 1;
 	list->allocated_count = 1;
 	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self = list;
+	list->self_ptr = (uintptr_t)list;
 	Platform_vsiListAddInt(list, proc->tgid);
 	char buffer[1024];
 	int e = Platform_vsiGet(this->vsi_userworld_cartel_cmdline_id,
@@ -303,7 +303,7 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 	list->type_or_version = 1;
 	list->allocated_count = 1;
 	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self = list;
+	list->self_ptr = (uintptr_t)list;
 	Platform_vsiListAddInt(list, proc->pid);
 	switch(Platform_running_vmkernel_version) {
 			struct memstats_common_32 common32;
@@ -350,7 +350,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	memset(worlds_list, 0, sizeof(struct vsi_list));
 	worlds_list->type_or_version = 1;
 	worlds_list->param_size = sizeof(struct vsi_list);
-	worlds_list->self = worlds_list;
+	worlds_list->self_ptr = (uintptr_t)worlds_list;
 	int e = Platform_vsiGetList(this->vsi_world_id, this->vsi_world_cksum,
 		worlds_list, sizeof(struct vsi_list));
 	if(e) CRT_fatalError("VSI_GetList", e);
@@ -364,7 +364,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	worlds_list->param_size = param_size;
 	worlds_list->string_size = string_size;
 	worlds_list->string_offset = param_size;
-	worlds_list->self = worlds_list;
+	worlds_list->self_ptr = (uintptr_t)worlds_list;
 	e = Platform_vsiGetList(this->vsi_world_id, this->vsi_world_cksum, worlds_list, list_size);
 	if(e) CRT_fatalError("VSI_GetList", e);
 	for(size_t i = 0; i < worlds_list->instance_count; i++) {

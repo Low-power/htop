@@ -62,46 +62,12 @@ struct vsi_list {
 	uint32_t unknown_1;
 	uint32_t string_size;
 	uint64_t string_offset;
-	void *self;
+	uint64_t self_ptr;
 	uint64_t unknown_2[2];
 	union {
 		struct vsi_param v5[0];
 		struct vsi_param_6_7 v6_7[0];
 	} param;
-};
-
-struct vsi_get_args {
-	uint64_t checksum;
-	void *buf;
-	uint32_t size;
-	uint8_t unknown_1[12];
-	uint64_t checksum_2;
-	void *buf_2;
-	uint32_t size_2;
-};
-
-struct vsi_get_args_6_5 {
-	uint32_t unknown_1;
-	void *buf;
-	uint32_t size;
-} __attribute__((__packed__));
-
-struct vsi_getlist_args {
-	uint64_t checksum_1;
-	uint32_t size_1;
-	uint32_t unknown_1;
-	uint64_t checksum_2;
-	uint32_t size_2;
-	uint32_t unknown_2;
-};
-
-struct vsi_getlist_args_6_5 {
-	void *buf_1;
-	uint32_t size_1;
-	uint32_t unknown_1;
-	void *buf_2;
-	uint32_t size_2;
-	uint32_t unknown_2;
 };
 
 static inline uint64_t Platform_vsiListGetValue(const struct vsi_list *list, int i) {
@@ -132,13 +98,32 @@ static inline uint64_t Platform_vsiListGetValue(const struct vsi_list *list, int
 #include "UsersMeter.h"
 #include "CRT.h"
 #include "vmk_error_codes.h"
+#ifndef __i386__
 #include <sys/syscall.h>
+#endif
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+
+#ifdef __i386__
+#define VMKSC_0(N) ({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N) : "memory"); e; })
+#define VMKSC_1(N,A1) \
+	({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N), "c"(A1) : "memory"); e; })
+#define VMKSC_2(N,A1,A2) \
+	({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N), "c"(A1), "d"(A2) : "memory"); e; })
+#define VMKSC_3(N,A1,A2,A3) \
+	({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N), "c"(A1), "d"(A2), "S"(A3) : "memory"); e; })
+#define VMKSC_4(N,A1,A2,A3,A4) \
+	({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N), "c"(A1), "d"(A2), "S"(A3), "D"(A4) : "memory"); e; })
+#define VMKSC_VA_6(A1,A2,A3,A4,A5,A6,...) A6
+#define VMKSC_VA(...) VMKSC_VA_6(__VA_ARGS__,VMKSC_4,VMKSC_3,VMKSC_2,VMKSC_1,VMKSC_0,)
+#define VMKSC(...) VMKSC_VA(__VA_ARGS__)(__VA_ARGS__)
+#else
+#define VMKSC syscall
+#endif
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -234,7 +219,7 @@ void Platform_setBindings(Htop_Action* keys) {
 
 int Platform_getUptime() {
 	uint64_t uptime;
-	int e = syscall(SYS_GetUptimeUS, &uptime);
+	int e = VMKSC(SYS_GetUptimeUS, &uptime);
 	return e == VMK_OK ? (int)(uptime / 1000000) : -1;
 }
 
@@ -257,7 +242,7 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 
 void Platform_updateMemoryValues(Meter *meter) {
 	uint64_t total, free;
-	unsigned int e = syscall(SYS_GetMemSize, &total, &free);
+	unsigned int e = VMKSC(SYS_GetMemSize, &total, &free);
 	if(e != VMK_OK) return;
 	meter->total = total / 1024;
 	meter->values[0] = (total - free) / 1024;
@@ -283,13 +268,22 @@ bool Platform_haveSwap() {
 int Platform_vsiGetNodeIdAndChecksum(uint32_t parent_node_id, const char *node_name, uint32_t *node_id, uint64_t *node_cksum) {
 	struct vsi_node_info info_buffer;
 	char name_buffer[128];
+#ifdef __i386__
+	uint32_t extra_args[2] = { (uint32_t)name_buffer, sizeof info_buffer };
+	int e = VMKSC(SYS_VSI_GetNodeInfo, parent_node_id, 0, &info_buffer, extra_args);
+#else
 	int e = syscall(SYS_VSI_GetNodeInfo, parent_node_id, 0,
 		&info_buffer, name_buffer, sizeof info_buffer);
+#endif
 	if(e) return e;
 	uint32_t child_node_id = info_buffer.first_child_id;
 	do {
+#ifdef __i386__
+		e = VMKSC(SYS_VSI_GetNodeInfo, child_node_id, 0, &info_buffer, extra_args);
+#else
 		e = syscall(SYS_VSI_GetNodeInfo, child_node_id, 0,
 			&info_buffer, name_buffer, sizeof info_buffer);
+#endif
 		if(e) return e;
 		if(strcmp(name_buffer, node_name) == 0) {
 			if(node_id) *node_id = info_buffer.id;
@@ -307,37 +301,65 @@ int Platform_running_vmkernel_version;
 int Platform_vsi_int;
 int Platform_vsi_string;
 
+#ifndef __i386__
+
 static int vsi_get_5_0(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *list, void *buffer, size_t size) {
-	struct vsi_get_args get_args = { node_cksum, buffer, size, {}, node_cksum, buffer, size };
-	return syscall(SYS_VSI_Get, node_id, 0, list, list->param_size, 0, &get_args);
+	struct {
+		uint64_t checksum;
+		void *buffer;
+		size_t buffer_size;
+		uint64_t _unknown_1;
+	} extra_args[2] = {
+		{ node_cksum, buffer, size },
+		{ node_cksum, buffer, size }
+	};
+	return syscall(SYS_VSI_Get, node_id, 0, list, list->param_size, 0, extra_args);
 }
 
 static int vsi_get_6_5(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *list, void *buffer, size_t size) {
-	struct vsi_get_args_6_5 get_args = { 0, buffer, size };
-	return syscall(SYS_VSI_Get, node_id, 0, node_cksum, list, list->param_size, &get_args);
+	struct {
+		uint32_t _unknown_1;
+		void *buffer;
+		size_t buffer_size;
+	} __attribute__((__packed__)) extra_args = {
+		0, buffer, size
+	};
+	return syscall(SYS_VSI_Get, node_id, 0, node_cksum, list, list->param_size, &extra_args);
 }
 
 static int (*vsi_get)(uint32_t, uint64_t, const struct vsi_list *, void *, size_t);
 
 static int vsi_get_list_5_0(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
 	struct vsi_list input_list = {
-		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self = &input_list
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
 	};
-	struct vsi_getlist_args getlist_args = { node_cksum, size, 0, node_cksum, size, 0 };
+	struct {
+		uint64_t checksum;
+		size_t output_size;
+	} extra_args[2] = {
+		{ node_cksum, size }, { node_cksum, size }
+	};
 	return syscall(SYS_VSI_GetList, node_id, 0, &input_list, input_list.param_size, list,
-		&getlist_args);
+		extra_args);
 }
 
 static int vsi_get_list_6_5(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
 	struct vsi_list input_list = {
-		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self = &input_list
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
 	};
-	struct vsi_getlist_args_6_5 getlist_args = { list, size, 0, list, size, 0 };
+	struct {
+		struct vsi_list *output_list;
+		size_t output_size;
+	} extra_args[2] = {
+		{ list, size }, { list, size }
+	};
 	return syscall(SYS_VSI_GetList, node_id, 0, node_cksum, &input_list, input_list.param_size,
-		&getlist_args);
+		extra_args);
 }
 
 static int (*vsi_get_list)(uint32_t, uint64_t, struct vsi_list *, size_t);
+
+#endif
 
 void Platform_checkVMkernelVersion() {
 	struct utsname utsname;
@@ -356,26 +378,34 @@ void Platform_checkVMkernelVersion() {
 		case VMKERNEL_VERSION_5_5:
 			Platform_vsi_int = 0;
 			Platform_vsi_string = 1;
+#ifndef __i386__
 			vsi_get = vsi_get_5_0;
 			vsi_get_list = vsi_get_list_5_0;
+#endif
 			break;
 		case VMKERNEL_VERSION_6_0:
 			Platform_vsi_int = 0;
 			Platform_vsi_string = 1;
+#ifndef __i386__
 			vsi_get = vsi_get_5_0;
 			vsi_get_list = vsi_get_list_5_0;
+#endif
 			break;
 		case VMKERNEL_VERSION_6_5:
 			Platform_vsi_int = 0;
 			Platform_vsi_string = 1;
+#ifndef __i386__
 			vsi_get = vsi_get_6_5;
 			vsi_get_list = vsi_get_list_6_5;
+#endif
 			break;
 		case VMKERNEL_VERSION_6_7:
 			Platform_vsi_int = 1;
 			Platform_vsi_string = 2;
+#ifndef __i386__
 			vsi_get = vsi_get_6_5;
 			vsi_get_list = vsi_get_list_6_5;
+#endif
 			break;
 		default:
 			CRT_fatalError("Kernel version not supported", EPERM);
@@ -404,11 +434,41 @@ void Platform_vsiListAddInt(struct vsi_list *list, uint64_t value) {
 }
 
 int Platform_vsiGet(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *list, void *buffer, size_t size) {
+#ifdef __i386__
+	struct {
+		uint64_t checksum;
+		size_t input_size;
+		uint32_t _unknown_1;
+		void *buffer;
+		size_t buffer_size;
+	} extra_args[2] = {
+		{ node_cksum, list->param_size, 0, buffer, size },
+		{ node_cksum, list->param_size, 0, buffer, size }
+	};
+	return VMKSC(SYS_VSI_Get, node_id, 0, list, extra_args);
+#else
 	if(!vsi_get) Platform_checkVMkernelVersion();
 	return vsi_get(node_id, node_cksum, list, buffer, size);
+#endif
 }
 
 int Platform_vsiGetList(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
+#ifdef __i386__
+	struct vsi_list input_list = {
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
+	};
+	struct {
+		uint64_t checksum;
+		size_t input_size;
+		struct vsi_list *output_list;
+		size_t output_size;
+	} extra_args[2] = {
+		{ node_cksum, input_list.param_size, list, size },
+		{ node_cksum, input_list.param_size, list, size }
+	};
+	return VMKSC(SYS_VSI_GetList, node_id, 0, &input_list, extra_args);
+#else
 	if(!vsi_get_list) Platform_checkVMkernelVersion();
 	return vsi_get_list(node_id, node_cksum, list, size);
+#endif
 }
