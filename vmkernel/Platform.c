@@ -238,11 +238,17 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 }
 
 void Platform_updateMemoryValues(Meter *meter) {
+#if 0
 	uint64_t total, free;
 	unsigned int e = VMKSC(SYS_GetMemSize, &total, &free);
 	if(e != VMK_OK) return;
 	meter->total = total / 1024;
 	meter->values[0] = (total - free) / 1024;
+#else
+	const ProcessList *pl = meter->pl;
+	meter->total = pl->totalMem;
+	meter->values[0] = pl->usedMem;
+#endif
 }
 
 void Platform_updateSwapValues(Meter *meter) {

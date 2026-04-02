@@ -23,6 +23,8 @@ typedef struct {
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
+	uint32_t vsi_memory_id;
+	uint32_t vsi_memory_comprehensive_id;
 	uint64_t vsi_world_cksum;
 	uint64_t vsi_world_info_cksum;
 	uint64_t vsi_world_name_cksum;
@@ -34,6 +36,8 @@ typedef struct {
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
+	uint64_t vsi_memory_cksum;
+	uint64_t vsi_memory_comprehensive_cksum;
 
 	size_t world_info_size;
 } VMKernelProcessList;
@@ -177,6 +181,37 @@ struct memstats_uw_64 {
 } __attribute__((__packed__));
 #endif
 
+// All values are in kibibyte
+struct comprehensive_memory_statistics {
+	uint64_t physical_memory_estimate;
+	uint64_t given_to_vmkernel;
+	uint64_t reliable_memory;
+	uint64_t discarded_by_vmkernel;
+	uint64_t mmap_critical_space;
+	uint64_t mmap_buddy_overhead;
+	uint64_t kernel_code;
+	uint64_t kernel_data_and_heap;
+	uint64_t kernel_other;
+	uint64_t non_kernel;
+	uint64_t reserved_low;
+	uint64_t free;
+};
+
+// All values are in kibibyte
+struct comprehensive_memory_statistics_6_7 {
+	uint64_t physical_memory_estimate;
+	uint64_t given_to_vmkernel;
+	uint64_t reliable_memory;
+	uint64_t discarded_by_vmkernel;
+	uint64_t mmap_buddy_overhead;
+	uint64_t kernel_code;
+	uint64_t kernel_data_and_heap;
+	uint64_t kernel_other;
+	uint64_t non_kernel;
+	uint64_t reserved_low;
+	uint64_t free;
+};
+
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
    ProcessList_init(&this->super, Class(VMKernelProcess), usersTable, pidWhiteList, userId);
@@ -212,6 +247,11 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_userworld_cartel_id, "cmdline",
       &this->vsi_userworld_cartel_cmdline_id, &this->vsi_userworld_cartel_cmdline_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.cmdline", e);
+   e = Platform_vsiGetNodeIdAndChecksum(0, "memory", &this->vsi_memory_id, &this->vsi_memory_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo memory", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_memory_id, "comprehensive",
+      &this->vsi_memory_comprehensive_id, &this->vsi_memory_comprehensive_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo memory.comprehensive", e);
 
    Platform_checkVMkernelVersion();
    switch(Platform_running_vmkernel_version) {
@@ -231,6 +271,42 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 void ProcessList_delete(ProcessList* this) {
    ProcessList_done(this);
    free(this);
+}
+
+static void get_global_memory_stats(VMKernelProcessList *this) {
+	struct vsi_list list = {
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
+	};
+	switch(Platform_running_vmkernel_version) {
+			struct comprehensive_memory_statistics stats;
+			struct comprehensive_memory_statistics_6_7 stats_6_7;
+			int e;
+		case VMKERNEL_VERSION_5_5:
+		case VMKERNEL_VERSION_6_0:
+		case VMKERNEL_VERSION_6_5:
+			e = Platform_vsiGet(this->vsi_memory_comprehensive_id, this->vsi_memory_comprehensive_cksum,
+				&list, &stats, sizeof stats);
+			if(e) goto failure;
+			this->super.totalMem = stats.physical_memory_estimate;
+			this->super.freeMem = stats.free;
+			this->super.usedMem = stats.physical_memory_estimate - stats.free;
+			break;
+		case VMKERNEL_VERSION_6_7:
+			e = Platform_vsiGet(this->vsi_memory_comprehensive_id, this->vsi_memory_comprehensive_cksum,
+				&list, &stats_6_7, sizeof stats_6_7);
+			if(e) goto failure;
+			this->super.totalMem = stats_6_7.physical_memory_estimate;
+			this->super.freeMem = stats_6_7.free;
+			this->super.usedMem = stats_6_7.physical_memory_estimate - stats_6_7.free;
+			break;
+		failure:
+			this->super.totalMem = 0;
+			this->super.freeMem = 0;
+			this->super.usedMem = 0;
+			break;
+		default:
+			abort();
+	}
 }
 
 static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
@@ -344,6 +420,9 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 
 void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	VMKernelProcessList *this = (VMKernelProcessList *)super;
+
+	get_global_memory_stats(this);
+
 	struct vsi_list *worlds_list = xMalloc(sizeof(struct vsi_list));
 	memset(worlds_list, 0, sizeof(struct vsi_list));
 	worlds_list->type_or_version = 1;
