@@ -159,8 +159,6 @@ struct memstats_common_64 {
 	uint8_t _reserved_2[2];
 } __attribute__((__packed__));
 
-size_t _check_common_32 = sizeof(struct memstats_common_32);
-
 #if 0
 struct memstats_uw_64 {
 	struct memstats_common64 common;
