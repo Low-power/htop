@@ -98,9 +98,6 @@ static inline uint64_t Platform_vsiListGetValue(const struct vsi_list *list, int
 #include "UsersMeter.h"
 #include "CRT.h"
 #include "vmk_error_codes.h"
-#ifndef __i386__
-#include <sys/syscall.h>
-#endif
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <signal.h>
