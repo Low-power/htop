@@ -27,7 +27,7 @@ in the source distribution for its full text.
 #define SYS_VSI_GetNodeInfo 1202
 #define SYS_GetMemSize 1215
 #define SYS_GetNumCPUsUsed 1221
-#define SYS_GetUptimeUS 1612
+#define SYS_GetUptimeUS 1216
 
 struct vsi_node_info {
 	uint32_t id;
