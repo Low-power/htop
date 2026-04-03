@@ -105,9 +105,9 @@ typedef struct Process_ {
    float percent_cpu;
    float percent_mem;
 
-   long int priority;
-   long int nice;
-   long int nlwp;
+   int priority;
+   int nice;
+   int nlwp;
    time_t starttime_ctime;
 
    // In pages
