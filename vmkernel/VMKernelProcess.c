@@ -17,6 +17,7 @@ typedef enum {
 	HTOP_WORLD_GROUP_ID_FIELD = 100,
 	HTOP_USERSPACE_ID_FIELD,
 	HTOP_CARTEL_GROUP_ID_FIELD,
+	HTOP_VCPU_COUNT_FIELD,
 	HTOP_LAST_PROCESSFIELD
 } VMKernelProcessField;
 
@@ -25,6 +26,7 @@ typedef struct {
 	uint32_t group_id;
 	uint32_t userspace_id;
 	uint32_t cartel_group_id;
+	uint32_t vcpu_count;
 	bool is_kernel_process;
 } VMKernelProcess;
 }*/
@@ -87,6 +89,7 @@ FieldData Process_fields[] = {
    [HTOP_WORLD_GROUP_ID_FIELD] = { .name = "WGID", .title = "      WGID ", .description = "World group ID", .flags = 0 },
    [HTOP_USERSPACE_ID_FIELD] = { .name = "USID", .title = "USID ", .description = "Userspace ID", .flags = 0 },
    [HTOP_CARTEL_GROUP_ID_FIELD] = { .name = "CGID", .title = "      CGID ", .description = "Cartel group ID", .flags = 0 },
+   [HTOP_VCPU_COUNT_FIELD] = { .name = "VCPU_COUNT", .title = "NVCPUS ", .description = "Number of virtual processors allocated to the world", .flags = 0 },
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
@@ -133,6 +136,8 @@ long int VMKernelProcess_compare(const void *o1, const void *o2) {
 			return uintcmp(p1->userspace_id, p2->userspace_id);
 		case HTOP_CARTEL_GROUP_ID_FIELD:
 			return uintcmp(p1->cartel_group_id, p2->cartel_group_id);
+		case HTOP_VCPU_COUNT_FIELD:
+			return uintcmp(p1->vcpu_count, p2->vcpu_count);
 		default:
 			return Process_compare(o1, o2);
 	}
@@ -150,6 +155,9 @@ void VMKernelProcess_writeField(const Process *super, RichString *str, ProcessFi
 			break;
 		case HTOP_CARTEL_GROUP_ID_FIELD:
 			xSnprintf(buffer, sizeof buffer, Process_pidFormat, this->cartel_group_id);
+			break;
+		case HTOP_VCPU_COUNT_FIELD:
+			xSnprintf(buffer, sizeof buffer, "%6u ", (unsigned int)this->vcpu_count);
 			break;
 		default:
 			Process_writeField(super, str, field);

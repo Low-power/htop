@@ -20,6 +20,8 @@ typedef struct {
 	uint32_t vsi_sched_memclients_memstats_id;
 	uint32_t vsi_sched_memclients_memstats_common_id;
 	uint32_t vsi_sched_memclients_memstats_uw_id;
+	uint32_t vsi_sched_cpuclients_id;
+	uint32_t vsi_sched_cpuclients_numvcpus_id;
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
@@ -33,6 +35,8 @@ typedef struct {
 	uint64_t vsi_sched_memclients_memstats_cksum;
 	uint64_t vsi_sched_memclients_memstats_common_cksum;
 	uint64_t vsi_sched_memclients_memstats_uw_cksum;
+	uint64_t vsi_sched_cpuclients_cksum;
+	uint64_t vsi_sched_cpuclients_numvcpus_cksum;
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
@@ -238,6 +242,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_memclients_memstats_id, "uw",
       &this->vsi_sched_memclients_memstats_uw_id, &this->vsi_sched_memclients_memstats_uw_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats.uw", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "cpuClients",
+      &this->vsi_sched_cpuclients_id, &this->vsi_sched_cpuclients_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_cpuclients_id, "numVcpus",
+      &this->vsi_sched_cpuclients_numvcpus_id, &this->vsi_sched_cpuclients_numvcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients.numVcpus", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
       &this->vsi_userworld_id, &this->vsi_userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -271,6 +281,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 void ProcessList_delete(ProcessList* this) {
    ProcessList_done(this);
    free(this);
+}
+
+static struct vsi_list *allocate_vsi_list(uint32_t count, uint32_t string_size) {
+	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count + string_size;
+	struct vsi_list *list = xMalloc(list_size);
+	memset(list, 0, list_size);
+	list->type_or_version = 1;
+	list->allocated_count = count;
+	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
+	list->string_size = string_size;
+	if(string_size) list->string_offset = list->param_size;
+	list->self_ptr = (uintptr_t)list;
+	return list;
 }
 
 static void get_global_memory_stats(VMKernelProcessList *this) {
@@ -310,13 +333,7 @@ static void get_global_memory_stats(VMKernelProcessList *this) {
 }
 
 static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = 1;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self_ptr = (uintptr_t)list;
+	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	struct world_info info;
 	assert(this->world_info_size <= sizeof info);
@@ -336,13 +353,7 @@ static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_world_name(const VMKernelProcessList *this, Process *proc) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = 1;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self_ptr = (uintptr_t)list;
+	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	char buffer[128];
 	int e = Platform_vsiGet(this->vsi_world_name_id, this->vsi_world_name_cksum,
@@ -353,13 +364,7 @@ static void get_world_name(const VMKernelProcessList *this, Process *proc) {
 
 static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 	if(proc->tgid <= 0) return false;
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = 1;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self_ptr = (uintptr_t)list;
+	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->tgid);
 	char buffer[1024];
 	int e = Platform_vsiGet(this->vsi_userworld_cartel_cmdline_id,
@@ -371,13 +376,7 @@ static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = 1;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self_ptr = (uintptr_t)list;
+	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	switch(Platform_running_vmkernel_version) {
 			struct memstats_common_32 common32;
@@ -416,6 +415,16 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 			abort();
 	}
 	free(list);
+}
+
+static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
+	struct vsi_list *list = allocate_vsi_list(1, 0);
+	Platform_vsiListAddInt(list, proc->super.pid);
+	int e = Platform_vsiGet(this->vsi_sched_cpuclients_numvcpus_id,
+		this->vsi_sched_cpuclients_numvcpus_cksum, list,
+		&proc->vcpu_count, sizeof proc->vcpu_count);
+	free(list);
+	if(e) proc->vcpu_count = 0;
 }
 
 void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
@@ -457,6 +466,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			ProcessList_add(super, proc);
 		}
 		get_memory_stats(this, proc);
+		get_vcpu_stats(this, (VMKernelProcess *)proc);
 		if(!is_existing || ProcessList_shouldUpdateProcessNames(super)) {
 			free(proc->name);
 			free(proc->comm);
