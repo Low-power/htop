@@ -418,13 +418,15 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
-	Platform_vsiListAddInt(list, proc->super.pid);
-	int e = Platform_vsiGet(this->vsi_sched_cpuclients_numvcpus_id,
-		this->vsi_sched_cpuclients_numvcpus_cksum, list,
-		&proc->vcpu_count, sizeof proc->vcpu_count);
-	free(list);
-	if(e) proc->vcpu_count = 0;
+	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
+		struct vsi_list *list = allocate_vsi_list(1, 0);
+		Platform_vsiListAddInt(list, proc->super.pid);
+		int e = Platform_vsiGet(this->vsi_sched_cpuclients_numvcpus_id,
+			this->vsi_sched_cpuclients_numvcpus_cksum, list,
+			&proc->vcpu_count, sizeof proc->vcpu_count);
+		free(list);
+		if(e) proc->vcpu_count = 0;
+	}
 }
 
 void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {

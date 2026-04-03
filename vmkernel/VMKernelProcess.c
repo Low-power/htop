@@ -13,6 +13,9 @@ in the source distribution for its full text.
 
 #define Process_delete VMKernelProcess_delete
 
+#define PROCESS_FLAG_VMKERNEL_PRIORITY 0x0100
+#define PROCESS_FLAG_VMKERNEL_VCPU_COUNT 0x0200
+
 typedef enum {
 	HTOP_WORLD_GROUP_ID_FIELD = 100,
 	HTOP_USERSPACE_ID_FIELD,
@@ -71,8 +74,8 @@ FieldData Process_fields[] = {
    [HTOP_TPGID_FIELD] = { .name = "TPGID", .title = "  TPGID ", .description = "Process ID of the fg process group of the controlling terminal", .flags = 0, },
    [HTOP_MINFLT_FIELD] = { .name = "MINFLT", .title = "     MINFLT ", .description = "Number of minor faults which have not required loading a memory page from disk", .flags = 0, },
    [HTOP_MAJFLT_FIELD] = { .name = "MAJFLT", .title = "     MAJFLT ", .description = "Number of major faults which have required loading a memory page from disk", .flags = 0, },
-   [HTOP_PRIORITY_FIELD] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = 0, },
-   [HTOP_NICE_FIELD] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = 0, },
+   [HTOP_PRIORITY_FIELD] = { .name = "PRIORITY", .title = "PRI ", .description = "Kernel's internal priority for the process", .flags = PROCESS_FLAG_VMKERNEL_PRIORITY },
+   [HTOP_NICE_FIELD] = { .name = "NICE", .title = " NI ", .description = "Nice value (the higher the value, the more it lets other processes take priority)", .flags = PROCESS_FLAG_VMKERNEL_PRIORITY },
    [HTOP_STARTTIME_FIELD] = { .name = "STARTTIME", .title = "START ", .description = "Time the process was started", .flags = 0, },
    [HTOP_PROCESSOR_FIELD] = { .name = "PROCESSOR", .title = "CPU ", .description = "Id of the CPU the process last executed on", .flags = 0, },
    [HTOP_M_SIZE_FIELD] = { .name = "M_SIZE", .title = " VIRT ", .description = "Total program size in virtual memory", .flags = 0, },
@@ -89,7 +92,7 @@ FieldData Process_fields[] = {
    [HTOP_WORLD_GROUP_ID_FIELD] = { .name = "WGID", .title = "      WGID ", .description = "World group ID", .flags = 0 },
    [HTOP_USERSPACE_ID_FIELD] = { .name = "USID", .title = "USID ", .description = "Userspace ID", .flags = 0 },
    [HTOP_CARTEL_GROUP_ID_FIELD] = { .name = "CGID", .title = "      CGID ", .description = "Cartel group ID", .flags = 0 },
-   [HTOP_VCPU_COUNT_FIELD] = { .name = "VCPU_COUNT", .title = "NVCPUS ", .description = "Number of virtual processors allocated to the world", .flags = 0 },
+   [HTOP_VCPU_COUNT_FIELD] = { .name = "VCPU_COUNT", .title = "NVCPUS ", .description = "Number of virtual processors allocated to the world", .flags = PROCESS_FLAG_VMKERNEL_VCPU_COUNT },
    [HTOP_LAST_PROCESSFIELD] = { .name = "*** report bug! ***", .title = NULL, .description = NULL, .flags = 0, },
 };
 
