@@ -66,7 +66,7 @@ FieldData Process_fields[] = {
    [HTOP_PID_FIELD] = { .name = "PID", .title = "    PID ", .description = "World ID", .flags = 0, },
    [HTOP_NAME_FIELD] = { .name = "NAME", .title = "NAME            ", .description = "World name", .flags = 0, },
    [HTOP_COMM_FIELD] = { .name = "Command", .title = "Command ", .description = "Command line", .flags = 0, },
-   //[HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (R running, T stopped, S sleeping, D uninterruptible sleeping)", .flags = 0 },
+   [HTOP_STATE_FIELD] = { .name = "STATE", .title = "S ", .description = "Process state (R running, T stopped, S sleeping, D uninterruptible sleeping)", .flags = 0 },
    [HTOP_PPID_FIELD] = { .name = "PPID", .title = "   PPID ", .description = "Parent process ID", .flags = 0, },
    [HTOP_PGRP_FIELD] = { .name = "PGRP", .title = "   PGRP ", .description = "Process group ID", .flags = 0, },
    [HTOP_SESSION_FIELD] = { .name = "SESSION", .title = "    SID ", .description = "Process's session ID", .flags = 0, },

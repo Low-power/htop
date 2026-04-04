@@ -22,6 +22,9 @@ typedef struct {
 	uint32_t vsi_sched_memclients_memstats_uw_id;
 	uint32_t vsi_sched_cpuclients_id;
 	uint32_t vsi_sched_cpuclients_numvcpus_id;
+	uint32_t vsi_sched_vcpus_id;
+	uint32_t vsi_sched_vcpus_stats_id;
+	uint32_t vsi_sched_vcpus_stats_summarystats_id;
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
@@ -37,6 +40,9 @@ typedef struct {
 	uint64_t vsi_sched_memclients_memstats_uw_cksum;
 	uint64_t vsi_sched_cpuclients_cksum;
 	uint64_t vsi_sched_cpuclients_numvcpus_cksum;
+	uint64_t vsi_sched_vcpus_cksum;
+	uint64_t vsi_sched_vcpus_stats_cksum;
+	uint64_t vsi_sched_vcpus_stats_summarystats_cksum;
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
@@ -216,6 +222,65 @@ struct comprehensive_memory_statistics_6_7 {
 	uint64_t free;
 };
 
+struct sched_allocation {
+	uint32_t min;
+	uint32_t max;
+	uint32_t shares;
+	uint32_t min_limits;
+	uint32_t units;
+};
+
+struct vcpu_load_metrics {
+	uint32_t inter_wait_run_avg;
+	uint32_t sleep_avg;
+	uint32_t cache_miss_rate;
+};
+
+struct vcpu_stats_5_5 {
+	uint32_t world_flags;
+	uint32_t run_state;
+	uint32_t wait_state;
+	uint32_t paused;
+	uint32_t vmm_world_id;
+	uint32_t active_world_id;
+	uint32_t ht_sharing;
+	struct sched_allocation normalized_allocated;
+	struct sched_allocation internal_allocated;
+	uint32_t pcpu;
+	uint32_t effective_min;
+	uint8_t ht_quarantine;
+	uint8_t group_max_enforced;
+	uint64_t ht_stolen_time;
+	uint64_t vtime_main;
+	uint64_t vtime_extra;
+	uint64_t vtime_limit;
+	uint64_t vtime_ahead;
+	struct vcpu_load_metrics load_information;
+	uint64_t cpu_latency;
+	uint64_t mem_swap_fault_time;
+	uint32_t mem_swap_fault_count;
+	uint64_t mem_compress_fault_time;
+	uint32_t mem_compress_fault_count;
+	uint64_t _reserved[7];
+};
+
+struct vcpu_stats_6_5 {
+	uint32_t world_flags;
+	uint32_t run_state;
+	uint32_t wait_state;
+	uint32_t vmm_world_id;
+	uint32_t active_world_id;
+	struct sched_allocation normalized_allocated;
+	struct sched_allocation internal_allocated;
+	uint32_t pcpu;
+	uint64_t _reserved[24];
+} __attribute__((__packed__));
+
+static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
+static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
+static const char vcpu_wait_state_map_5_5[] = { [3] = 'L', [7] = 'S' };
+static const char vcpu_wait_state_map_6_5[] = { [3] = 'L', [6] = 'S', [8] = 'I' };
+
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
    ProcessList_init(&this->super, Class(VMKernelProcess), usersTable, pidWhiteList, userId);
@@ -248,6 +313,15 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_cpuclients_id, "numVcpus",
       &this->vsi_sched_cpuclients_numvcpus_id, &this->vsi_sched_cpuclients_numvcpus_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients.numVcpus", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "Vcpus",
+      &this->vsi_sched_vcpus_id, &this->vsi_sched_vcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_id, "stats",
+      &this->vsi_sched_vcpus_stats_id, &this->vsi_sched_vcpus_stats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "summaryStats",
+      &this->vsi_sched_vcpus_stats_summarystats_id, &this->vsi_sched_vcpus_stats_summarystats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.summaryStats", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
       &this->vsi_userworld_id, &this->vsi_userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -418,8 +492,63 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
+	struct vsi_list *list = allocate_vsi_list(1, 0);
+	Platform_vsiListAddInt(list, proc->super.pid);
+	switch(Platform_running_vmkernel_version) {
+			struct vcpu_stats_5_5 stats_5_5;
+			struct vcpu_stats_6_5 stats_6_5;
+			int e;
+		case VMKERNEL_VERSION_5_5:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
+				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+				&stats_5_5, 204);
+			if(e) goto failure;
+			goto read_5_5_run_state;
+		case VMKERNEL_VERSION_6_0:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
+				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+				&stats_5_5, 220);
+			if(e) goto failure;
+		read_5_5_run_state:
+			proc->super.state = stats_5_5.run_state < sizeof vcpu_run_state_map_5_0 ?
+				vcpu_run_state_map_5_0[stats_5_5.run_state] : '?';
+			if(proc->super.state == 'W') {
+				proc->super.state =
+					stats_5_5.wait_state < sizeof vcpu_wait_state_map_5_5 ?
+						vcpu_wait_state_map_5_5[stats_5_5.wait_state] : 'D';
+				if(!proc->super.state) proc->super.state = '?';
+			}
+			break;
+		case VMKERNEL_VERSION_6_5:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
+				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+				&stats_6_5, 248);
+			if(e) goto failure;
+			goto read_6_5_run_state;
+		case VMKERNEL_VERSION_6_7:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
+				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+				&stats_6_5, 256);
+			if(e) goto failure;
+		read_6_5_run_state:
+			proc->super.state = stats_6_5.run_state < sizeof vcpu_run_state_map_6_5 ?
+				vcpu_run_state_map_6_5[stats_6_5.run_state] : '?';
+			if(proc->super.state == 'W') {
+				proc->super.state =
+					stats_6_5.wait_state < sizeof vcpu_wait_state_map_6_5 ?
+						vcpu_wait_state_map_6_5[stats_6_5.wait_state] : 'D';
+				if(!proc->super.state) proc->super.state = '?';
+			}
+			break;
+		failure:
+			proc->super.state = '?';
+			break;
+		default:
+			abort();
+	}
+	free(list);
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
-		struct vsi_list *list = allocate_vsi_list(1, 0);
+		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
 		int e = Platform_vsiGet(this->vsi_sched_cpuclients_numvcpus_id,
 			this->vsi_sched_cpuclients_numvcpus_cksum, list,
@@ -481,6 +610,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			if(proc->tgid == 0) proc->tgid = pid;
 		}
 		super->totalTasks++;
+		if(proc->state == 'O') super->running_thread_count++;
 		proc->updated = true;
 	}
 	free(worlds_list);
