@@ -278,8 +278,6 @@ struct vcpu_stats_6_5 {
 
 static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
 static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
-static const char vcpu_wait_state_map_5_5[] = { [3] = 'L', [7] = 'S' };
-static const char vcpu_wait_state_map_6_5[] = { [3] = 'L', [6] = 'S', [8] = 'I' };
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
@@ -513,10 +511,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			proc->super.state = stats_5_5.run_state < sizeof vcpu_run_state_map_5_0 ?
 				vcpu_run_state_map_5_0[stats_5_5.run_state] : '?';
 			if(proc->super.state == 'W') {
-				proc->super.state =
-					stats_5_5.wait_state < sizeof vcpu_wait_state_map_5_5 ?
-						vcpu_wait_state_map_5_5[stats_5_5.wait_state] : 'D';
-				if(!proc->super.state) proc->super.state = '?';
+				proc->super.state = stats_5_5.wait_state ? stats_5_5.wait_state << 8 : '?';
 			}
 			break;
 		case VMKERNEL_VERSION_6_5:
@@ -534,10 +529,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			proc->super.state = stats_6_5.run_state < sizeof vcpu_run_state_map_6_5 ?
 				vcpu_run_state_map_6_5[stats_6_5.run_state] : '?';
 			if(proc->super.state == 'W') {
-				proc->super.state =
-					stats_6_5.wait_state < sizeof vcpu_wait_state_map_6_5 ?
-						vcpu_wait_state_map_6_5[stats_6_5.wait_state] : 'D';
-				if(!proc->super.state) proc->super.state = '?';
+				proc->super.state = stats_6_5.wait_state ? stats_6_5.wait_state << 8 : '?';
 			}
 			break;
 		failure:
@@ -547,6 +539,313 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			abort();
 	}
 	free(list);
+	if(proc->super.state > 255) switch(Platform_running_vmkernel_version) {
+		case VMKERNEL_VERSION_5_5:
+			switch(proc->super.state >> 8) {
+				case 1:
+				case 3 ... 5:
+				case 53:
+					proc->super.state = 'L';
+					break;
+				case 2:
+				case 10 ... 24:
+				case 26:
+				case 28:
+				case 50:
+				case 54 ... 71:
+				case 73 ... 75:
+				case 77:
+				case 84:
+				case 88 ... 91:
+				case 93 ... 102:
+				case 106:
+				case 113 ... 116:
+				case 119:
+				case 125:
+				case 126:
+					proc->super.state = 'D';
+					break;
+				case 6:
+				case 7:
+				case 32 ... 47:
+				case 52:
+					proc->super.state = 'S';
+					break;
+				case 8:
+				case 9:
+				case 72:
+				case 76:
+				case 92:
+				case 112:
+				case 121:
+					proc->super.state = 'I';
+					break;
+				case 25:
+				case 27:
+					proc->super.state = 'V';
+					break;
+				case 29:
+				case 30:
+				case 104:
+				case 105:
+				case 110:
+				case 117:
+				case 118:
+					proc->super.state = 'C';
+					break;
+				case 31:
+					proc->super.state = 'T';
+					break;
+				case 49:
+					proc->super.state = 't';
+					break;
+				case 78 ... 83:
+					proc->super.state = 'H';
+					break;
+				default:
+					proc->super.state = 'W';
+					break;
+			}
+			break;
+		case VMKERNEL_VERSION_6_0:
+			switch(proc->super.state >> 8) {
+				case 1:
+				case 3 ... 5:
+				case 58:
+					proc->super.state = 'L';
+					break;
+				case 2:
+				case 11:
+				case 12:
+				case 15 ... 22:
+				case 24 ... 26:
+				case 28:
+				case 30:
+				case 35:
+				case 55:
+				case 59 ... 67:
+				case 69:
+				case 70:
+				case 72:
+				case 74 ... 82:
+				case 84 ... 86:
+				case 88 ... 90:
+				case 97:
+				case 101 ... 104:
+				case 106:
+				case 108 ... 116:
+				case 120:
+				case 143:
+				case 144:
+				case 146:
+					proc->super.state = 'D';
+					break;
+				case 7:
+				case 39:
+				case 45:
+				case 50:
+				case 51:
+				case 52:
+				case 57:
+					proc->super.state = 'S';
+					break;
+				case 8:
+				case 10:
+				case 13:
+				case 14:
+				case 23:
+				case 27:
+				case 32:
+				case 68:
+				case 71:
+				case 73:
+				case 83:
+				case 87:
+				case 105:
+				case 107:
+				case 126:
+				case 131 ... 133:
+				case 136:
+					proc->super.state = 'I';
+					break;
+				case 29:
+					proc->super.state = 'V';
+					break;
+				case 31:
+				case 33:
+				case 34:
+				case 118:
+				case 119:
+				case 124:
+					proc->super.state = 'C';
+					break;
+				case 36:
+					proc->super.state = 'T';
+					break;
+				case 54:
+				case 142:
+					proc->super.state = 't';
+					break;
+				case 91 ... 96:
+				case 137:
+					proc->super.state = 'H';
+					break;
+				default:
+					proc->super.state = 'W';
+					break;
+			}
+			break;
+		case VMKERNEL_VERSION_6_5:
+			switch(proc->super.state >> 8) {
+				case 1 ... 5:
+				case 57:
+					proc->super.state = 'L';
+					break;
+				case 6:
+				case 37 ... 52:
+				case 56:
+					proc->super.state = 'S';
+					break;
+				case 7:
+				case 8:
+				case 11:
+				case 13:
+				case 33:
+				case 65:
+				case 68:
+				case 70:
+				case 71:
+				case 90:
+				case 107 ... 109:
+				case 113:
+				case 130:
+				case 135 ... 137:
+				case 140:
+					proc->super.state = 'I';
+					break;
+				case 9:
+				case 10:
+				case 12:
+				case 14:
+				case 19 ... 32:
+				case 34:
+				case 35:
+				case 55:
+				case 58 ... 64:
+				case 66:
+				case 67:
+				case 69:
+				case 72 ... 89:
+				case 91 ... 95:
+				case 101:
+				case 104 ... 106:
+				case 110 ... 112:
+				case 114 ... 122:
+				case 149:
+				case 151 ... 153:
+					proc->super.state = 'D';
+					break;
+				case 15:
+					proc->super.state = 'V';
+					break;
+				case 16 ... 18:
+				case 102:
+				case 124:
+				case 128:
+					proc->super.state = 'C';
+					break;
+				case 96 ... 100:
+				case 141:
+					proc->super.state = 'H';
+					break;
+				default:
+					proc->super.state = 'W';
+					break;
+			}
+			break;
+		case VMKERNEL_VERSION_6_7:
+			switch(proc->super.state >> 8) {
+				case 1 ... 5:
+				case 59:
+				case 82:
+					proc->super.state = 'L';
+					break;
+				case 6:
+				case 39 ... 54:
+				case 58:
+				case 62:
+					proc->super.state = 'S';
+					break;
+				case 7:
+				case 8:
+				case 12:
+				case 14:
+				case 35:
+				case 69:
+				case 72:
+				case 74:
+				case 75:
+				case 98:
+				case 115 ... 117:
+				case 121:
+				case 139:
+				case 144 ... 146:
+				case 149:
+					proc->super.state = 'I';
+					break;
+				case 9 ... 11:
+				case 13:
+				case 15:
+				case 20 ... 34:
+				case 36:
+				case 37:
+				case 57:
+				case 60:
+				case 61:
+				case 64 ... 68:
+				case 70:
+				case 71:
+				case 73:
+				case 76 ... 81:
+				case 83 ... 97:
+				case 99 ... 103:
+				case 109:
+				case 112 ... 114:
+				case 118 ... 120:
+				case 122 ... 131:
+				case 159:
+				case 161:
+				case 162:
+				case 165:
+					proc->super.state = 'D';
+					break;
+				case 16:
+					proc->super.state = 'V';
+					break;
+				case 17 ... 19:
+				case 110:
+				case 133:
+				case 137:
+					proc->super.state = 'C';
+					break;
+				case 38:
+					proc->super.state = 'T';
+					break;
+				case 56:
+				case 63:
+				case 155:
+					proc->super.state = 't';
+					break;
+				case 104 ... 108:
+				case 150:
+					proc->super.state = 'H';
+					break;
+				default:
+					proc->super.state = 'W';
+					break;
+			}
+			break;
+	}
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
 		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
@@ -610,7 +909,10 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			if(proc->tgid == 0) proc->tgid = pid;
 		}
 		super->totalTasks++;
-		if(proc->state == 'O') super->running_thread_count++;
+		if(proc->state == 'O') {
+			super->running_thread_count++;
+			super->running_process_count++;
+		}
 		proc->updated = true;
 	}
 	free(worlds_list);
