@@ -59,6 +59,9 @@ typedef struct {
 #include "Settings.h"
 #include "Platform.h"
 #include "CRT.h"
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -897,6 +900,11 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		}
 		get_memory_stats(this, proc);
 		get_vcpu_stats(this, (VMKernelProcess *)proc);
+		if(super->settings->flags & PROCESS_FLAG_VMKERNEL_PRIORITY) {
+			errno = 0;
+			proc->nice = getpriority(PRIO_PROCESS, pid);
+			if(proc->nice == -1 && errno) proc->nice = LONG_MAX;
+		}
 		if(!is_existing || ProcessList_shouldUpdateProcessNames(super)) {
 			free(proc->name);
 			free(proc->comm);
