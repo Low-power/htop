@@ -504,13 +504,13 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 204);
 			if(e) goto failure;
-			goto read_5_5_run_state;
+			goto read_5_5_stats;
 		case VMKERNEL_VERSION_6_0:
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 220);
 			if(e) goto failure;
-		read_5_5_run_state:
+		read_5_5_stats:
 			proc->super.state = stats_5_5.run_state < sizeof vcpu_run_state_map_5_0 ?
 				vcpu_run_state_map_5_0[stats_5_5.run_state] : '?';
 			if(proc->super.state == 'W') {
@@ -522,13 +522,13 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 248);
 			if(e) goto failure;
-			goto read_6_5_run_state;
+			goto read_6_5_stats;
 		case VMKERNEL_VERSION_6_7:
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 256);
 			if(e) goto failure;
-		read_6_5_run_state:
+		read_6_5_stats:
 			proc->super.state = stats_6_5.run_state < sizeof vcpu_run_state_map_6_5 ?
 				vcpu_run_state_map_6_5[stats_6_5.run_state] : '?';
 			if(proc->super.state == 'W') {
@@ -756,6 +756,14 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 				case 124:
 				case 128:
 					proc->super.state = 'C';
+					break;
+				case 36:
+					proc->super.state = 'T';
+					break;
+				case 54:
+				case 139:
+				case 145:
+					proc->super.state = 't';
 					break;
 				case 96 ... 100:
 				case 141:
