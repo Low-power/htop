@@ -234,16 +234,16 @@ struct sched_allocation {
 };
 
 struct vcpu_load_metrics {
-	uint32_t inter_wait_run_avg;
-	uint32_t sleep_avg;
+	uint64_t inter_wait_run_avg;
+	uint64_t sleep_avg;
 	uint32_t cache_miss_rate;
-};
+} __attribute__((__packed__));
 
 struct vcpu_stats_5_5 {
 	uint32_t world_flags;
 	uint32_t run_state;
 	uint32_t wait_state;
-	uint32_t paused;
+	uint8_t paused;
 	uint32_t vmm_world_id;
 	uint32_t active_world_id;
 	uint32_t ht_sharing;
@@ -264,8 +264,8 @@ struct vcpu_stats_5_5 {
 	uint32_t mem_swap_fault_count;
 	uint64_t mem_compress_fault_time;
 	uint32_t mem_compress_fault_count;
-	uint64_t _reserved[7];
-};
+	uint8_t _reserved[53];
+} __attribute__((__packed__));
 
 struct vcpu_stats_6_5 {
 	uint32_t world_flags;
@@ -516,6 +516,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			if(proc->super.state == 'W') {
 				proc->super.state = stats_5_5.wait_state ? stats_5_5.wait_state << 8 : '?';
 			}
+			proc->super.processor = stats_5_5.pcpu;
 			break;
 		case VMKERNEL_VERSION_6_5:
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
@@ -534,6 +535,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			if(proc->super.state == 'W') {
 				proc->super.state = stats_6_5.wait_state ? stats_6_5.wait_state << 8 : '?';
 			}
+			proc->super.processor = stats_6_5.pcpu;
 			break;
 		failure:
 			proc->super.state = '?';
