@@ -468,10 +468,10 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          return;
       case HTOP_NICE_FIELD:
          switch(this->nice) {
-            case LONG_MAX:
+            case INT_MAX:
                xSnprintf(buffer, n, "  ? ");
                break;
-            case LONG_MIN:
+            case INT_MIN:
                xSnprintf(buffer, n, "  - ");
                break;
             default:
@@ -652,7 +652,7 @@ void Process_init(Process* this, struct Settings_* settings) {
    this->updated = false;
    this->argv0_length = -1;
    this->processor = -1;
-   this->nice = LONG_MAX;
+   this->nice = INT_MAX;
    if (Process_getuid == -1) Process_getuid = getuid();
 }
 

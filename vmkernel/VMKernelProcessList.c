@@ -903,7 +903,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		if(super->settings->flags & PROCESS_FLAG_VMKERNEL_PRIORITY) {
 			errno = 0;
 			proc->nice = getpriority(PRIO_PROCESS, pid);
-			if(proc->nice == -1 && errno) proc->nice = LONG_MAX;
+			if(proc->nice == -1 && errno) proc->nice = INT_MAX;
 		}
 		if(!is_existing || ProcessList_shouldUpdateProcessNames(super)) {
 			free(proc->name);

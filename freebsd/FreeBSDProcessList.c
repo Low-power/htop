@@ -624,7 +624,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
       proc->priority = kproc->ki_pri.pri_level - PZERO;
       switch(PRI_BASE(kproc->ki_pri.pri_class)) {
          case PRI_ITHD:
-            proc->nice = LONG_MIN;
+            proc->nice = INT_MIN;
             break;
          case PRI_REALTIME:
             proc->nice = PRIO_MIN - 1 - (PRI_MAX_REALTIME - kproc->ki_pri.pri_level);
@@ -636,7 +636,7 @@ void ProcessList_goThroughEntries(ProcessList* this, bool skip_processes) {
             proc->nice = PRIO_MAX + 1 + kproc->ki_pri.pri_level - PRI_MIN_IDLE;
             break;
          default:
-            proc->nice = LONG_MAX;
+            proc->nice = INT_MAX;
             break;
       }
 
