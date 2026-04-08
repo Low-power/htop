@@ -539,6 +539,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			break;
 		failure:
 			proc->super.state = '?';
+			proc->super.processor = -1;
 			break;
 		default:
 			abort();
