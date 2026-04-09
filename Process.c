@@ -653,6 +653,7 @@ void Process_init(Process* this, struct Settings_* settings) {
    this->argv0_length = -1;
    this->processor = -1;
    this->nice = INT_MAX;
+   this->starttime_ctime = -1;
    if (Process_getuid == -1) Process_getuid = getuid();
 }
 

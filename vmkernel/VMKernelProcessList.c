@@ -25,6 +25,7 @@ typedef struct {
 	uint32_t vsi_sched_vcpus_id;
 	uint32_t vsi_sched_vcpus_stats_id;
 	uint32_t vsi_sched_vcpus_stats_summarystats_id;
+	uint32_t vsi_sched_vcpus_stats_statetimes_id;
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
@@ -43,6 +44,7 @@ typedef struct {
 	uint64_t vsi_sched_vcpus_cksum;
 	uint64_t vsi_sched_vcpus_stats_cksum;
 	uint64_t vsi_sched_vcpus_stats_summarystats_cksum;
+	uint64_t vsi_sched_vcpus_stats_statetimes_cksum;
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
@@ -50,6 +52,7 @@ typedef struct {
 	uint64_t vsi_memory_comprehensive_cksum;
 
 	size_t world_info_size;
+	struct timeval last_updated;
 } VMKernelProcessList;
 }*/
 
@@ -279,6 +282,61 @@ struct vcpu_stats_6_5 {
 	uint64_t _reserved[24];
 } __attribute__((__packed__));
 
+struct vcpu_state_times_5_0 {
+	uint64_t up_time;
+	uint64_t used_time;
+	uint64_t system_time;
+	uint64_t system_overlap_time;
+	uint64_t run_time;
+	uint64_t wait_time;
+	uint64_t co_stop_time;
+	uint64_t idle_time;
+	uint64_t ready_time;
+	uint64_t max_limited_time;
+	uint64_t paused_time;
+	uint64_t vmkernel_call_time;
+	uint64_t guest_progress_time;
+	uint64_t sticky_time;
+	uint64_t active_sticky_time;
+};
+
+struct vcpu_state_times_6_0 {
+	uint64_t up_time;
+	uint64_t used_time;
+	uint64_t system_time;
+	uint64_t system_overlap_time;
+	uint64_t system_distributed_time;
+	uint64_t run_time;
+	uint64_t wait_time;
+	uint64_t co_stop_time;
+	uint64_t idle_time;
+	uint64_t ready_time;
+	uint64_t max_limited_time;
+	uint64_t paused_time;
+	uint64_t vmkernel_call_time;
+	uint64_t guest_progress_time;
+	uint64_t sticky_time;
+	uint64_t active_sticky_time;
+};
+
+struct vcpu_state_times_6_5 {
+	uint64_t up_time;
+	uint64_t used_time;
+	uint64_t system_time;
+	uint64_t system_overlap_time;
+	uint64_t system_distributed_time;
+	uint64_t run_time;
+	uint64_t wait_time;
+	uint64_t co_stop_time;
+	uint64_t idle_time;
+	uint64_t ready_time;
+	uint64_t max_limited_time;
+	uint64_t vmkernel_call_time;
+	uint64_t guest_progress_time;
+	uint64_t sticky_time;
+	uint64_t active_sticky_time;
+};
+
 static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
 static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
 
@@ -323,6 +381,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "summaryStats",
       &this->vsi_sched_vcpus_stats_summarystats_id, &this->vsi_sched_vcpus_stats_summarystats_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.summaryStats", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "stateTimes",
+      &this->vsi_sched_vcpus_stats_statetimes_id, &this->vsi_sched_vcpus_stats_statetimes_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.stateTimes", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
       &this->vsi_userworld_id, &this->vsi_userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -503,13 +564,13 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 204);
-			if(e) goto failure;
+			if(e) goto stats_failure;
 			goto read_5_5_stats;
 		case VMKERNEL_VERSION_6_0:
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 220);
-			if(e) goto failure;
+			if(e) goto stats_failure;
 		read_5_5_stats:
 			proc->super.state = stats_5_5.run_state < sizeof vcpu_run_state_map_5_0 ?
 				vcpu_run_state_map_5_0[stats_5_5.run_state] : '?';
@@ -522,13 +583,13 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 248);
-			if(e) goto failure;
+			if(e) goto stats_failure;
 			goto read_6_5_stats;
 		case VMKERNEL_VERSION_6_7:
 			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
 				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 256);
-			if(e) goto failure;
+			if(e) goto stats_failure;
 		read_6_5_stats:
 			proc->super.state = stats_6_5.run_state < sizeof vcpu_run_state_map_6_5 ?
 				vcpu_run_state_map_6_5[stats_6_5.run_state] : '?';
@@ -537,7 +598,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			}
 			proc->super.processor = stats_6_5.pcpu;
 			break;
-		failure:
+		stats_failure:
 			proc->super.state = '?';
 			proc->super.processor = -1;
 			break;
@@ -860,6 +921,50 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			}
 			break;
 	}
+	list = allocate_vsi_list(1, 0);
+	Platform_vsiListAddInt(list, proc->super.pid);
+	switch(Platform_running_vmkernel_version) {
+			struct vcpu_state_times_5_0 state_times_5_0;
+			struct vcpu_state_times_6_0 state_times_6_0;
+			struct vcpu_state_times_6_5 state_times_6_5;
+			int e;
+		case VMKERNEL_VERSION_5_5:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
+				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+				&state_times_5_0, sizeof state_times_5_0);
+			if(e) break;
+			if(proc->super.starttime_ctime == (time_t)-1) {
+				proc->super.starttime_ctime = this->last_updated.tv_sec - state_times_5_0.up_time / 1000000;
+			}
+			proc->time_usec = state_times_5_0.run_time;
+			break;
+		case VMKERNEL_VERSION_6_0:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
+				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+				&state_times_6_0, sizeof state_times_6_0);
+			if(e) break;
+			if(proc->super.starttime_ctime == (time_t)-1) {
+				proc->super.starttime_ctime = this->last_updated.tv_sec - state_times_6_0.up_time / 1000000;
+			}
+			proc->time_usec = state_times_6_0.run_time;
+			break;
+		case VMKERNEL_VERSION_6_5:
+		case VMKERNEL_VERSION_6_7:
+			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
+				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+				&state_times_6_5, sizeof state_times_6_5);
+			if(e) break;
+			if(proc->super.starttime_ctime == (time_t)-1) {
+				proc->super.starttime_ctime = this->last_updated.tv_sec - state_times_6_5.up_time / 1000000;
+			}
+			proc->time_usec = state_times_6_5.run_time;
+			break;
+		default:
+			abort();
+	}
+	free(list);
+	// Just use last value if VSI_Get failed
+	proc->super.time = proc->time_usec / 10000;
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
 		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
@@ -873,6 +978,10 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 
 void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	VMKernelProcessList *this = (VMKernelProcessList *)super;
+
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	this->last_updated = now;
 
 	get_global_memory_stats(this);
 

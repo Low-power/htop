@@ -30,6 +30,7 @@ typedef struct {
 	uint32_t userspace_id;
 	uint32_t cartel_group_id;
 	uint32_t vcpu_count;
+	uint64_t time_usec;
 	bool is_kernel_process;
 } VMKernelProcess;
 }*/
