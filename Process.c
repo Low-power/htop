@@ -475,7 +475,7 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
                xSnprintf(buffer, n, "  - ");
                break;
             default:
-               n = snprintf(buffer, n, "%3ld", this->nice);
+               n = snprintf(buffer, n, "%3d", this->nice);
                assert(n >= 3);
                if(n == 3) {
                   buffer[3] = ' ';
@@ -487,7 +487,7 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          }
          break;
       case HTOP_NLWP_FIELD:
-         xSnprintf(buffer, n, "%4ld ", this->nlwp);
+         xSnprintf(buffer, n, "%4d ", this->nlwp);
          break;
       case HTOP_PGRP_FIELD:
          xSnprintf(buffer, n, Process_pidFormat, this->pgrp);
@@ -501,7 +501,7 @@ void Process_writeField(const Process *this, RichString* str, ProcessField field
          break;
       case HTOP_PRIORITY_FIELD:
          if(this->priority <= -100) xSnprintf(buffer, n, " RT ");
-         else xSnprintf(buffer, n, "%3ld ", this->priority);
+         else xSnprintf(buffer, n, "%3d ", this->priority);
          break;
       case HTOP_PROCESSOR_FIELD:
          if(this->processor < 0) strcpy(buffer, "  - ");
