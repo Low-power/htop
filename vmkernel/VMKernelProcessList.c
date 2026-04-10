@@ -553,7 +553,7 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 	free(list);
 }
 
-static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
+static void get_vcpu_stats(const VMKernelProcessList *this, uint64_t interval, VMKernelProcess *proc) {
 	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->super.pid);
 	switch(Platform_running_vmkernel_version) {
@@ -921,6 +921,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			}
 			break;
 	}
+	uint64_t diff = proc->time_usec;
 	list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->super.pid);
 	switch(Platform_running_vmkernel_version) {
@@ -964,7 +965,9 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 	}
 	free(list);
 	// Just use last value if VSI_Get failed
+	diff = proc->time_usec < diff ? 0 : proc->time_usec - diff;
 	proc->super.time = proc->time_usec / 10000;
+	if(interval) proc->super.percent_cpu = (double)diff / (double)interval * 100;
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
 		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
@@ -981,6 +984,9 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 
 	struct timeval now;
 	gettimeofday(&now, NULL);
+	uint64_t interval_usec = now.tv_sec < this->last_updated.tv_sec ?
+		0 : (uint64_t)(now.tv_sec - this->last_updated.tv_sec) * 1000000 +
+			(now.tv_usec - this->last_updated.tv_usec);
 	this->last_updated = now;
 
 	get_global_memory_stats(this);
@@ -1019,7 +1025,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			ProcessList_add(super, proc);
 		}
 		get_memory_stats(this, proc);
-		get_vcpu_stats(this, (VMKernelProcess *)proc);
+		get_vcpu_stats(this, interval_usec, (VMKernelProcess *)proc);
 		if(super->settings->flags & PROCESS_FLAG_VMKERNEL_PRIORITY) {
 			errno = 0;
 			proc->nice = getpriority(PRIO_PROCESS, pid);
