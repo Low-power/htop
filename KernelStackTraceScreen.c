@@ -1,7 +1,7 @@
 /*
 htop - KernelStackTraceScreen.c
 (C) 2004-2012 Hisham H. Muhammad
-Copyright 2015-2022 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -53,7 +53,8 @@ void KernelStackTraceScreen_scan(InfoScreen* this) {
    if(frames) {
       char **p = frames;
       while(*p) {
-         InfoScreen_addLine(this, *p, **p == '#' ? HTOP_DEFAULT_COLOR : HTOP_PROCESS_TAG_COLOR);
+         InfoScreen_addLine(this, *p,
+            **p == ' ' || **p == '#' ? HTOP_DEFAULT_COLOR : HTOP_PROCESS_TAG_COLOR);
          free(*p++);
       }
       free(frames);

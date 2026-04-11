@@ -85,6 +85,22 @@ static inline uint64_t Platform_vsiListGetValue(const struct vsi_list *list, int
 	}
 }
 
+static inline void Platform_vsiListSetValue(struct vsi_list *list, int i, uint64_t value) {
+	extern int Platform_running_vmkernel_version;
+	switch(Platform_running_vmkernel_version) {
+		case VMKERNEL_VERSION_5_5:
+		case VMKERNEL_VERSION_6_0:
+		case VMKERNEL_VERSION_6_5:
+			list->param.v5[i].value = value;
+			break;
+		case VMKERNEL_VERSION_6_7:
+			list->param.v6_7[i].value = value;
+			break;
+		default:
+			abort();
+	}
+}
+
 }*/
 
 #include "Platform.h"

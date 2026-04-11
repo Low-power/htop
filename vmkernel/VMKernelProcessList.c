@@ -15,6 +15,7 @@ typedef struct {
 	uint32_t vsi_world_id;
 	uint32_t vsi_world_info_id;
 	uint32_t vsi_world_name_id;
+	uint32_t vsi_world_backtrace_id;
 	uint32_t vsi_sched_id;
 	uint32_t vsi_sched_memclients_id;
 	uint32_t vsi_sched_memclients_memstats_id;
@@ -31,9 +32,13 @@ typedef struct {
 	uint32_t vsi_userworld_cartel_cmdline_id;
 	uint32_t vsi_memory_id;
 	uint32_t vsi_memory_comprehensive_id;
+	uint32_t vsi_system_id;
+	uint32_t vsi_system_modloader_id;
+	uint32_t vsi_system_modloader_symaddrtoname_id;
 	uint64_t vsi_world_cksum;
 	uint64_t vsi_world_info_cksum;
 	uint64_t vsi_world_name_cksum;
+	uint64_t vsi_world_backtrace_cksum;
 	uint64_t vsi_sched_cksum;
 	uint64_t vsi_sched_memclients_cksum;
 	uint64_t vsi_sched_memclients_memstats_cksum;
@@ -50,6 +55,9 @@ typedef struct {
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
 	uint64_t vsi_memory_cksum;
 	uint64_t vsi_memory_comprehensive_cksum;
+	uint64_t vsi_system_cksum;
+	uint64_t vsi_system_modloader_cksum;
+	uint64_t vsi_system_modloader_symaddrtoname_cksum;
 
 	size_t world_info_size;
 	struct timeval last_updated;
@@ -352,6 +360,9 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_world_id, "name",
       &this->vsi_world_name_id, &this->vsi_world_name_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo world.name", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_world_id, "backtrace",
+      &this->vsi_world_backtrace_id, &this->vsi_world_backtrace_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo world.backtrace", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "sched", &this->vsi_sched_id, &this->vsi_sched_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched", e);
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "memClients",
@@ -398,6 +409,14 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_memory_id, "comprehensive",
       &this->vsi_memory_comprehensive_id, &this->vsi_memory_comprehensive_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo memory.comprehensive", e);
+   e = Platform_vsiGetNodeIdAndChecksum(0, "system", &this->vsi_system_id, &this->vsi_system_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_id, "modloader",
+      &this->vsi_system_modloader_id, &this->vsi_system_modloader_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_modloader_id, "symAddrToName",
+      &this->vsi_system_modloader_symaddrtoname_id, &this->vsi_system_modloader_symaddrtoname_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader.symAddrToName", e);
 
    Platform_checkVMkernelVersion();
    switch(Platform_running_vmkernel_version) {
@@ -1021,6 +1040,13 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			continue;
 		}
 		if(!is_existing) {
+			VMKernelProcess *vmk_proc = (VMKernelProcess *)proc;
+			vmk_proc->vsi_world_backtrace_id = this->vsi_world_backtrace_id;
+			vmk_proc->vsi_world_backtrace_cksum = this->vsi_world_backtrace_cksum;
+			vmk_proc->vsi_system_modloader_symaddrtoname_id =
+				this->vsi_system_modloader_symaddrtoname_id;
+			vmk_proc->vsi_system_modloader_symaddrtoname_cksum =
+				this->vsi_system_modloader_symaddrtoname_cksum;
 			proc->state = '?';
 			ProcessList_add(super, proc);
 		}

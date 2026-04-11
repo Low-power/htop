@@ -7,7 +7,8 @@ in the source distribution for its full text.
 */
 
 /*{
-#include "Settings.h"
+#include <Process.h>
+#include <Settings.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -26,6 +27,10 @@ typedef enum {
 
 typedef struct {
 	Process super;
+	uint32_t vsi_world_backtrace_id;
+	uint32_t vsi_system_modloader_symaddrtoname_id;
+	uint64_t vsi_world_backtrace_cksum;
+	uint64_t vsi_system_modloader_symaddrtoname_cksum;
 	uint32_t group_id;
 	uint32_t userspace_id;
 	uint32_t cartel_group_id;
@@ -35,9 +40,10 @@ typedef struct {
 } VMKernelProcess;
 }*/
 
-#include "Process.h"
-#include "VMKernelProcess.h"
-#include "CRT.h"
+#include <Process.h>
+#include <VMKernelProcess.h>
+#include <CRT.h>
+#include <Platform.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -178,6 +184,56 @@ bool Process_isExtraThreadProcess(const Process *this) {
 	return this->pid != this->tgid;
 }
 
-char **Process_getKernelStackTrace(const Process *this) {
-	return NULL;
+char **Process_getKernelStackTrace(const Process *super) {
+	const VMKernelProcess *this = (const VMKernelProcess *)super;
+	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
+	struct vsi_list *list = xMalloc(list_size);
+	memset(list, 0, list_size);
+	list->type_or_version = 1;
+	list->allocated_count = 1;
+	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
+	list->self_ptr = (uintptr_t)list;
+	Platform_vsiListAddInt(list, super->pid);
+	struct world_backtrace_frame { uint64_t pc, bp; } frames[25];
+	int e = Platform_vsiGet(this->vsi_world_backtrace_id, this->vsi_world_backtrace_cksum,
+		list, frames, sizeof frames);
+	if(e) {
+		free(list);
+		char **v = xMalloc(2 * sizeof(char *));
+		v[0] = xMalloc(17);
+		xSnprintf(v[0], 17, "Error 0x%08x", e);
+		v[1] = NULL;
+		return v;
+	}
+	size_t nframes = 0;
+	while(nframes < sizeof frames / sizeof *frames && frames[nframes].bp) nframes++;
+	char **v = xMalloc((nframes + 1) * sizeof(char *));
+	size_t i = 0;
+	while(i < nframes) {
+		const struct world_backtrace_frame *f = frames + i;
+		const char *pad = i <= 9 && nframes > 10 ? " " : "";
+		// Reusing same 'list' to avoid repeated malloc(3) and free(3)
+		Platform_vsiListSetValue(list, 0, f->pc);
+		struct symbol { char name[128]; uint64_t addr; } symbol;
+		e = Platform_vsiGet(this->vsi_system_modloader_symaddrtoname_id,
+			this->vsi_system_modloader_symaddrtoname_cksum,
+			list, &symbol, sizeof symbol);
+		if(e) {
+			v[i] = xMalloc(29);
+			xSnprintf(v[i], 29, "%s#%zu 0x%016llx at ??", pad, i, (unsigned long long int)f->pc);
+		} else {
+			size_t name_len = strnlen(symbol.name, 128);
+			char *end_p = memchr(symbol.name, 0, 128);
+			if(!end_p) *(end_p = symbol.name + 127) = 0;
+			size_t len = 22 + (name_len ? 4 + (end_p - symbol.name) + 20 : 1);
+			v[i] = xMalloc(len);
+			xSnprintf(v[i], len, "%s#%zu 0x%016llx at %s+0x%x", pad, i,
+				(unsigned long long int)f->pc, symbol.name,
+				(unsigned int)(f->pc - symbol.addr));
+		}
+		i++;
+	}
+	free(list);
+	v[i] = NULL;
+	return v;
 }
