@@ -10,6 +10,13 @@ in the source distribution for its full text.
 #include "ProcessList.h"
 
 typedef struct {
+	uint64_t total_used_time;
+	uint64_t kernel_used_time;
+	uint32_t total_used_period;
+	uint32_t kernel_used_period;
+} VMKernelCPUStatistics;
+
+typedef struct {
 	ProcessList super;
 
 	uint32_t vsi_world_id;
@@ -27,6 +34,8 @@ typedef struct {
 	uint32_t vsi_sched_vcpus_stats_id;
 	uint32_t vsi_sched_vcpus_stats_summarystats_id;
 	uint32_t vsi_sched_vcpus_stats_statetimes_id;
+	uint32_t vsi_sched_pcpus_id;
+	uint32_t vsi_sched_pcpus_stats_id;
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
@@ -35,6 +44,9 @@ typedef struct {
 	uint32_t vsi_system_id;
 	uint32_t vsi_system_modloader_id;
 	uint32_t vsi_system_modloader_symaddrtoname_id;
+	uint32_t vsi_hardware_id;
+	uint32_t vsi_hardware_cpu_id;
+	uint32_t vsi_hardware_cpu_cpuinfo_id;
 	uint64_t vsi_world_cksum;
 	uint64_t vsi_world_info_cksum;
 	uint64_t vsi_world_name_cksum;
@@ -50,6 +62,8 @@ typedef struct {
 	uint64_t vsi_sched_vcpus_stats_cksum;
 	uint64_t vsi_sched_vcpus_stats_summarystats_cksum;
 	uint64_t vsi_sched_vcpus_stats_statetimes_cksum;
+	uint64_t vsi_sched_pcpus_cksum;
+	uint64_t vsi_sched_pcpus_stats_cksum;
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
@@ -58,9 +72,16 @@ typedef struct {
 	uint64_t vsi_system_cksum;
 	uint64_t vsi_system_modloader_cksum;
 	uint64_t vsi_system_modloader_symaddrtoname_cksum;
+	uint64_t vsi_hardware_cksum;
+	uint64_t vsi_hardware_cpu_cksum;
+	uint64_t vsi_hardware_cpu_cpuinfo_cksum;
 
 	size_t world_info_size;
+	size_t pcpu_info_size;
 	struct timeval last_updated;
+	uint64_t interval_usec;
+
+	VMKernelCPUStatistics *cpu_stats;
 } VMKernelProcessList;
 }*/
 
@@ -345,8 +366,63 @@ struct vcpu_state_times_6_5 {
 	uint64_t active_sticky_time;
 };
 
+struct pcpu_info {
+	uint64_t used_time;
+	uint64_t idle_time;
+	uint64_t wdt_time;
+	uint64_t busy_wait_time;
+	uint64_t halt_time;
+	uint64_t core_halt_time;
+	uint64_t elapsed_time;
+	uint64_t system_time;
+	uint8_t is_halted;
+	uint32_t exclusive_affinity;
+	uint32_t numa_node;
+	uint32_t dispatch_count;
+	uint32_t use_whole_core;
+	uint32_t preempts;
+	uint32_t timer_intrs;
+	uint32_t inter_processor_interrupts;
+	uint32_t handoff;
+	uint32_t handoff_failed;
+	uint32_t handoff_switch_failed;
+	uint32_t remote_req_add_failed;
+	uint32_t idle_halt_end;
+	uint32_t idle_halt_end_interrupts;
+	uint32_t retry_dispatch;
+	uint8_t _reserved[51];
+} __attribute__((__packed__));
+
+struct cpu_global_information {
+	uint32_t hyperthreading_state;
+	uint32_t hv_state;
+	uint32_t npackages;
+	uint32_t ncores;
+	uint32_t ncpus;
+	uint32_t number_of_licensable_cores;
+	uint8_t slc64_capable;
+	uint8_t hv_reply_capable;
+	uint32_t replay_disabled_first_reason;
+	uint32_t replay_disabled_several_reason;
+	uint8_t nvoa;
+	uint8_t _reserved;
+} __attribute__((__packed__));
+
 static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
 static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
+
+static struct vsi_list *allocate_vsi_list(uint32_t count, uint32_t string_size) {
+	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count + string_size;
+	struct vsi_list *list = xMalloc(list_size);
+	memset(list, 0, list_size);
+	list->type_or_version = 1;
+	list->allocated_count = count;
+	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
+	list->string_size = string_size;
+	if(string_size) list->string_offset = list->param_size;
+	list->self_ptr = (uintptr_t)list;
+	return list;
+}
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
@@ -395,6 +471,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "stateTimes",
       &this->vsi_sched_vcpus_stats_statetimes_id, &this->vsi_sched_vcpus_stats_statetimes_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.stateTimes", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "pcpus",
+      &this->vsi_sched_pcpus_id, &this->vsi_sched_pcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_pcpus_id, "stats",
+      &this->vsi_sched_pcpus_stats_id, &this->vsi_sched_pcpus_stats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus.stats", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
       &this->vsi_userworld_id, &this->vsi_userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -417,6 +499,14 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_modloader_id, "symAddrToName",
       &this->vsi_system_modloader_symaddrtoname_id, &this->vsi_system_modloader_symaddrtoname_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader.symAddrToName", e);
+   e = Platform_vsiGetNodeIdAndChecksum(0, "hardware", &this->vsi_hardware_id, &this->vsi_hardware_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo hardware", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_hardware_id, "cpu",
+      &this->vsi_hardware_cpu_id, &this->vsi_hardware_cpu_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo hardware.cpu", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_hardware_cpu_id, "cpuInfo",
+      &this->vsi_hardware_cpu_cpuinfo_id, &this->vsi_hardware_cpu_cpuinfo_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo hardware.cpu.cpuInfo", e);
 
    Platform_checkVMkernelVersion();
    switch(Platform_running_vmkernel_version) {
@@ -429,6 +519,26 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
          this->world_info_size = 72;
          break;
    }
+   switch(Platform_running_vmkernel_version) {
+      case VMKERNEL_VERSION_5_5:
+      case VMKERNEL_VERSION_6_5:
+      case VMKERNEL_VERSION_6_7:
+         this->pcpu_info_size = 172;
+         break;
+      case VMKERNEL_VERSION_6_0:
+         this->pcpu_info_size = 156;
+         break;
+   }
+
+   struct vsi_list list = {
+      .type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
+   };
+   struct cpu_global_information cpuinfo;
+   e = Platform_vsiGet(this->vsi_hardware_cpu_cpuinfo_id, this->vsi_hardware_cpu_cpuinfo_cksum,
+      &list, &cpuinfo, sizeof cpuinfo);
+   if(e) CRT_fatalError("VSI_Get hardware.cpu.cpuInfo", e);
+   this->super.cpuCount = cpuinfo.ncpus;
+   this->cpu_stats = xCalloc(cpuinfo.ncpus, sizeof(VMKernelCPUStatistics));
 
    return &this->super;
 }
@@ -436,19 +546,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
 void ProcessList_delete(ProcessList* this) {
    ProcessList_done(this);
    free(this);
-}
-
-static struct vsi_list *allocate_vsi_list(uint32_t count, uint32_t string_size) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count + string_size;
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = count;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
-	list->string_size = string_size;
-	if(string_size) list->string_offset = list->param_size;
-	list->self_ptr = (uintptr_t)list;
-	return list;
 }
 
 static void get_global_memory_stats(VMKernelProcessList *this) {
@@ -485,6 +582,35 @@ static void get_global_memory_stats(VMKernelProcessList *this) {
 		default:
 			abort();
 	}
+}
+
+static void get_global_cpu_stats(VMKernelProcessList *this) {
+	struct vsi_list *list = allocate_vsi_list(1, 0);
+	Platform_vsiListAddInt(list, 0);
+	for(int i = 0; i < this->super.cpuCount; i++) {
+		VMKernelCPUStatistics *htop_cpu_stats = this->cpu_stats + i;
+		Platform_vsiListSetValue(list, 0, i);
+		struct pcpu_info info;
+		assert(this->pcpu_info_size <= sizeof info);
+		int e = Platform_vsiGet(this->vsi_sched_pcpus_stats_id, this->vsi_sched_pcpus_stats_cksum, list, &info, this->pcpu_info_size);
+		if(e) {
+			htop_cpu_stats->total_used_period = 0;
+			htop_cpu_stats->kernel_used_period = 0;
+		} else {
+#define DIFF(A,B) ((A)>(B)?((A)-(B)):0)
+			htop_cpu_stats->total_used_period =
+				DIFF(info.used_time, htop_cpu_stats->total_used_time);
+			htop_cpu_stats->kernel_used_period =
+				DIFF(info.system_time, htop_cpu_stats->kernel_used_time);
+			if(htop_cpu_stats->total_used_period < htop_cpu_stats->kernel_used_period) {
+				htop_cpu_stats->total_used_period = htop_cpu_stats->kernel_used_period;
+			}
+#undef DIFF
+			htop_cpu_stats->total_used_time = info.used_time;
+			htop_cpu_stats->kernel_used_time = info.system_time;
+		}
+	}
+	free(list);
 }
 
 static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
@@ -572,7 +698,7 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 	free(list);
 }
 
-static void get_vcpu_stats(const VMKernelProcessList *this, uint64_t interval, VMKernelProcess *proc) {
+static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
 	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->super.pid);
 	switch(Platform_running_vmkernel_version) {
@@ -986,7 +1112,9 @@ static void get_vcpu_stats(const VMKernelProcessList *this, uint64_t interval, V
 	// Just use last value if VSI_Get failed
 	diff = proc->time_usec < diff ? 0 : proc->time_usec - diff;
 	proc->super.time = proc->time_usec / 10000;
-	if(interval) proc->super.percent_cpu = (double)diff / (double)interval * 100;
+	if(this->interval_usec) {
+		proc->super.percent_cpu = (double)diff / (double)this->interval_usec * 100;
+	}
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
 		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
@@ -1003,12 +1131,13 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 
 	struct timeval now;
 	gettimeofday(&now, NULL);
-	uint64_t interval_usec = now.tv_sec < this->last_updated.tv_sec ?
+	this->interval_usec = now.tv_sec < this->last_updated.tv_sec ?
 		0 : (uint64_t)(now.tv_sec - this->last_updated.tv_sec) * 1000000 +
 			(now.tv_usec - this->last_updated.tv_usec);
 	this->last_updated = now;
 
 	get_global_memory_stats(this);
+	get_global_cpu_stats(this);
 
 	struct vsi_list *worlds_list = xMalloc(sizeof(struct vsi_list));
 	memset(worlds_list, 0, sizeof(struct vsi_list));
@@ -1051,7 +1180,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			ProcessList_add(super, proc);
 		}
 		get_memory_stats(this, proc);
-		get_vcpu_stats(this, interval_usec, (VMKernelProcess *)proc);
+		get_vcpu_stats(this, (VMKernelProcess *)proc);
 		if(super->settings->flags & PROCESS_FLAG_VMKERNEL_PRIORITY) {
 			errno = 0;
 			proc->nice = getpriority(PRIO_PROCESS, pid);

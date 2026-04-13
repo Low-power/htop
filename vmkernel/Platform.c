@@ -27,7 +27,6 @@ in the source distribution for its full text.
 #define SYS_VSI_GetList 1197
 #define SYS_VSI_GetNodeInfo 1202
 #define SYS_GetMemSize 1215
-#define SYS_GetNumCPUsUsed 1221
 #define SYS_GetUptimeUS 1216
 
 struct vsi_node_info {
@@ -103,18 +102,19 @@ static inline void Platform_vsiListSetValue(struct vsi_list *list, int i, uint64
 
 }*/
 
-#include "Platform.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "UsersMeter.h"
-#include "CRT.h"
 #include "vmk_error_codes.h"
+#include <Platform.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UptimeMeter.h>
+#include <UsersMeter.h>
+#include <CRT.h>
+#include <VMKernelProcessList.h>
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <signal.h>
@@ -252,8 +252,35 @@ int Platform_getMaxPid() {
 }
 
 double Platform_updateCPUValues(Meter *meter, int cpu) {
-   // TODO
-   return 0;
+	double total_percent;
+	const VMKernelProcessList *pl = (const VMKernelProcessList *)meter->pl;
+	if(!pl->interval_usec) {
+		total_percent = 0;
+		meter->values[CPU_METER_NORMAL] = 0;
+		meter->values[CPU_METER_KERNEL] = 0;
+	} else if(cpu || pl->super.cpuCount == 1) {
+		const VMKernelCPUStatistics *stats = pl->cpu_stats + (cpu ? cpu - 1 : 0);
+		total_percent = stats->total_used_period / (double)pl->interval_usec * 100;
+		meter->values[CPU_METER_NORMAL] =
+			(stats->total_used_period - stats->kernel_used_period) / (double)pl->interval_usec * 100;
+		meter->values[CPU_METER_KERNEL] = stats->kernel_used_period / (double)pl->interval_usec * 100;
+	} else {
+		double total_time = 0;
+		double total_user_time = 0;
+		double total_kernel_time = 0;
+		for(int i = 0; i < pl->super.cpuCount; i++) {
+			const VMKernelCPUStatistics *stats = pl->cpu_stats + i;
+			total_time += stats->total_used_period;
+			total_user_time += stats->total_used_period - stats->kernel_used_period;
+			total_kernel_time += stats->kernel_used_period;
+		}
+		total_percent = total_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
+		meter->values[CPU_METER_NORMAL] =
+			total_user_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
+		meter->values[CPU_METER_KERNEL] =
+			total_kernel_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
+	}
+	return total_percent;
 }
 
 void Platform_updateMemoryValues(Meter *meter) {
