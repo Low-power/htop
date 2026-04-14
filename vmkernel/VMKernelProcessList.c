@@ -11,9 +11,11 @@ in the source distribution for its full text.
 
 typedef struct {
 	uint64_t total_used_time;
-	uint64_t kernel_used_time;
+	uint64_t wdt_time;
+	uint64_t kernel_nw_time;
 	uint32_t total_used_period;
-	uint32_t kernel_used_period;
+	uint32_t wdt_period;
+	uint32_t kernel_nw_period;
 } VMKernelCPUStatistics;
 
 typedef struct {
@@ -595,19 +597,23 @@ static void get_global_cpu_stats(VMKernelProcessList *this) {
 		int e = Platform_vsiGet(this->vsi_sched_pcpus_stats_id, this->vsi_sched_pcpus_stats_cksum, list, &info, this->pcpu_info_size);
 		if(e) {
 			htop_cpu_stats->total_used_period = 0;
-			htop_cpu_stats->kernel_used_period = 0;
+			htop_cpu_stats->wdt_period = 0;
+			htop_cpu_stats->kernel_nw_period = 0;
 		} else {
 #define DIFF(A,B) ((A)>(B)?((A)-(B)):0)
 			htop_cpu_stats->total_used_period =
 				DIFF(info.used_time, htop_cpu_stats->total_used_time);
-			htop_cpu_stats->kernel_used_period =
-				DIFF(info.wdt_time + info.system_time, htop_cpu_stats->kernel_used_time);
-			if(htop_cpu_stats->total_used_period < htop_cpu_stats->kernel_used_period) {
-				htop_cpu_stats->total_used_period = htop_cpu_stats->kernel_used_period;
+			htop_cpu_stats->wdt_period = DIFF(info.wdt_time, htop_cpu_stats->wdt_time);
+			htop_cpu_stats->kernel_nw_period =
+				DIFF(info.system_time, htop_cpu_stats->kernel_nw_time);
+			if(htop_cpu_stats->total_used_period < htop_cpu_stats->wdt_period + htop_cpu_stats->kernel_nw_period) {
+				htop_cpu_stats->total_used_period =
+					htop_cpu_stats->wdt_period + htop_cpu_stats->kernel_nw_period;
 			}
 #undef DIFF
 			htop_cpu_stats->total_used_time = info.used_time;
-			htop_cpu_stats->kernel_used_time = info.wdt_time + info.system_time;
+			htop_cpu_stats->wdt_time = info.wdt_time;
+			htop_cpu_stats->kernel_nw_time = info.system_time;
 		}
 	}
 	free(list);
