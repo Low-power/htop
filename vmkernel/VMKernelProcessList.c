@@ -601,13 +601,13 @@ static void get_global_cpu_stats(VMKernelProcessList *this) {
 			htop_cpu_stats->total_used_period =
 				DIFF(info.used_time, htop_cpu_stats->total_used_time);
 			htop_cpu_stats->kernel_used_period =
-				DIFF(info.system_time, htop_cpu_stats->kernel_used_time);
+				DIFF(info.wdt_time + info.system_time, htop_cpu_stats->kernel_used_time);
 			if(htop_cpu_stats->total_used_period < htop_cpu_stats->kernel_used_period) {
 				htop_cpu_stats->total_used_period = htop_cpu_stats->kernel_used_period;
 			}
 #undef DIFF
 			htop_cpu_stats->total_used_time = info.used_time;
-			htop_cpu_stats->kernel_used_time = info.system_time;
+			htop_cpu_stats->kernel_used_time = info.wdt_time + info.system_time;
 		}
 	}
 	free(list);
