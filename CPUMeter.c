@@ -126,7 +126,7 @@ static void CPUMeter_display(Object* cast, RichString* out) {
       xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_KERNEL]);
       RichString_append(out, CRT_colors[HTOP_CPU_KERNEL_COLOR], buffer);
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "sys");
-      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[2]);
+      xSnprintf(buffer, sizeof(buffer), " %5.1f%%", this->values[CPU_METER_NICE]);
       RichString_append(out, CRT_colors[HTOP_CPU_NICE_TEXT_COLOR], buffer);
       RichString_append(out, CRT_colors[HTOP_METER_TEXT_COLOR], "low");
       if (this->values[3] > 0) {
