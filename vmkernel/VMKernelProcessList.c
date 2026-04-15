@@ -38,6 +38,8 @@ typedef struct {
 	uint32_t vsi_sched_vcpus_stats_statetimes_id;
 	uint32_t vsi_sched_pcpus_id;
 	uint32_t vsi_sched_pcpus_stats_id;
+	uint32_t vsi_sched_globalstats_id;
+	uint32_t vsi_sched_globalstats_numpcpus_id;
 	uint32_t vsi_userworld_id;
 	uint32_t vsi_userworld_cartel_id;
 	uint32_t vsi_userworld_cartel_cmdline_id;
@@ -46,9 +48,6 @@ typedef struct {
 	uint32_t vsi_system_id;
 	uint32_t vsi_system_modloader_id;
 	uint32_t vsi_system_modloader_symaddrtoname_id;
-	uint32_t vsi_hardware_id;
-	uint32_t vsi_hardware_cpu_id;
-	uint32_t vsi_hardware_cpu_cpuinfo_id;
 	uint64_t vsi_world_cksum;
 	uint64_t vsi_world_info_cksum;
 	uint64_t vsi_world_name_cksum;
@@ -66,6 +65,8 @@ typedef struct {
 	uint64_t vsi_sched_vcpus_stats_statetimes_cksum;
 	uint64_t vsi_sched_pcpus_cksum;
 	uint64_t vsi_sched_pcpus_stats_cksum;
+	uint64_t vsi_sched_globalstats_cksum;
+	uint64_t vsi_sched_globalstats_numpcpus_cksum;
 	uint64_t vsi_userworld_cksum;
 	uint64_t vsi_userworld_cartel_cksum;
 	uint64_t vsi_userworld_cartel_cmdline_cksum;
@@ -74,9 +75,6 @@ typedef struct {
 	uint64_t vsi_system_cksum;
 	uint64_t vsi_system_modloader_cksum;
 	uint64_t vsi_system_modloader_symaddrtoname_cksum;
-	uint64_t vsi_hardware_cksum;
-	uint64_t vsi_hardware_cpu_cksum;
-	uint64_t vsi_hardware_cpu_cpuinfo_cksum;
 
 	size_t world_info_size;
 	size_t pcpu_info_size;
@@ -84,6 +82,7 @@ typedef struct {
 	uint64_t interval_usec;
 
 	VMKernelCPUStatistics *cpu_stats;
+	int ncores;
 } VMKernelProcessList;
 }*/
 
@@ -395,20 +394,11 @@ struct pcpu_info {
 	uint8_t _reserved[51];
 } __attribute__((__packed__));
 
-struct cpu_global_information {
-	uint32_t hyperthreading_state;
-	uint32_t hv_state;
-	uint32_t npackages;
-	uint32_t ncores;
+struct number_of_pcpus {
 	uint32_t ncpus;
-	uint32_t number_of_licensable_cores;
-	uint8_t slc64_capable;
-	uint8_t hv_reply_capable;
-	uint32_t replay_disabled_first_reason;
-	uint32_t replay_disabled_several_reason;
-	uint8_t nvoa;
-	uint8_t _reserved;
-} __attribute__((__packed__));
+	uint32_t ncores;
+	uint32_t npackages;
+};
 
 static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
 static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
@@ -479,6 +469,12 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_pcpus_id, "stats",
       &this->vsi_sched_pcpus_stats_id, &this->vsi_sched_pcpus_stats_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus.stats", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "globalStats",
+      &this->vsi_sched_globalstats_id, &this->vsi_sched_globalstats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats", e);
+   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_globalstats_id, "numPcpus",
+      &this->vsi_sched_globalstats_numpcpus_id, &this->vsi_sched_globalstats_numpcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats.numPcpus", e);
    e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
       &this->vsi_userworld_id, &this->vsi_userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -501,14 +497,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_modloader_id, "symAddrToName",
       &this->vsi_system_modloader_symaddrtoname_id, &this->vsi_system_modloader_symaddrtoname_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader.symAddrToName", e);
-   e = Platform_vsiGetNodeIdAndChecksum(0, "hardware", &this->vsi_hardware_id, &this->vsi_hardware_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo hardware", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_hardware_id, "cpu",
-      &this->vsi_hardware_cpu_id, &this->vsi_hardware_cpu_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo hardware.cpu", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_hardware_cpu_id, "cpuInfo",
-      &this->vsi_hardware_cpu_cpuinfo_id, &this->vsi_hardware_cpu_cpuinfo_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo hardware.cpu.cpuInfo", e);
 
    Platform_checkVMkernelVersion();
    switch(Platform_running_vmkernel_version) {
@@ -535,12 +523,13 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    struct vsi_list list = {
       .type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
    };
-   struct cpu_global_information cpuinfo;
-   e = Platform_vsiGet(this->vsi_hardware_cpu_cpuinfo_id, this->vsi_hardware_cpu_cpuinfo_cksum,
-      &list, &cpuinfo, sizeof cpuinfo);
-   if(e) CRT_fatalError("VSI_Get hardware.cpu.cpuInfo", e);
-   this->super.cpuCount = cpuinfo.ncpus;
-   this->cpu_stats = xCalloc(cpuinfo.ncpus, sizeof(VMKernelCPUStatistics));
+   struct number_of_pcpus npcpus;
+   e = Platform_vsiGet(this->vsi_sched_globalstats_numpcpus_id, this->vsi_sched_globalstats_numpcpus_cksum,
+      &list, &npcpus, sizeof npcpus);
+   if(e) CRT_fatalError("VSI_Get sched.globalStats.numPcpus", e);
+   this->super.cpuCount = npcpus.ncpus;
+   this->cpu_stats = xCalloc(npcpus.ncpus, sizeof(VMKernelCPUStatistics));
+   this->ncores = npcpus.ncores;
 
    return &this->super;
 }
