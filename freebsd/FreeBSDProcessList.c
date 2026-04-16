@@ -8,6 +8,7 @@ in the source distribution for its full text.
 
 /*{
 #include "config.h"
+#include <ProcessList.h>
 #ifdef HAVE_LIBKVM
 #include <kvm.h>
 #endif
@@ -57,10 +58,10 @@ typedef struct FreeBSDProcessList_ {
 
 }*/
 
-#include "ProcessList.h"
-#include "FreeBSDProcessList.h"
-#include "FreeBSDProcess.h"
-#include "CRT.h"
+#include <FreeBSDProcessList.h>
+#include <FreeBSDProcess.h>
+#include <Platform.h>
+#include <CRT.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -89,19 +90,6 @@ static long int lround(double v) {
 #define P_KPROC 0x00004
 #endif
 
-static int MIB_hw_physmem[2];
-static int MIB_vm_stats_vm_v_page_count[4];
-static int MIB_vm_stats_vm_v_wire_count[4];
-static int MIB_vm_stats_vm_v_active_count[4];
-static int *MIB_vm_stats_vm_v_cache_count;
-static int MIB_vm_stats_vm_v_inactive_count[4];
-static int *v_laundry_count_mib;
-static int MIB_vfs_bufspace[2];
-static int MIB_kern_cp_time[2];
-static int MIB_kern_cp_times[2];
-#ifndef HAVE_LIBKVM
-static int *swap_info_mib;
-#endif
 static int kernelFScale;
 
 #ifdef __GLIBC__
@@ -111,60 +99,17 @@ static int kernelFScale;
 #endif
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
-   size_t len;
    FreeBSDProcessList* fpl = xCalloc(1, sizeof(FreeBSDProcessList));
    ProcessList* pl = (ProcessList*) fpl;
    ProcessList_init(pl, Class(FreeBSDProcess), usersTable, pidWhiteList, userId);
 
-   // physical memory in system: hw.physmem
-   // physical page size: hw.pagesize
-   // usable pagesize : vm.stats.vm.v_page_size
-   len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
-
    unsigned int page_size;
-   len = sizeof page_size;
+   size_t len = sizeof page_size;
    if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
       // How can this happen?
       CRT_page_size = page_size;
       CRT_page_size_kibibyte = page_size / ONE_BINARY_K;
    }
-
-   int mib[4];
-
-   // usable page count vm.stats.vm.v_page_count
-   // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
-   len = 4; sysctlnametomib("vm.stats.vm.v_page_count", MIB_vm_stats_vm_v_page_count, &len);
-
-   len = 4; sysctlnametomib("vm.stats.vm.v_wire_count", MIB_vm_stats_vm_v_wire_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
-
-   len = 4;
-   if(sysctlnametomib("vm.stats.vm.v_cache_count", mib, &len) == 0) {
-      assert(len == 4);
-      MIB_vm_stats_vm_v_cache_count = xMalloc(sizeof mib);
-      memcpy(MIB_vm_stats_vm_v_cache_count, mib, sizeof mib);
-   }
-
-   len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   //len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
-
-   len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
-
-   len = 4;
-   if(sysctlnametomib("vm.stats.vm.v_laundry_count", mib, &len) == 0) {
-      assert(len == 4);
-      v_laundry_count_mib = xMalloc(sizeof mib);
-      memcpy(v_laundry_count_mib, mib, sizeof mib);
-   }
-
-#ifndef HAVE_LIBKVM
-   len = 2;
-   if(sysctlnametomib("vm.swap_info", mib, &len) == 0) {
-      assert(len == 2);
-      swap_info_mib = xMalloc(sizeof(int) * 3);
-      memcpy(swap_info_mib, mib, sizeof(int) * 2);
-   }
-#endif
 
    int smp = 0;
    len = sizeof(smp);
@@ -177,21 +122,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    if(!smp || sysctlbyname("kern.smp.cpus", &cpus, &len, NULL, 0) < 0) cpus = 1;
 
    size_t sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
    fpl->cp_time_o = xCalloc(cpus, sizeof_cp_time_array);
    fpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
    len = sizeof_cp_time_array;
 
    // fetch initial single (or average) CPU clicks from kernel
-   sysctl(MIB_kern_cp_time, 2, fpl->cp_time_o, &len, NULL, 0);
+   sysctl(platform.kern_cp_time_mib, 2, fpl->cp_time_o, &len, NULL, 0);
 
    // on smp box, fetch rest of initial CPU's clicks
    if (cpus > 1) {
-      len = 2; sysctlnametomib("kern.cp_times", MIB_kern_cp_times, &len);
       fpl->cp_times_o = xCalloc(cpus, sizeof_cp_time_array);
       fpl->cp_times_n = xCalloc(cpus, sizeof_cp_time_array);
       len = cpus * sizeof_cp_time_array;
-      sysctl(MIB_kern_cp_times, 2, fpl->cp_times_o, &len, NULL, 0);
+      sysctl(platform.kern_cp_times_mib, 2, fpl->cp_times_o, &len, NULL, 0);
    }
 
    pl->cpuCount = MAX(cpus, 1);
@@ -281,7 +224,9 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get averages or single CPU clicks
    sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   if(sysctl(MIB_kern_cp_time, 2, fpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) return;
+   if(sysctl(platform.kern_cp_time_mib, 2, fpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+      return;
+   }
 
    // get rest of CPUs
    if (cpus > 1) {
@@ -290,7 +235,7 @@ static inline void FreeBSDProcessList_scanCPUTime(ProcessList* pl) {
       // we store averages in fpl->cpus[0], and actual cores after that
       maxcpu = cpus + 1;
       sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
-      if(sysctl(MIB_kern_cp_times, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+      if(sysctl(platform.kern_cp_times_mib, 2, fpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
          return;
       }
    }
@@ -371,41 +316,41 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    //disabled for now, as it is always smaller than phycal amount of memory...
    //...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
+   //sysctl(platform.vm_stats_vm_v_page_count_mib, 4, &buffer, &len, NULL, 0);
    //pl->totalMem = buffer.v_uint * CRT_page_size_kibibyte;
    len = sizeof buffer.v_ulong;
-   if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.hw_physmem_mib, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_active_count_mib, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->memActive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_wire_count_mib, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->memWire = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0) > 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_inactive_count_mib, 4, &buffer, &len, NULL, 0) > 0) goto fail;
    fpl->memInactive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_long;
-   if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vfs_bufspace_mib, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    fpl->vfs_buffer_size = buffer.v_long / 1024;
 
-   if(MIB_vm_stats_vm_v_cache_count) {
+   if(platform.vm_stats_vm_v_cache_count_mib) {
       len = sizeof buffer.v_uint;
-      if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) {
+      if(sysctl(platform.vm_stats_vm_v_cache_count_mib, 4, &buffer, &len, NULL, 0) < 0) {
          pl->cachedMem = 0;
       } else {
          pl->cachedMem = buffer.v_uint * CRT_page_size_kibibyte;
       }
    }
 
-   if(v_laundry_count_mib) {
+   if(platform.vm_stats_vm_v_laundry_count_mib) {
       // Exists since kFreeBSD 11.1
       len = sizeof buffer.v_uint;
-      if(sysctl(v_laundry_count_mib, 4, &buffer, &len, NULL, 0) < 0) {
+      if(sysctl(platform.vm_stats_vm_v_laundry_count_mib, 4, &buffer, &len, NULL, 0) < 0) {
          fpl->laundry_size = 0;
       } else {
          fpl->laundry_size = buffer.v_uint * CRT_page_size_kibibyte;
@@ -428,13 +373,15 @@ static inline void FreeBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    pl->totalSwap *= CRT_page_size_kibibyte;
    pl->usedSwap *= CRT_page_size_kibibyte;
 #else
-   if(swap_info_mib) {
+   if(platform.vm_swap_info_mib) {
+      int mib[3];
       struct xswdev swd;
-      swap_info_mib[2] = 0;
-      while(len = sizeof swd, sysctl(swap_info_mib, 3, &swd, &len, NULL, 0) == 0) {
+      memcpy(mib, platform.vm_swap_info_mib, 2 * sizeof(int));
+      mib[2] = 0;
+      while(len = sizeof swd, sysctl(mib, 3, &swd, &len, NULL, 0) == 0) {
          pl->totalSwap += swd.xsw_nblks;
          pl->usedSwap += swd.xsw_used;
-         swap_info_mib[2]++;
+         mib[2]++;
       }
       pl->totalSwap *= CRT_page_size_kibibyte;
       pl->usedSwap *= CRT_page_size_kibibyte;

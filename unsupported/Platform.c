@@ -24,6 +24,9 @@ in the source distribution for its full text.
 #include "UnsupportedProcess.h"
 }*/
 
+void Platform_init() {
+}
+
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
 #define SIG(NAME) { .name = #NAME, .number = SIG##NAME }

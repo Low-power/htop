@@ -2,7 +2,7 @@
 htop - haiku/Platform.c
 (C) 2014 Hisham H. Muhammad
 (C) 2015 David C. Hunt
-Copyright 2015-2024 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -63,6 +63,9 @@ static inline void *get_libroot() {
 #include <limits.h>
 #include <string.h>
 #include <errno.h>
+
+void Platform_init() {
+}
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },

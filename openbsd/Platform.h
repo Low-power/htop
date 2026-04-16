@@ -26,6 +26,8 @@ in the source distribution for its full text.
 #define PLATFORM_SUPPORT_PROCESS_O_STATE
 #define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 
+void Platform_init();
+
 extern ProcessField Platform_defaultFields[];
 
 extern const unsigned int Platform_numberOfFields;

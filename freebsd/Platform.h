@@ -10,17 +10,37 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <BatteryMeter.h>
+#include <SignalsPanel.h>
+
+typedef struct {
+	int hw_physmem_mib[2];
+	int vm_stats_vm_v_page_count_mib[4];
+	int vm_stats_vm_v_wire_count_mib[4];
+	int vm_stats_vm_v_active_count_mib[4];
+	int *vm_stats_vm_v_cache_count_mib;
+	int vm_stats_vm_v_inactive_count_mib[4];
+	int *vm_stats_vm_v_laundry_count_mib;
+	int vfs_bufspace_mib[2];
+	int kern_cp_time_mib[2];
+	int kern_cp_times_mib[2];
+#ifndef HAVE_LIBKVM
+	int *vm_swap_info_mib;
+#endif
+} GlobalPlatformData;
+
 #if !defined KERN_PROC_ENV && defined HAVE_LIBKVM
 #endif
-
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
+
+extern GlobalPlatformData platform;
+
+void Platform_init();
 
 extern ProcessField Platform_defaultFields[];
 

@@ -1,7 +1,7 @@
 /*
 htop - htop.c
 (C) 2004-2011 Hisham H. Muhammad
-Copyright 2015-2023 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -271,6 +271,7 @@ int main(int argc, char** argv) {
       return 1;
    }
 #endif
+   Platform_init();
    CRT_initColorSchemes();
    Process_setupColumnWidths();
    UsersTable* ut = UsersTable_new();

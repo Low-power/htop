@@ -2,7 +2,7 @@
 htop - dragonflybsd/DragonFlyBSDProcessList.c
 (C) 2014 Hisham H. Muhammad
 (C) 2017 Diederik de Groot
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -45,9 +45,10 @@ typedef struct DragonFlyBSDProcessList_ {
 } DragonFlyBSDProcessList;
 }*/
 
-#include "DragonFlyBSDProcessList.h"
-#include "DragonFlyBSDProcess.h"
-#include "CRT.h"
+#include <DragonFlyBSDProcessList.h>
+#include <DragonFlyBSDProcess.h>
+#include <Platform.h>
+#include <CRT.h>
 #include <sys/sysctl.h>
 #include <sys/kinfo.h>
 #include <sys/jail.h>
@@ -63,48 +64,20 @@ typedef struct DragonFlyBSDProcessList_ {
 
 #define _UNUSED_ __attribute__((unused))
 
-static int MIB_hw_physmem[2];
-static int MIB_vm_stats_vm_v_page_count[4];
-static int MIB_vm_stats_vm_v_wire_count[4];
-static int MIB_vm_stats_vm_v_active_count[4];
-static int MIB_vm_stats_vm_v_cache_count[4];
-static int MIB_vm_stats_vm_v_inactive_count[4];
-static int MIB_vfs_bufspace[2];
-static int MIB_kern_cp_time[2];
-static int MIB_kern_cp_times[2];
 static int kernelFScale;
 
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
-   size_t len;
-   char errbuf[_POSIX2_LINE_MAX];
    DragonFlyBSDProcessList* dfpl = xCalloc(1, sizeof(DragonFlyBSDProcessList));
    ProcessList* pl = (ProcessList*) dfpl;
    ProcessList_init(pl, Class(DragonFlyBSDProcess), usersTable, pidWhiteList, userId);
 
-   // physical memory in system: hw.physmem
-   // physical page size: hw.pagesize
-   // usable pagesize : vm.stats.vm.v_page_size
-   len = 2; sysctlnametomib("hw.physmem", MIB_hw_physmem, &len);
-
    unsigned int page_size;
-   len = sizeof page_size;
+   size_t len = sizeof page_size;
    if (sysctlbyname("vm.stats.vm.v_page_size", &page_size, &len, NULL, 0) == 0 && page_size != CRT_page_size) {
       // How can this happen?
       CRT_page_size = page_size;
       CRT_page_size_kibibyte = page_size / ONE_BINARY_K;
    }
-
-   // usable page count vm.stats.vm.v_page_count
-   // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
-   len = 4; sysctlnametomib("vm.stats.vm.v_page_count", MIB_vm_stats_vm_v_page_count, &len);
-
-   len = 4; sysctlnametomib("vm.stats.vm.v_wire_count", MIB_vm_stats_vm_v_wire_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_active_count", MIB_vm_stats_vm_v_active_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_cache_count", MIB_vm_stats_vm_v_cache_count, &len);
-   len = 4; sysctlnametomib("vm.stats.vm.v_inactive_count", MIB_vm_stats_vm_v_inactive_count, &len);
-   //len = 4; sysctlnametomib("vm.stats.vm.v_free_count", MIB_vm_stats_vm_v_free_count, &len);
-
-   len = 2; sysctlnametomib("vfs.bufspace", MIB_vfs_bufspace, &len);
 
    int cpus = 1;
    len = sizeof(cpus);
@@ -113,21 +86,19 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    }
 
    size_t sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   len = 2; sysctlnametomib("kern.cp_time", MIB_kern_cp_time, &len);
    dfpl->cp_time_o = xCalloc(cpus, sizeof_cp_time_array);
    dfpl->cp_time_n = xCalloc(cpus, sizeof_cp_time_array);
    len = sizeof_cp_time_array;
 
    // fetch initial single (or average) CPU clicks from kernel
-   sysctl(MIB_kern_cp_time, 2, dfpl->cp_time_o, &len, NULL, 0);
+   sysctl(platform.kern_cp_time_mib, 2, dfpl->cp_time_o, &len, NULL, 0);
 
    // on smp box, fetch rest of initial CPU's clicks
    if (cpus > 1) {
-      len = 2; sysctlnametomib("kern.cp_times", MIB_kern_cp_times, &len);
       dfpl->cp_times_o = xCalloc(cpus, sizeof_cp_time_array);
       dfpl->cp_times_n = xCalloc(cpus, sizeof_cp_time_array);
       len = cpus * sizeof_cp_time_array;
-      sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_o, &len, NULL, 0);
+      sysctl(platform.kern_cp_times_mib, 2, dfpl->cp_times_o, &len, NULL, 0);
    }
 
    pl->cpuCount = MAX(cpus, 1);
@@ -145,6 +116,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       kernelFScale = 2048;
    }
 
+   char errbuf[_POSIX2_LINE_MAX];
    dfpl->kd = kvm_openfiles(NULL, "/dev/null", NULL, 0, errbuf);
    if (dfpl->kd == NULL) {
       errx(1, "kvm_open: %s", errbuf);
@@ -189,7 +161,9 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
 
    // get averages or single CPU clicks
    sizeof_cp_time_array = sizeof(long int) * CPUSTATES;
-   if(sysctl(MIB_kern_cp_time, 2, dfpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) return;
+   if(sysctl(platform.kern_cp_time_mib, 2, dfpl->cp_time_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+      return;
+   }
 
    // get rest of CPUs
    if (cpus > 1) {
@@ -198,7 +172,7 @@ static inline void DragonFlyBSDProcessList_scanCPUTime(ProcessList* pl) {
       // we store averages in dfpl->cpus[0], and actual cores after that
       maxcpu = cpus + 1;
       sizeof_cp_time_array = cpus * sizeof(long int) * CPUSTATES;
-      if(sysctl(MIB_kern_cp_times, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
+      if(sysctl(platform.kern_cp_times_mib, 2, dfpl->cp_times_n, &sizeof_cp_time_array, NULL, 0) < 0) {
          return;
       }
    }
@@ -272,30 +246,30 @@ static inline void DragonFlyBSDProcessList_scanMemoryInfo(ProcessList* pl) {
    // disabled for now, as it is always smaller than phycal amount of memory...
    // ...to avoid "where is my memory?" questions
    //len = sizeof buffer.v_uint;
-   //sysctl(MIB_vm_stats_vm_v_page_count, 4, &buffer, &len, NULL, 0);
+   //sysctl(platform.vm_stats_vm_v_page_count_mib, 4, &buffer, &len, NULL, 0);
    //pl->totalMem = buffer.v_uint * CRT_page_size_kibibyte;
    len = sizeof buffer.v_ulong;
-   if(sysctl(MIB_hw_physmem, 2, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.hw_physmem_mib, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->totalMem = buffer.v_ulong / 1024;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_active_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_active_count_mib, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->memActive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_wire_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_wire_count_mib, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->memWire = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_uint;
-   sysctl(MIB_vm_stats_vm_v_inactive_count, 4, &buffer, &len, NULL, 0);
+   sysctl(platform.vm_stats_vm_v_inactive_count_mib, 4, &buffer, &len, NULL, 0);
    dfpl->memInactive = buffer.v_uint * CRT_page_size_kibibyte;
 
    len = sizeof buffer.v_long;
-   if(sysctl(MIB_vfs_bufspace, 2, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vfs_bufspace_mib, 2, &buffer, &len, NULL, 0) < 0) goto fail;
    dfpl->buffers_size = buffer.v_long / 1024;
 
    len = sizeof buffer.v_uint;
-   if(sysctl(MIB_vm_stats_vm_v_cache_count, 4, &buffer, &len, NULL, 0) < 0) goto fail;
+   if(sysctl(platform.vm_stats_vm_v_cache_count_mib, 4, &buffer, &len, NULL, 0) < 0) goto fail;
    pl->cachedMem = buffer.v_uint * CRT_page_size_kibibyte;
 
    pl->usedMem = dfpl->memActive + dfpl->memWire + dfpl->memInactive - dfpl->buffers_size;

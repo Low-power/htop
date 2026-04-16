@@ -11,6 +11,7 @@ in the source distribution for its full text.
 */
 
 #include "config.h"
+#include <ProcessList.h>
 #ifdef HAVE_LIBKVM
 #include <kvm.h>
 #endif
@@ -67,8 +68,6 @@ typedef struct FreeBSDProcessList_ {
 #define P_KPROC 0x00004
 #endif
 
-#ifndef HAVE_LIBKVM
-#endif
 #ifdef __GLIBC__
 // GNU C Library defines NZERO to 20, which is incorrect for kFreeBSD
 #undef NZERO

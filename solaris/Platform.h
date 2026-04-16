@@ -37,6 +37,8 @@ in the source distribution for its full text.
 #define isnan isnand
 #endif
 
+void Platform_init();
+
 extern const SignalItem Platform_signals[];
 
 extern const unsigned int Platform_numberOfSignals;

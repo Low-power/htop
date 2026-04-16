@@ -25,6 +25,8 @@ in the source distribution for its full text.
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
+void Platform_init();
+
 extern ProcessField Platform_defaultFields[];
 
 extern const unsigned int Platform_numberOfFields;

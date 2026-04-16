@@ -6,6 +6,29 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+/*{
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <BatteryMeter.h>
+#include <SignalsPanel.h>
+
+typedef struct {
+	int hw_physmem_mib[2];
+	int vm_stats_vm_v_page_count_mib[4];
+	int vm_stats_vm_v_wire_count_mib[4];
+	int vm_stats_vm_v_active_count_mib[4];
+	int *vm_stats_vm_v_cache_count_mib;
+	int vm_stats_vm_v_inactive_count_mib[4];
+	int *vm_stats_vm_v_laundry_count_mib;
+	int vfs_bufspace_mib[2];
+	int kern_cp_time_mib[2];
+	int kern_cp_times_mib[2];
+#ifndef HAVE_LIBKVM
+	int *vm_swap_info_mib;
+#endif
+} GlobalPlatformData;
+}*/
+
 #include "config.h"
 #include "Platform.h"
 #include "Meter.h"
@@ -38,16 +61,68 @@ in the source distribution for its full text.
 #include <time.h>
 #include <math.h>
 
-/*{
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-}*/
-
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
+
+GlobalPlatformData platform;
+
+void Platform_init() {
+   int mib[4];
+   size_t len;
+
+   // physical memory in system: hw.physmem
+   // physical page size: hw.pagesize
+   // usable pagesize : vm.stats.vm.v_page_size
+   len = 2;
+   sysctlnametomib("hw.physmem", platform.hw_physmem_mib, &len);
+
+   // usable page count vm.stats.vm.v_page_count
+   // actually usable memory : vm.stats.vm.v_page_count * vm.stats.vm.v_page_size
+   len = 4;
+   sysctlnametomib("vm.stats.vm.v_page_count", platform.vm_stats_vm_v_page_count_mib, &len);
+   len = 4;
+   sysctlnametomib("vm.stats.vm.v_wire_count", platform.vm_stats_vm_v_wire_count_mib, &len);
+   len = 4;
+   sysctlnametomib("vm.stats.vm.v_active_count", platform.vm_stats_vm_v_active_count_mib, &len);
+
+   len = 4;
+   if(sysctlnametomib("vm.stats.vm.v_cache_count", mib, &len) == 0) {
+      assert(len == 4);
+      platform.vm_stats_vm_v_cache_count_mib = xMalloc(4 * sizeof(int));
+      memcpy(platform.vm_stats_vm_v_cache_count_mib, mib, 4 * sizeof(int));
+   }
+
+   len = 4;
+   sysctlnametomib("vm.stats.vm.v_inactive_count", platform.vm_stats_vm_v_inactive_count_mib, &len);
+   //len = 4;
+   //sysctlnametomib("vm.stats.vm.v_free_count", platform.vm_stats_vm_v_free_count_mib, &len);
+
+   len = 2;
+   sysctlnametomib("vfs.bufspace", platform.vfs_bufspace_mib, &len);
+
+   len = 4;
+   if(sysctlnametomib("vm.stats.vm.v_laundry_count", mib, &len) == 0) {
+      assert(len == 4);
+      platform.vm_stats_vm_v_laundry_count_mib = xMalloc(4 * sizeof(int));
+      memcpy(platform.vm_stats_vm_v_laundry_count_mib, mib, 4 * sizeof(int));
+   }
+
+#ifndef HAVE_LIBKVM
+   len = 2;
+   if(sysctlnametomib("vm.swap_info", mib, &len) == 0) {
+      assert(len == 2);
+      //platform.vm_swap_info_mib = xMalloc(sizeof(int) * 3);
+      platform.vm_swap_info_mib = xMalloc(sizeof(int) * 2);
+      memcpy(platform.vm_swap_info_mib, mib, sizeof(int) * 2);
+   }
+#endif
+
+   len = 2;
+   sysctlnametomib("kern.cp_time", platform.kern_cp_time_mib, &len);
+   len = 2;
+   sysctlnametomib("kern.cp_times", platform.kern_cp_times_mib, &len);
+}
 
 ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_M_SIZE_FIELD, HTOP_M_RESIDENT_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_PERCENT_MEM_FIELD, HTOP_TIME_FIELD, HTOP_COMM_FIELD, 0 };
 

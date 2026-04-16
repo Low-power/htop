@@ -21,61 +21,6 @@ typedef struct {
 typedef struct {
 	ProcessList super;
 
-	uint32_t vsi_world_id;
-	uint32_t vsi_world_info_id;
-	uint32_t vsi_world_name_id;
-	uint32_t vsi_world_backtrace_id;
-	uint32_t vsi_sched_id;
-	uint32_t vsi_sched_memclients_id;
-	uint32_t vsi_sched_memclients_memstats_id;
-	uint32_t vsi_sched_memclients_memstats_common_id;
-	uint32_t vsi_sched_memclients_memstats_uw_id;
-	uint32_t vsi_sched_cpuclients_id;
-	uint32_t vsi_sched_cpuclients_numvcpus_id;
-	uint32_t vsi_sched_vcpus_id;
-	uint32_t vsi_sched_vcpus_stats_id;
-	uint32_t vsi_sched_vcpus_stats_summarystats_id;
-	uint32_t vsi_sched_vcpus_stats_statetimes_id;
-	uint32_t vsi_sched_pcpus_id;
-	uint32_t vsi_sched_pcpus_stats_id;
-	uint32_t vsi_sched_globalstats_id;
-	uint32_t vsi_sched_globalstats_numpcpus_id;
-	uint32_t vsi_userworld_id;
-	uint32_t vsi_userworld_cartel_id;
-	uint32_t vsi_userworld_cartel_cmdline_id;
-	uint32_t vsi_memory_id;
-	uint32_t vsi_memory_comprehensive_id;
-	uint32_t vsi_system_id;
-	uint32_t vsi_system_modloader_id;
-	uint32_t vsi_system_modloader_symaddrtoname_id;
-	uint64_t vsi_world_cksum;
-	uint64_t vsi_world_info_cksum;
-	uint64_t vsi_world_name_cksum;
-	uint64_t vsi_world_backtrace_cksum;
-	uint64_t vsi_sched_cksum;
-	uint64_t vsi_sched_memclients_cksum;
-	uint64_t vsi_sched_memclients_memstats_cksum;
-	uint64_t vsi_sched_memclients_memstats_common_cksum;
-	uint64_t vsi_sched_memclients_memstats_uw_cksum;
-	uint64_t vsi_sched_cpuclients_cksum;
-	uint64_t vsi_sched_cpuclients_numvcpus_cksum;
-	uint64_t vsi_sched_vcpus_cksum;
-	uint64_t vsi_sched_vcpus_stats_cksum;
-	uint64_t vsi_sched_vcpus_stats_summarystats_cksum;
-	uint64_t vsi_sched_vcpus_stats_statetimes_cksum;
-	uint64_t vsi_sched_pcpus_cksum;
-	uint64_t vsi_sched_pcpus_stats_cksum;
-	uint64_t vsi_sched_globalstats_cksum;
-	uint64_t vsi_sched_globalstats_numpcpus_cksum;
-	uint64_t vsi_userworld_cksum;
-	uint64_t vsi_userworld_cartel_cksum;
-	uint64_t vsi_userworld_cartel_cmdline_cksum;
-	uint64_t vsi_memory_cksum;
-	uint64_t vsi_memory_comprehensive_cksum;
-	uint64_t vsi_system_cksum;
-	uint64_t vsi_system_modloader_cksum;
-	uint64_t vsi_system_modloader_symaddrtoname_cksum;
-
 	size_t world_info_size;
 	size_t pcpu_info_size;
 	struct timeval last_updated;
@@ -420,85 +365,6 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
    ProcessList_init(&this->super, Class(VMKernelProcess), usersTable, pidWhiteList, userId);
 
-   int e = Platform_vsiGetNodeIdAndChecksum(0, "world", &this->vsi_world_id, &this->vsi_world_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo world", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_world_id, "info",
-      &this->vsi_world_info_id, &this->vsi_world_info_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo world.info", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_world_id, "name",
-      &this->vsi_world_name_id, &this->vsi_world_name_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo world.name", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_world_id, "backtrace",
-      &this->vsi_world_backtrace_id, &this->vsi_world_backtrace_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo world.backtrace", e);
-   e = Platform_vsiGetNodeIdAndChecksum(0, "sched", &this->vsi_sched_id, &this->vsi_sched_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "memClients",
-      &this->vsi_sched_memclients_id, &this->vsi_sched_memclients_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_memclients_id, "memStats",
-      &this->vsi_sched_memclients_memstats_id, &this->vsi_sched_memclients_memstats_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_memclients_memstats_id, "totalCommon",
-      &this->vsi_sched_memclients_memstats_common_id, &this->vsi_sched_memclients_memstats_common_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats.totalCommon", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_memclients_memstats_id, "uw",
-      &this->vsi_sched_memclients_memstats_uw_id, &this->vsi_sched_memclients_memstats_uw_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats.uw", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "cpuClients",
-      &this->vsi_sched_cpuclients_id, &this->vsi_sched_cpuclients_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_cpuclients_id, "numVcpus",
-      &this->vsi_sched_cpuclients_numvcpus_id, &this->vsi_sched_cpuclients_numvcpus_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients.numVcpus", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "Vcpus",
-      &this->vsi_sched_vcpus_id, &this->vsi_sched_vcpus_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_id, "stats",
-      &this->vsi_sched_vcpus_stats_id, &this->vsi_sched_vcpus_stats_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "summaryStats",
-      &this->vsi_sched_vcpus_stats_summarystats_id, &this->vsi_sched_vcpus_stats_summarystats_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.summaryStats", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_vcpus_stats_id, "stateTimes",
-      &this->vsi_sched_vcpus_stats_statetimes_id, &this->vsi_sched_vcpus_stats_statetimes_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.stateTimes", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "pcpus",
-      &this->vsi_sched_pcpus_id, &this->vsi_sched_pcpus_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_pcpus_id, "stats",
-      &this->vsi_sched_pcpus_stats_id, &this->vsi_sched_pcpus_stats_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus.stats", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_id, "globalStats",
-      &this->vsi_sched_globalstats_id, &this->vsi_sched_globalstats_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_sched_globalstats_id, "numPcpus",
-      &this->vsi_sched_globalstats_numpcpus_id, &this->vsi_sched_globalstats_numpcpus_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats.numPcpus", e);
-   e = Platform_vsiGetNodeIdAndChecksum(0, "userworld",
-      &this->vsi_userworld_id, &this->vsi_userworld_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_userworld_id, "cartel",
-      &this->vsi_userworld_cartel_id, &this->vsi_userworld_cartel_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_userworld_cartel_id, "cmdline",
-      &this->vsi_userworld_cartel_cmdline_id, &this->vsi_userworld_cartel_cmdline_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.cmdline", e);
-   e = Platform_vsiGetNodeIdAndChecksum(0, "memory", &this->vsi_memory_id, &this->vsi_memory_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo memory", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_memory_id, "comprehensive",
-      &this->vsi_memory_comprehensive_id, &this->vsi_memory_comprehensive_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo memory.comprehensive", e);
-   e = Platform_vsiGetNodeIdAndChecksum(0, "system", &this->vsi_system_id, &this->vsi_system_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo system", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_id, "modloader",
-      &this->vsi_system_modloader_id, &this->vsi_system_modloader_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader", e);
-   e = Platform_vsiGetNodeIdAndChecksum(this->vsi_system_modloader_id, "symAddrToName",
-      &this->vsi_system_modloader_symaddrtoname_id, &this->vsi_system_modloader_symaddrtoname_cksum);
-   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader.symAddrToName", e);
-
-   Platform_checkVMkernelVersion();
    switch(Platform_running_vmkernel_version) {
       case VMKERNEL_VERSION_5_5:
       case VMKERNEL_VERSION_6_7:
@@ -524,7 +390,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
       .type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
    };
    struct number_of_pcpus npcpus;
-   e = Platform_vsiGet(this->vsi_sched_globalstats_numpcpus_id, this->vsi_sched_globalstats_numpcpus_cksum,
+   int e = Platform_vsiGet(platform.sched_globalstats_numpcpus_id, platform.sched_globalstats_numpcpus_cksum,
       &list, &npcpus, sizeof npcpus);
    if(e) CRT_fatalError("VSI_Get sched.globalStats.numPcpus", e);
    this->super.cpuCount = npcpus.ncpus;
@@ -550,7 +416,7 @@ static void get_global_memory_stats(VMKernelProcessList *this) {
 		case VMKERNEL_VERSION_5_5:
 		case VMKERNEL_VERSION_6_0:
 		case VMKERNEL_VERSION_6_5:
-			e = Platform_vsiGet(this->vsi_memory_comprehensive_id, this->vsi_memory_comprehensive_cksum,
+			e = Platform_vsiGet(platform.memory_comprehensive_id, platform.memory_comprehensive_cksum,
 				&list, &stats, sizeof stats);
 			if(e) goto failure;
 			this->super.totalMem = stats.physical_memory_estimate;
@@ -558,7 +424,7 @@ static void get_global_memory_stats(VMKernelProcessList *this) {
 			this->super.usedMem = stats.physical_memory_estimate - stats.free;
 			break;
 		case VMKERNEL_VERSION_6_7:
-			e = Platform_vsiGet(this->vsi_memory_comprehensive_id, this->vsi_memory_comprehensive_cksum,
+			e = Platform_vsiGet(platform.memory_comprehensive_id, platform.memory_comprehensive_cksum,
 				&list, &stats_6_7, sizeof stats_6_7);
 			if(e) goto failure;
 			this->super.totalMem = stats_6_7.physical_memory_estimate;
@@ -583,7 +449,7 @@ static void get_global_cpu_stats(VMKernelProcessList *this) {
 		Platform_vsiListSetValue(list, 0, i);
 		struct pcpu_info info;
 		assert(this->pcpu_info_size <= sizeof info);
-		int e = Platform_vsiGet(this->vsi_sched_pcpus_stats_id, this->vsi_sched_pcpus_stats_cksum, list, &info, this->pcpu_info_size);
+		int e = Platform_vsiGet(platform.sched_pcpus_stats_id, platform.sched_pcpus_stats_cksum, list, &info, this->pcpu_info_size);
 		if(e) {
 			htop_cpu_stats->total_used_period = 0;
 			htop_cpu_stats->wdt_period = 0;
@@ -613,7 +479,7 @@ static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
 	Platform_vsiListAddInt(list, proc->pid);
 	struct world_info info;
 	assert(this->world_info_size <= sizeof info);
-	int e = Platform_vsiGet(this->vsi_world_info_id, this->vsi_world_info_cksum,
+	int e = Platform_vsiGet(platform.world_info_id, platform.world_info_cksum,
 		list, &info, this->world_info_size);
 	free(list);
 	if(e) return false;
@@ -632,7 +498,7 @@ static void get_world_name(const VMKernelProcessList *this, Process *proc) {
 	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	char buffer[128];
-	int e = Platform_vsiGet(this->vsi_world_name_id, this->vsi_world_name_cksum,
+	int e = Platform_vsiGet(platform.world_name_id, platform.world_name_cksum,
 		list, buffer, sizeof buffer);
 	free(list);
 	proc->name = xStrdup(e ? "" : buffer);
@@ -643,8 +509,8 @@ static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 	struct vsi_list *list = allocate_vsi_list(1, 0);
 	Platform_vsiListAddInt(list, proc->tgid);
 	char buffer[1024];
-	int e = Platform_vsiGet(this->vsi_userworld_cartel_cmdline_id,
-		this->vsi_userworld_cartel_cmdline_cksum, list, buffer, sizeof buffer);
+	int e = Platform_vsiGet(platform.userworld_cartel_cmdline_id,
+		platform.userworld_cartel_cmdline_cksum, list, buffer, sizeof buffer);
 	free(list);
 	if(e) return false;
 	proc->comm = xStrdup(buffer);
@@ -660,14 +526,14 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 			int e;
 		case VMKERNEL_VERSION_5_5:
 			assert(128 < sizeof common32);
-			e = Platform_vsiGet(this->vsi_sched_memclients_memstats_common_id,
-				this->vsi_sched_memclients_memstats_common_cksum, list,
+			e = Platform_vsiGet(platform.sched_memclients_memstats_common_id,
+				platform.sched_memclients_memstats_common_cksum, list,
 				&common32, 128);
 			goto copy_common32_values;
 		case VMKERNEL_VERSION_6_0:
 			assert(132 == sizeof common32);
-			e = Platform_vsiGet(this->vsi_sched_memclients_memstats_common_id,
-				this->vsi_sched_memclients_memstats_common_cksum, list,
+			e = Platform_vsiGet(platform.sched_memclients_memstats_common_id,
+				platform.sched_memclients_memstats_common_cksum, list,
 				&common32, 132);
 		copy_common32_values:
 			if(e) goto failure;
@@ -676,8 +542,8 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 			break;
 		case VMKERNEL_VERSION_6_5:
 		case VMKERNEL_VERSION_6_7:
-			e = Platform_vsiGet(this->vsi_sched_memclients_memstats_common_id,
-				this->vsi_sched_memclients_memstats_common_cksum, list,
+			e = Platform_vsiGet(platform.sched_memclients_memstats_common_id,
+				platform.sched_memclients_memstats_common_cksum, list,
 				&common64, sizeof common64);
 			if(e) goto failure;
 			proc->m_size = common64.size / CRT_page_size_kibibyte;
@@ -701,14 +567,14 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			struct vcpu_stats_6_5 stats_6_5;
 			int e;
 		case VMKERNEL_VERSION_5_5:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
-				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_summarystats_id,
+				platform.sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 204);
 			if(e) goto stats_failure;
 			goto read_5_5_stats;
 		case VMKERNEL_VERSION_6_0:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
-				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_summarystats_id,
+				platform.sched_vcpus_stats_summarystats_cksum, list,
 				&stats_5_5, 220);
 			if(e) goto stats_failure;
 		read_5_5_stats:
@@ -720,14 +586,14 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			proc->super.processor = stats_5_5.pcpu;
 			break;
 		case VMKERNEL_VERSION_6_5:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
-				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_summarystats_id,
+				platform.sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 248);
 			if(e) goto stats_failure;
 			goto read_6_5_stats;
 		case VMKERNEL_VERSION_6_7:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_summarystats_id,
-				this->vsi_sched_vcpus_stats_summarystats_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_summarystats_id,
+				platform.sched_vcpus_stats_summarystats_cksum, list,
 				&stats_6_5, 256);
 			if(e) goto stats_failure;
 		read_6_5_stats:
@@ -1070,8 +936,8 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			struct vcpu_state_times_6_5 state_times_6_5;
 			int e;
 		case VMKERNEL_VERSION_5_5:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
-				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_statetimes_id,
+				platform.sched_vcpus_stats_statetimes_cksum, list,
 				&state_times_5_0, sizeof state_times_5_0);
 			if(e) break;
 			if(proc->super.starttime_ctime == (time_t)-1) {
@@ -1080,8 +946,8 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			proc->time_usec = state_times_5_0.run_time;
 			break;
 		case VMKERNEL_VERSION_6_0:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
-				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_statetimes_id,
+				platform.sched_vcpus_stats_statetimes_cksum, list,
 				&state_times_6_0, sizeof state_times_6_0);
 			if(e) break;
 			if(proc->super.starttime_ctime == (time_t)-1) {
@@ -1091,8 +957,8 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			break;
 		case VMKERNEL_VERSION_6_5:
 		case VMKERNEL_VERSION_6_7:
-			e = Platform_vsiGet(this->vsi_sched_vcpus_stats_statetimes_id,
-				this->vsi_sched_vcpus_stats_statetimes_cksum, list,
+			e = Platform_vsiGet(platform.sched_vcpus_stats_statetimes_id,
+				platform.sched_vcpus_stats_statetimes_cksum, list,
 				&state_times_6_5, sizeof state_times_6_5);
 			if(e) break;
 			if(proc->super.starttime_ctime == (time_t)-1) {
@@ -1113,8 +979,8 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
 		list = allocate_vsi_list(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
-		int e = Platform_vsiGet(this->vsi_sched_cpuclients_numvcpus_id,
-			this->vsi_sched_cpuclients_numvcpus_cksum, list,
+		int e = Platform_vsiGet(platform.sched_cpuclients_numvcpus_id,
+			platform.sched_cpuclients_numvcpus_cksum, list,
 			&proc->vcpu_count, sizeof proc->vcpu_count);
 		free(list);
 		if(e) proc->vcpu_count = 0;
@@ -1139,7 +1005,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	worlds_list->type_or_version = 1;
 	worlds_list->param_size = sizeof(struct vsi_list);
 	worlds_list->self_ptr = (uintptr_t)worlds_list;
-	int e = Platform_vsiGetList(this->vsi_world_id, this->vsi_world_cksum,
+	int e = Platform_vsiGetList(platform.world_id, platform.world_cksum,
 		worlds_list, sizeof(struct vsi_list));
 	if(e) CRT_fatalError("VSI_GetList", e);
 	size_t count = worlds_list->instance_count;
@@ -1153,7 +1019,7 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	worlds_list->string_size = string_size;
 	worlds_list->string_offset = param_size;
 	worlds_list->self_ptr = (uintptr_t)worlds_list;
-	e = Platform_vsiGetList(this->vsi_world_id, this->vsi_world_cksum, worlds_list, list_size);
+	e = Platform_vsiGetList(platform.world_id, platform.world_cksum, worlds_list, list_size);
 	if(e) CRT_fatalError("VSI_GetList", e);
 	for(size_t i = 0; i < worlds_list->instance_count; i++) {
 		pid_t pid = Platform_vsiListGetValue(worlds_list, i);
@@ -1164,13 +1030,6 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 			continue;
 		}
 		if(!is_existing) {
-			VMKernelProcess *vmk_proc = (VMKernelProcess *)proc;
-			vmk_proc->vsi_world_backtrace_id = this->vsi_world_backtrace_id;
-			vmk_proc->vsi_world_backtrace_cksum = this->vsi_world_backtrace_cksum;
-			vmk_proc->vsi_system_modloader_symaddrtoname_id =
-				this->vsi_system_modloader_symaddrtoname_id;
-			vmk_proc->vsi_system_modloader_symaddrtoname_cksum =
-				this->vsi_system_modloader_symaddrtoname_cksum;
 			proc->state = '?';
 			ProcessList_add(super, proc);
 		}

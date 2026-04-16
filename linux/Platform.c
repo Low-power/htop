@@ -46,6 +46,9 @@ in the source distribution for its full text.
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
+void Platform_init() {
+}
+
 ProcessField Platform_defaultFields[] = { HTOP_PID_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_PRIORITY_FIELD, HTOP_NICE_FIELD, HTOP_M_SIZE_FIELD, HTOP_M_RESIDENT_FIELD, HTOP_M_SHARE_FIELD, HTOP_STATE_FIELD, HTOP_PERCENT_CPU_FIELD, HTOP_PERCENT_MEM_FIELD, HTOP_TIME_FIELD, HTOP_COMM_FIELD, 0 };
 
 //static ProcessField defaultIoFields[] = { HTOP_PID_FIELD, HTOP_IO_PRIORITY_FIELD, HTOP_EFFECTIVE_USER_FIELD, HTOP_IO_READ_RATE_FIELD, HTOP_IO_WRITE_RATE_FIELD, HTOP_IO_RATE_FIELD, HTOP_COMM_FIELD, 0 };

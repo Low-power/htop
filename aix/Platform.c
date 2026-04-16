@@ -48,6 +48,9 @@ extern int getkerninfo(int, char*, int*, int32long64_t);
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
 #endif
 
+void Platform_init() {
+}
+
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
 #define SIG(NAME) { .name = #NAME, .number = SIG##NAME }

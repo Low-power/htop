@@ -27,10 +27,6 @@ typedef enum {
 
 typedef struct {
 	Process super;
-	uint32_t vsi_world_backtrace_id;
-	uint32_t vsi_system_modloader_symaddrtoname_id;
-	uint64_t vsi_world_backtrace_cksum;
-	uint64_t vsi_system_modloader_symaddrtoname_cksum;
 	uint32_t group_id;
 	uint32_t userspace_id;
 	uint32_t cartel_group_id;
@@ -184,8 +180,7 @@ bool Process_isExtraThreadProcess(const Process *this) {
 	return this->pid != this->tgid;
 }
 
-char **Process_getKernelStackTrace(const Process *super) {
-	const VMKernelProcess *this = (const VMKernelProcess *)super;
+char **Process_getKernelStackTrace(const Process *this) {
 	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
 	struct vsi_list *list = xMalloc(list_size);
 	memset(list, 0, list_size);
@@ -193,9 +188,9 @@ char **Process_getKernelStackTrace(const Process *super) {
 	list->allocated_count = 1;
 	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
 	list->self_ptr = (uintptr_t)list;
-	Platform_vsiListAddInt(list, super->pid);
+	Platform_vsiListAddInt(list, this->pid);
 	struct world_backtrace_frame { uint64_t pc, bp; } frames[25];
-	int e = Platform_vsiGet(this->vsi_world_backtrace_id, this->vsi_world_backtrace_cksum,
+	int e = Platform_vsiGet(platform.world_backtrace_id, platform.world_backtrace_cksum,
 		list, frames, sizeof frames);
 	if(e) {
 		free(list);
@@ -215,8 +210,8 @@ char **Process_getKernelStackTrace(const Process *super) {
 		// Reusing same 'list' to avoid repeated malloc(3) and free(3)
 		Platform_vsiListSetValue(list, 0, f->pc);
 		struct symbol { char name[128]; uint64_t addr; } symbol;
-		e = Platform_vsiGet(this->vsi_system_modloader_symaddrtoname_id,
-			this->vsi_system_modloader_symaddrtoname_cksum,
+		e = Platform_vsiGet(platform.system_modloader_symaddrtoname_id,
+			platform.system_modloader_symaddrtoname_cksum,
 			list, &symbol, sizeof symbol);
 		if(e) {
 			v[i] = xMalloc(29);

@@ -46,6 +46,9 @@ static inline mach_port_t get_host_port() {
 #include <fcntl.h>
 #include <errno.h>
 
+void Platform_init() {
+}
+
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
 #define SIG(NAME) { .name = #NAME, .number = SIG##NAME }

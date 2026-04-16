@@ -29,6 +29,63 @@ in the source distribution for its full text.
 #define SYS_GetMemSize 1215
 #define SYS_GetUptimeUS 1216
 
+typedef struct {
+	uint32_t world_id;
+	uint32_t world_info_id;
+	uint32_t world_name_id;
+	uint32_t world_backtrace_id;
+	uint32_t sched_id;
+	uint32_t sched_memclients_id;
+	uint32_t sched_memclients_memstats_id;
+	uint32_t sched_memclients_memstats_common_id;
+	uint32_t sched_memclients_memstats_uw_id;
+	uint32_t sched_cpuclients_id;
+	uint32_t sched_cpuclients_numvcpus_id;
+	uint32_t sched_vcpus_id;
+	uint32_t sched_vcpus_stats_id;
+	uint32_t sched_vcpus_stats_summarystats_id;
+	uint32_t sched_vcpus_stats_statetimes_id;
+	uint32_t sched_pcpus_id;
+	uint32_t sched_pcpus_stats_id;
+	uint32_t sched_globalstats_id;
+	uint32_t sched_globalstats_numpcpus_id;
+	uint32_t userworld_id;
+	uint32_t userworld_cartel_id;
+	uint32_t userworld_cartel_cmdline_id;
+	uint32_t memory_id;
+	uint32_t memory_comprehensive_id;
+	uint32_t system_id;
+	uint32_t system_modloader_id;
+	uint32_t system_modloader_symaddrtoname_id;
+	uint64_t world_cksum;
+	uint64_t world_info_cksum;
+	uint64_t world_name_cksum;
+	uint64_t world_backtrace_cksum;
+	uint64_t sched_cksum;
+	uint64_t sched_memclients_cksum;
+	uint64_t sched_memclients_memstats_cksum;
+	uint64_t sched_memclients_memstats_common_cksum;
+	uint64_t sched_memclients_memstats_uw_cksum;
+	uint64_t sched_cpuclients_cksum;
+	uint64_t sched_cpuclients_numvcpus_cksum;
+	uint64_t sched_vcpus_cksum;
+	uint64_t sched_vcpus_stats_cksum;
+	uint64_t sched_vcpus_stats_summarystats_cksum;
+	uint64_t sched_vcpus_stats_statetimes_cksum;
+	uint64_t sched_pcpus_cksum;
+	uint64_t sched_pcpus_stats_cksum;
+	uint64_t sched_globalstats_cksum;
+	uint64_t sched_globalstats_numpcpus_cksum;
+	uint64_t userworld_cksum;
+	uint64_t userworld_cartel_cksum;
+	uint64_t userworld_cartel_cmdline_cksum;
+	uint64_t memory_cksum;
+	uint64_t memory_comprehensive_cksum;
+	uint64_t system_cksum;
+	uint64_t system_modloader_cksum;
+	uint64_t system_modloader_symaddrtoname_cksum;
+} GlobalPlatformData;
+
 struct vsi_node_info {
 	uint32_t id;
 	uint8_t _unknown_1[9];
@@ -138,6 +195,123 @@ static inline void Platform_vsiListSetValue(struct vsi_list *list, int i, uint64
 #else
 #define VMKSC syscall
 #endif
+
+GlobalPlatformData platform;
+
+static void check_vmkernel_version(void);
+
+static int vsi_get_node_id_and_checksum(uint32_t parent_node_id, const char *node_name, uint32_t *node_id, uint64_t *node_cksum) {
+	struct vsi_node_info info_buffer;
+	char name_buffer[128];
+#ifdef __i386__
+	uint32_t extra_args[2] = { (uint32_t)name_buffer, sizeof info_buffer };
+	int e = VMKSC(SYS_VSI_GetNodeInfo, parent_node_id, 0, &info_buffer, extra_args);
+#else
+	int e = syscall(SYS_VSI_GetNodeInfo, parent_node_id, 0,
+		&info_buffer, name_buffer, sizeof info_buffer);
+#endif
+	if(e) return e;
+	uint32_t child_node_id = info_buffer.first_child_id;
+	do {
+#ifdef __i386__
+		e = VMKSC(SYS_VSI_GetNodeInfo, child_node_id, 0, &info_buffer, extra_args);
+#else
+		e = syscall(SYS_VSI_GetNodeInfo, child_node_id, 0,
+			&info_buffer, name_buffer, sizeof info_buffer);
+#endif
+		if(e) return e;
+		if(strcmp(name_buffer, node_name) == 0) {
+			if(node_id) *node_id = info_buffer.id;
+			if(node_cksum) memcpy(node_cksum, &info_buffer.checksum, 8);
+			return VMK_OK;
+		}
+		child_node_id = info_buffer.sibling_id;
+	} while(child_node_id && child_node_id != UINT32_MAX);
+	//return VMK_NOT_FOUND;
+	return ENOENT;
+}
+
+void Platform_init() {
+   check_vmkernel_version();
+
+   int e = vsi_get_node_id_and_checksum(0, "world", &platform.world_id, &platform.world_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo world", e);
+   e = vsi_get_node_id_and_checksum(platform.world_id, "info",
+      &platform.world_info_id, &platform.world_info_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo world.info", e);
+   e = vsi_get_node_id_and_checksum(platform.world_id, "name",
+      &platform.world_name_id, &platform.world_name_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo world.name", e);
+   e = vsi_get_node_id_and_checksum(platform.world_id, "backtrace",
+      &platform.world_backtrace_id, &platform.world_backtrace_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo world.backtrace", e);
+   e = vsi_get_node_id_and_checksum(0, "sched", &platform.sched_id, &platform.sched_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "memClients",
+      &platform.sched_memclients_id, &platform.sched_memclients_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_memclients_id, "memStats",
+      &platform.sched_memclients_memstats_id, &platform.sched_memclients_memstats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_memclients_memstats_id, "totalCommon",
+      &platform.sched_memclients_memstats_common_id, &platform.sched_memclients_memstats_common_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats.totalCommon", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_memclients_memstats_id, "uw",
+      &platform.sched_memclients_memstats_uw_id, &platform.sched_memclients_memstats_uw_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.memClients.memStats.uw", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "cpuClients",
+      &platform.sched_cpuclients_id, &platform.sched_cpuclients_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_cpuclients_id, "numVcpus",
+      &platform.sched_cpuclients_numvcpus_id, &platform.sched_cpuclients_numvcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.cpuClients.numVcpus", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "Vcpus",
+      &platform.sched_vcpus_id, &platform.sched_vcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_vcpus_id, "stats",
+      &platform.sched_vcpus_stats_id, &platform.sched_vcpus_stats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_vcpus_stats_id, "summaryStats",
+      &platform.sched_vcpus_stats_summarystats_id, &platform.sched_vcpus_stats_summarystats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.summaryStats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_vcpus_stats_id, "stateTimes",
+      &platform.sched_vcpus_stats_statetimes_id, &platform.sched_vcpus_stats_statetimes_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.Vcpus.stats.stateTimes", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "pcpus",
+      &platform.sched_pcpus_id, &platform.sched_pcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_pcpus_id, "stats",
+      &platform.sched_pcpus_stats_id, &platform.sched_pcpus_stats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.pcpus.stats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "globalStats",
+      &platform.sched_globalstats_id, &platform.sched_globalstats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_globalstats_id, "numPcpus",
+      &platform.sched_globalstats_numpcpus_id, &platform.sched_globalstats_numpcpus_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats.numPcpus", e);
+   e = vsi_get_node_id_and_checksum(0, "userworld",
+      &platform.userworld_id, &platform.userworld_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
+   e = vsi_get_node_id_and_checksum(platform.userworld_id, "cartel",
+      &platform.userworld_cartel_id, &platform.userworld_cartel_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel", e);
+   e = vsi_get_node_id_and_checksum(platform.userworld_cartel_id, "cmdline",
+      &platform.userworld_cartel_cmdline_id, &platform.userworld_cartel_cmdline_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.cmdline", e);
+   e = vsi_get_node_id_and_checksum(0, "memory", &platform.memory_id, &platform.memory_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo memory", e);
+   e = vsi_get_node_id_and_checksum(platform.memory_id, "comprehensive",
+      &platform.memory_comprehensive_id, &platform.memory_comprehensive_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo memory.comprehensive", e);
+   e = vsi_get_node_id_and_checksum(0, "system", &platform.system_id, &platform.system_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system", e);
+   e = vsi_get_node_id_and_checksum(platform.system_id, "modloader",
+      &platform.system_modloader_id, &platform.system_modloader_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader", e);
+   e = vsi_get_node_id_and_checksum(platform.system_modloader_id, "symAddrToName",
+      &platform.system_modloader_symaddrtoname_id, &platform.system_modloader_symaddrtoname_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo system.modloader.symAddrToName", e);
+}
 
 const SignalItem Platform_signals[] = {
    { .name = "Cancel", .number = 0 },
@@ -336,37 +510,6 @@ bool Platform_haveSwap() {
 	return false;
 }
 
-int Platform_vsiGetNodeIdAndChecksum(uint32_t parent_node_id, const char *node_name, uint32_t *node_id, uint64_t *node_cksum) {
-	struct vsi_node_info info_buffer;
-	char name_buffer[128];
-#ifdef __i386__
-	uint32_t extra_args[2] = { (uint32_t)name_buffer, sizeof info_buffer };
-	int e = VMKSC(SYS_VSI_GetNodeInfo, parent_node_id, 0, &info_buffer, extra_args);
-#else
-	int e = syscall(SYS_VSI_GetNodeInfo, parent_node_id, 0,
-		&info_buffer, name_buffer, sizeof info_buffer);
-#endif
-	if(e) return e;
-	uint32_t child_node_id = info_buffer.first_child_id;
-	do {
-#ifdef __i386__
-		e = VMKSC(SYS_VSI_GetNodeInfo, child_node_id, 0, &info_buffer, extra_args);
-#else
-		e = syscall(SYS_VSI_GetNodeInfo, child_node_id, 0,
-			&info_buffer, name_buffer, sizeof info_buffer);
-#endif
-		if(e) return e;
-		if(strcmp(name_buffer, node_name) == 0) {
-			if(node_id) *node_id = info_buffer.id;
-			if(node_cksum) memcpy(node_cksum, &info_buffer.checksum, 8);
-			return VMK_OK;
-		}
-		child_node_id = info_buffer.sibling_id;
-	} while(child_node_id && child_node_id != UINT32_MAX);
-	//return VMK_NOT_FOUND;
-	return ENOENT;
-}
-
 int Platform_running_vmkernel_version;
 
 int Platform_vsi_int;
@@ -432,7 +575,7 @@ static int (*vsi_get_list)(uint32_t, uint64_t, struct vsi_list *, size_t);
 
 #endif
 
-void Platform_checkVMkernelVersion() {
+static void check_vmkernel_version() {
 	struct utsname utsname;
 	if(uname(&utsname) < 0) CRT_fatalError("uname", 0);
 	if(strcmp(utsname.sysname, "VMkernel")) CRT_fatalError("Kernel type not supported", EPERM);
@@ -518,7 +661,7 @@ int Platform_vsiGet(uint32_t node_id, uint64_t node_cksum, const struct vsi_list
 	};
 	return VMKSC(SYS_VSI_Get, node_id, 0, list, extra_args);
 #else
-	if(!vsi_get) Platform_checkVMkernelVersion();
+	if(!vsi_get) check_vmkernel_version();
 	return vsi_get(node_id, node_cksum, list, buffer, size);
 #endif
 }
@@ -539,7 +682,7 @@ int Platform_vsiGetList(uint32_t node_id, uint64_t node_cksum, struct vsi_list *
 	};
 	return VMKSC(SYS_VSI_GetList, node_id, 0, &input_list, extra_args);
 #else
-	if(!vsi_get_list) Platform_checkVMkernelVersion();
+	if(!vsi_get_list) check_vmkernel_version();
 	return vsi_get_list(node_id, node_cksum, list, size);
 #endif
 }
