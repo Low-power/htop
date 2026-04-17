@@ -49,6 +49,13 @@ typedef struct {
 	uint32_t sched_pcpus_stats_id;
 	uint32_t sched_globalstats_id;
 	uint32_t sched_globalstats_numpcpus_id;
+	uint32_t sched_groups_id;
+	uint32_t sched_groups_stats_id;
+	uint32_t sched_groups_stats_cpustatsdir_id;
+	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_id;
+	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_id;
+	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_id;
+	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_id;
 	uint32_t userworld_id;
 	uint32_t userworld_cartel_id;
 	uint32_t userworld_cartel_cmdline_id;
@@ -76,6 +83,13 @@ typedef struct {
 	uint64_t sched_pcpus_stats_cksum;
 	uint64_t sched_globalstats_cksum;
 	uint64_t sched_globalstats_numpcpus_cksum;
+	uint64_t sched_groups_cksum;
+	uint64_t sched_groups_stats_cksum;
+	uint64_t sched_groups_stats_cpustatsdir_cksum;
+	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cksum;
+	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_cksum;
+	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_cksum;
+	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_cksum;
 	uint64_t userworld_cksum;
 	uint64_t userworld_cartel_cksum;
 	uint64_t userworld_cartel_cmdline_cksum;
@@ -84,6 +98,8 @@ typedef struct {
 	uint64_t system_cksum;
 	uint64_t system_modloader_cksum;
 	uint64_t system_modloader_symaddrtoname_cksum;
+
+	int ncores;
 } GlobalPlatformData;
 
 struct vsi_node_info {
@@ -178,6 +194,18 @@ static inline void Platform_vsiListSetValue(struct vsi_list *list, int i, uint64
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+
+struct cpu_load_history_info_in_pct {
+	uint32_t avg_run_time;
+	uint32_t avg_active;
+	uint32_t avg_max_limited;
+	uint32_t max_run_time;
+	uint32_t max_active;
+	uint32_t max_max_limited;
+	uint32_t run_quantiles[10];
+	uint32_t active_quantiles[10];
+	uint32_t max_limited_quantiles[10];
+};
 
 #ifdef __i386__
 #define VMKSC_0(N) ({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N) : "memory"); e; })
@@ -289,6 +317,46 @@ void Platform_init() {
    e = vsi_get_node_id_and_checksum(platform.sched_globalstats_id, "numPcpus",
       &platform.sched_globalstats_numpcpus_id, &platform.sched_globalstats_numpcpus_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo sched.globalStats.numPcpus", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "groups",
+      &platform.sched_groups_id, &platform.sched_groups_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.groups", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_id, "stats",
+      &platform.sched_groups_stats_id, &platform.sched_groups_stats_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.groups.stats", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_stats_id, "cpuStatsDir",
+      &platform.sched_groups_stats_cpustatsdir_id, &platform.sched_groups_stats_cpustatsdir_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.groups.stats.cpuStatsDir", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_stats_cpustatsdir_id, "cpuLoadHistory",
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_id, 
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.groups.stats.cpuStatsDir.cpuLoadHistory", e);
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_stats_cpustatsdir_cpuloadhistory_id,
+      "cpuLoadHistory1MinInPct",
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_id,
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_cksum);
+   if(e) {
+      CRT_fatalError(
+         "VSI_GetNodeInfo sched.groups.stats.cpuStatsDir.cpuLoadHistory.cpuLoadHistory1MinInPct", e
+      );
+   }
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_stats_cpustatsdir_cpuloadhistory_id,
+      "cpuLoadHistory5MinInPct",
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_id,
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_cksum);
+   if(e) {
+      CRT_fatalError(
+         "VSI_GetNodeInfo sched.groups.stats.cpuStatsDir.cpuLoadHistory.cpuLoadHistory5MinInPct", e
+      );
+   }
+   e = vsi_get_node_id_and_checksum(platform.sched_groups_stats_cpustatsdir_cpuloadhistory_id,
+      "cpuLoadHistory15MinInPct",
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_id,
+      &platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_cksum);
+   if(e) {
+      CRT_fatalError(
+         "VSI_GetNodeInfo sched.groups.stats.cpuStatsDir.cpuLoadHistory.cpuLoadHistory15MinInPct", e
+      );
+   }
    e = vsi_get_node_id_and_checksum(0, "userworld",
       &platform.userworld_id, &platform.userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -414,11 +482,30 @@ int Platform_getUptime() {
 }
 
 void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-	double values[3] = { 0 };
-	getloadavg(values, 3);
-	*one = values[0];
-	*five = values[1];
-	*fifteen = values[2];
+	uint32_t vsi_node_ids[3] = {
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_id,
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_id,
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_id
+	};
+	uint64_t vsi_node_cksums[3] = {
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_cksum,
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_cksum,
+		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_cksum
+	};
+	double *store_dests[3] = { one, five, fifteen };
+
+	assert(platform.ncores > 0);
+	double divisor = platform.ncores * 100;
+
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
+	Platform_vsiListAddInt(list, 0);
+	for(int i = 0; i < 3; i++) {
+		struct cpu_load_history_info_in_pct load_info;
+		int e = Platform_vsiGet(vsi_node_ids[i], vsi_node_cksums[i], list,
+			&load_info, sizeof load_info);
+		*(store_dests[i]) = e ? 0 : load_info.avg_active / divisor;
+	}
+	free(list);
 }
 
 int Platform_getMaxPid() {
@@ -624,6 +711,19 @@ static void check_vmkernel_version() {
 		default:
 			CRT_fatalError("Kernel version not supported", EPERM);
 	}
+}
+
+struct vsi_list *Platform_allocateVsiList(uint32_t count, uint32_t string_size) {
+	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count + string_size;
+	struct vsi_list *list = xMalloc(list_size);
+	memset(list, 0, list_size);
+	list->type_or_version = 1;
+	list->allocated_count = count;
+	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
+	list->string_size = string_size;
+	if(string_size) list->string_offset = list->param_size;
+	list->self_ptr = (uintptr_t)list;
+	return list;
 }
 
 void Platform_vsiListAddInt(struct vsi_list *list, uint64_t value) {

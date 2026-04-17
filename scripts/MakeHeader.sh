@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2015-2023 Rivoreo
+# Copyright 2015-2026 Rivoreo
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of any version of the GNU General Public License as
@@ -60,14 +60,6 @@ while read -r line; do case "$state" in
 				;;
 			//*)
 				;;
-			"struct "*" "*\;)
-				is_blank=
-				printf 'extern %s\n' "$line"
-				state=skipone
-				;;
-			"struct "*|"typedef "*)
-				[ "${line%\{}" = "$line" ] && is_blank=1 || state=skip
-				;;
 			*"static "*)
 				if [ "${line%\{}" != "$line" ]; then
 					state=skip
@@ -76,6 +68,20 @@ while read -r line; do case "$state" in
 					is_blank=1
 				fi
 				;;
+			"struct "*" "*\;)
+				is_blank=
+				printf 'extern %s\n' "$line"
+				state=skipone
+				;;
+			*"("*")"*"{")
+				static=
+				is_blank=
+				printf '%s;\n' "${line%\)*\{})" | sed "s/inline //g"
+				state=skip
+				;;
+			"struct "*|"typedef "*)
+				[ "${line%\{}" = "$line" ] && is_blank=1 || state=skip
+				;;
 			*"extern "*\;*)
 				state=skipone
 				;;
@@ -83,13 +89,6 @@ while read -r line; do case "$state" in
 				static=
 				is_blank=
 				printf 'extern %s;\n' "${line%?= \{}"
-				state=skip
-				;;
-			*"{")
-				static=
-				is_blank=
-				#printf 'extern %s;\n' "${line%\)*\{})" | sed -E "s/ (extern|inline)//g"
-				printf '%s;\n' "${line%\)*\{})" | sed -E "s/(extern|inline) //g"
 				state=skip
 				;;
 			*" = "*)

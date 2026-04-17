@@ -27,7 +27,6 @@ typedef struct {
 	uint64_t interval_usec;
 
 	VMKernelCPUStatistics *cpu_stats;
-	int ncores;
 } VMKernelProcessList;
 }*/
 
@@ -348,19 +347,6 @@ struct number_of_pcpus {
 static const char vcpu_run_state_map_5_0[] = { 'N', 'Z', 'O', 'R', 'R', 'W' };
 static const char vcpu_run_state_map_6_5[] = { 'O', 'R', 'W', 'R', 'N', 'Z' };
 
-static struct vsi_list *allocate_vsi_list(uint32_t count, uint32_t string_size) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count + string_size;
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = count;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
-	list->string_size = string_size;
-	if(string_size) list->string_offset = list->param_size;
-	list->self_ptr = (uintptr_t)list;
-	return list;
-}
-
 ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteList, uid_t userId) {
    VMKernelProcessList *this = xCalloc(1, sizeof(VMKernelProcessList));
    ProcessList_init(&this->super, Class(VMKernelProcess), usersTable, pidWhiteList, userId);
@@ -395,7 +381,7 @@ ProcessList* ProcessList_new(UsersTable* usersTable, const Hashtable *pidWhiteLi
    if(e) CRT_fatalError("VSI_Get sched.globalStats.numPcpus", e);
    this->super.cpuCount = npcpus.ncpus;
    this->cpu_stats = xCalloc(npcpus.ncpus, sizeof(VMKernelCPUStatistics));
-   this->ncores = npcpus.ncores;
+   platform.ncores = npcpus.ncores;
 
    return &this->super;
 }
@@ -442,7 +428,7 @@ static void get_global_memory_stats(VMKernelProcessList *this) {
 }
 
 static void get_global_cpu_stats(VMKernelProcessList *this) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, 0);
 	for(int i = 0; i < this->super.cpuCount; i++) {
 		VMKernelCPUStatistics *htop_cpu_stats = this->cpu_stats + i;
@@ -475,7 +461,7 @@ static void get_global_cpu_stats(VMKernelProcessList *this) {
 }
 
 static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	struct world_info info;
 	assert(this->world_info_size <= sizeof info);
@@ -495,7 +481,7 @@ static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_world_name(const VMKernelProcessList *this, Process *proc) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	char buffer[128];
 	int e = Platform_vsiGet(platform.world_name_id, platform.world_name_cksum,
@@ -506,7 +492,7 @@ static void get_world_name(const VMKernelProcessList *this, Process *proc) {
 
 static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 	if(proc->tgid <= 0) return false;
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->tgid);
 	char buffer[1024];
 	int e = Platform_vsiGet(platform.userworld_cartel_cmdline_id,
@@ -518,7 +504,7 @@ static bool get_cartel_command(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->pid);
 	switch(Platform_running_vmkernel_version) {
 			struct memstats_common_32 common32;
@@ -560,7 +546,7 @@ static void get_memory_stats(const VMKernelProcessList *this, Process *proc) {
 }
 
 static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *proc) {
-	struct vsi_list *list = allocate_vsi_list(1, 0);
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->super.pid);
 	switch(Platform_running_vmkernel_version) {
 			struct vcpu_stats_5_5 stats_5_5;
@@ -928,7 +914,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 			break;
 	}
 	uint64_t diff = proc->time_usec;
-	list = allocate_vsi_list(1, 0);
+	list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, proc->super.pid);
 	switch(Platform_running_vmkernel_version) {
 			struct vcpu_state_times_5_0 state_times_5_0;
@@ -977,7 +963,7 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 		proc->super.percent_cpu = (double)diff / (double)this->interval_usec * 100;
 	}
 	if(this->super.settings->flags & PROCESS_FLAG_VMKERNEL_VCPU_COUNT) {
-		list = allocate_vsi_list(1, 0);
+		list = Platform_allocateVsiList(1, 0);
 		Platform_vsiListAddInt(list, proc->super.pid);
 		int e = Platform_vsiGet(platform.sched_cpuclients_numvcpus_id,
 			platform.sched_cpuclients_numvcpus_cksum, list,
