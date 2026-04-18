@@ -181,13 +181,7 @@ bool Process_isExtraThreadProcess(const Process *this) {
 }
 
 char **Process_getKernelStackTrace(const Process *this) {
-	size_t list_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	struct vsi_list *list = xMalloc(list_size);
-	memset(list, 0, list_size);
-	list->type_or_version = 1;
-	list->allocated_count = 1;
-	list->param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param);
-	list->self_ptr = (uintptr_t)list;
+	struct vsi_list *list = Platform_allocateVsiList(1, 0);
 	Platform_vsiListAddInt(list, this->pid);
 	struct world_backtrace_frame { uint64_t pc, bp; } frames[25];
 	int e = Platform_vsiGet(platform.world_backtrace_id, platform.world_backtrace_cksum,
