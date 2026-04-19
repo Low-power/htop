@@ -602,3 +602,55 @@ char **Process_getKernelStackTrace(const Process *this) {
 	v[i] = NULL;
 	return v;
 }
+
+char **Process_getVirtualMemoryMappings(const Process *this) {
+	char **v = xMalloc(2 * sizeof(char *));
+	char path[sizeof PROCDIR + 17];
+	xSnprintf(path, sizeof path, PROCDIR "/%d/maps", (int)this->pid);
+	FILE *f = fopen(path, "r");
+	if(!f) {
+		v[0] = strdup(strerror(errno));
+		if(v[0]) {
+			v[1] = NULL;
+		} else {
+			free(v);
+			v = NULL;
+		}
+		return v;
+	}
+	int i = 0;
+	char *line;
+	while((line = String_readLine(f))) {
+		unsigned long long int begin_addr, end_addr;
+		char protection[5];
+		unsigned long long int offset;
+		unsigned int dev_major, dev_minor;
+		unsigned long long int fino;
+		int line_offset;
+		int n = sscanf(line, "%llx-%llx %4s %llx %x:%x %llu %n",
+			&begin_addr, &end_addr, protection, &offset,
+			&dev_major, &dev_minor, &fino, &line_offset);
+		if(n < 7) {
+			v[i] = line;
+		} else {
+			size_t size = 95;
+			size_t path_len = strlen(line + line_offset);
+			if(path_len) size += 1 + path_len;
+			v[i] = xMalloc(size);
+			int j = snprintf(v[i], size,
+				"0x%016llx 0x%016llx %s 0x%016llx %04x:%02x %18llu",
+				begin_addr, end_addr, protection, offset, dev_major, dev_minor, fino);
+			assert(j < size);
+			if(path_len) {
+				v[i][j] = ' ';
+				memcpy(v[i] + j + 1, line + line_offset, path_len + 1);
+			}
+			free(line);
+		}
+		if(i++) v = xRealloc(v, (i + 1) * sizeof(char *));
+	}
+	fclose(f);
+	if(!i) v[i++] = xStrdup("No mapping entry");
+	v[i] = NULL;
+	return v;
+}

@@ -43,16 +43,47 @@ typedef struct {
 #include <string.h>
 #include <stdlib.h>
 
-#define WORLD_SYSTEM 0x01
-#define WORLD_IDLE 0x02
-#define WORLD_USER 0x04
-#define WORLD_VMM 0x08
-#define WORLD_HELPER 0x10
-#define WORLD_CLONE 0x20
-#define WORLD_TEST 0x40
-#define WORLD_UWVCPU 0x80
-#define WORLD_ASSISTANT 0x100
-#define WORLD_UTILITY_VM 0x200
+struct mem_map_entry_5_0 {
+	uint64_t start_address;
+	uint32_t length;
+	uint32_t type;
+	uint32_t protection;
+	int32_t fd;
+	char name[128];
+	uint32_t is_pinned;
+	uint32_t reserved_pages;
+	uint32_t faulted_pages;
+} __attribute__((__packed__));
+
+struct mem_map_entry_6_0 {
+	uint64_t start_address;
+	uint32_t length;
+	uint32_t unaccounted_length;
+	uint32_t type;
+	uint32_t protection;
+	int32_t fd;
+	char name[128];
+	uint32_t is_pinned;
+	uint32_t faulted_pages;
+	int32_t page_pool;
+	uint32_t _reserved;
+} __attribute__((__packed__));
+
+struct mem_map_entry_6_5 {
+	uint64_t start_address;
+	uint32_t length;
+	uint32_t unaccounted_length;
+	uint32_t type;
+	uint32_t protection;
+	int32_t fd;
+	char name[1984];
+	uint32_t is_pinned;
+	uint32_t is_reserved;
+	uint32_t is_shared;
+	uint32_t faulted_pages;
+	int32_t page_pool;
+	uint32_t _reserved;
+} __attribute__((__packed__));
 
 ProcessClass VMKernelProcess_class = {
    .super = {
@@ -224,5 +255,121 @@ char **Process_getKernelStackTrace(const Process *this) {
 	}
 	free(list);
 	v[i] = NULL;
+	return v;
+}
+
+char **Process_getVirtualMemoryMappings(const Process *this) {
+	static const char prot_name_map[3] = { '-', 'r', 'w' };
+	static const char *const type_name_map[11] = {
+		"unused", "anon", "file", "phys", "mpn", "ktext", "tdata", "contig", "unmap", "shared", "end"
+	};
+	static const char *const type_name_map_6_7[8] = {
+		"unused", "anon", "file", "phys", "mpn", "ktext", "contig", "end"
+	};
+
+	struct vsi_list *list = Platform_allocateVsiList(2, 0);
+	Platform_vsiListAddInt(list, this->tgid);
+	struct vsi_list *map_entries_list = xMalloc(sizeof(struct vsi_list));
+	memset(map_entries_list, 0, sizeof(struct vsi_list));
+	map_entries_list->type_or_version = 1;
+	map_entries_list->param_size = sizeof(struct vsi_list);
+	map_entries_list->self_ptr = (uintptr_t)map_entries_list;
+	int e = Platform_vsiGetList(platform.userworld_cartel_mem_mmaps_id,
+		platform.userworld_cartel_mem_mmaps_cksum,
+		list, map_entries_list, sizeof(struct vsi_list));
+	if(e) {
+ret_err_msg:
+		free(list);
+		free(map_entries_list);
+		char **v = xMalloc(2 * sizeof(char *));
+		v[0] = xMalloc(56);
+		xSnprintf(v[0], 56, "VSI_GetList userworld.cartel.mem.mmaps error 0x%08x", e);
+		v[1] = NULL;
+		return v;
+	}
+	size_t count = map_entries_list->instance_count;
+	map_entries_list->instance_count = 0;
+	size_t param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
+	size_t string_size = 128 * count;
+	size_t list_size = param_size + string_size;
+	map_entries_list = xRealloc(map_entries_list, list_size);
+	map_entries_list->allocated_count = count;
+	map_entries_list->param_size = param_size;
+	map_entries_list->string_size = string_size;
+	map_entries_list->string_offset = param_size;
+	map_entries_list->self_ptr = (uintptr_t)map_entries_list;
+	e = Platform_vsiGetList(platform.userworld_cartel_mem_mmaps_id,
+		platform.userworld_cartel_mem_mmaps_cksum,
+		list, map_entries_list, list_size);
+	if(e) goto ret_err_msg;
+	Platform_vsiListAddInt(list, 0);
+	char **v = xMalloc((map_entries_list->instance_count + 1) * sizeof(char *));
+	for(size_t i = 0; i < map_entries_list->instance_count; i++) {
+		uint64_t addr = Platform_vsiListGetValue(map_entries_list, i);
+		Platform_vsiListSetValue(list, 1, addr);
+		struct mem_map_entry_5_0 mme_5_0;
+		struct mem_map_entry_6_0 mme_6_0;
+		struct mem_map_entry_6_5 mme_6_5;
+		unsigned long long int begin_addr, end_addr;
+		unsigned int type;
+		int prot, is_pinned, is_reserved, is_shared;
+		const char *name;
+		switch(Platform_running_vmkernel_version) {
+#define CALL_VSI_GET_AND_COPY_VALUES(SUFFIX) \
+				e = Platform_vsiGet(platform.userworld_cartel_mem_mmaps_id, \
+					platform.userworld_cartel_mem_mmaps_cksum, list, \
+					&mme_##SUFFIX, sizeof mme_##SUFFIX); \
+				if(e) goto failure; \
+				begin_addr = mme_##SUFFIX.start_address; \
+				end_addr = mme_##SUFFIX.start_address + mme_##SUFFIX.length; \
+				type = mme_##SUFFIX.type; \
+				prot = mme_##SUFFIX.protection < sizeof prot_name_map ? \
+					prot_name_map[mme_##SUFFIX.protection] : '?'; \
+				is_pinned = mme_##SUFFIX.is_pinned ? 'P' : '-'; \
+				name = mme_##SUFFIX.name;
+			case VMKERNEL_VERSION_5_5:
+				CALL_VSI_GET_AND_COPY_VALUES(5_0)
+				is_reserved = '?';
+				is_shared = '?';
+				break;
+			case VMKERNEL_VERSION_6_0:
+				CALL_VSI_GET_AND_COPY_VALUES(6_0)
+				is_reserved = '?';
+				is_shared = '?';
+				break;
+			case VMKERNEL_VERSION_6_5:
+			case VMKERNEL_VERSION_6_7:
+				CALL_VSI_GET_AND_COPY_VALUES(6_5)
+				is_reserved = mme_6_5.is_reserved ? 'R' : '-';
+				is_shared = mme_6_5.is_shared ? 's' : 'p';
+				break;
+			failure:
+				v[i] = xMalloc(73);
+				xSnprintf(v[i], 73,
+					"VSI_Get userworld.cartel.mem.mmaps (0x%016llx) error 0x%08x",
+					(unsigned long long int)addr, e);
+				continue;
+			default:
+				abort();
+#undef CALL_VSI_GET_AND_COPY_VALUES
+		}
+		const char *type_s = Platform_running_vmkernel_version == VMKERNEL_VERSION_6_7 ?
+			(type < sizeof type_name_map_6_7 / sizeof(char *) ? type_name_map_6_7[type] : "?") :
+			(type < sizeof type_name_map / sizeof(char *) ? type_name_map[type] : "?");
+		size_t size = 50;
+		size_t name_len = strlen(name);
+		if(name_len) size += 1 + name_len;
+		v[i] = xMalloc(size);
+		int j = snprintf(v[i], size, "0x%016llx 0x%016llx %c%c%c%c %-6s",
+			begin_addr, end_addr, prot, is_pinned, is_reserved, is_shared, type_s);
+		assert(j < 50);
+		if(name_len) {
+			v[i][j] = ' ';
+			memcpy(v[i] + j + 1, name, name_len + 1);
+		}
+	}
+	free(list);
+	v[map_entries_list->instance_count] = NULL;
+	free(map_entries_list);
 	return v;
 }

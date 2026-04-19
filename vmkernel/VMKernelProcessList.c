@@ -47,6 +47,17 @@ typedef struct {
 #include <errno.h>
 #include <assert.h>
 
+#define WORLD_SYSTEM 0x01
+#define WORLD_IDLE 0x02
+#define WORLD_USER 0x04
+#define WORLD_VMM 0x08
+#define WORLD_HELPER 0x10
+#define WORLD_CLONE 0x20
+#define WORLD_TEST 0x40
+#define WORLD_UWVCPU 0x80
+#define WORLD_ASSISTANT 0x100
+#define WORLD_UTILITY_VM 0x200
+
 struct world_info {
 	uint32_t world_id;
 	uint32_t group_id;
@@ -986,14 +997,17 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	get_global_memory_stats(this);
 	get_global_cpu_stats(this);
 
+	struct vsi_list empty_list = {
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&empty_list
+	};
 	struct vsi_list *worlds_list = xMalloc(sizeof(struct vsi_list));
 	memset(worlds_list, 0, sizeof(struct vsi_list));
 	worlds_list->type_or_version = 1;
 	worlds_list->param_size = sizeof(struct vsi_list);
 	worlds_list->self_ptr = (uintptr_t)worlds_list;
 	int e = Platform_vsiGetList(platform.world_id, platform.world_cksum,
-		worlds_list, sizeof(struct vsi_list));
-	if(e) CRT_fatalError("VSI_GetList", e);
+		&empty_list, worlds_list, sizeof(struct vsi_list));
+	if(e) CRT_fatalError("VSI_GetList world", e);
 	size_t count = worlds_list->instance_count;
 	worlds_list->instance_count = 0;
 	size_t param_size = sizeof(struct vsi_list) + sizeof(struct vsi_param) * count;
@@ -1005,8 +1019,9 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 	worlds_list->string_size = string_size;
 	worlds_list->string_offset = param_size;
 	worlds_list->self_ptr = (uintptr_t)worlds_list;
-	e = Platform_vsiGetList(platform.world_id, platform.world_cksum, worlds_list, list_size);
-	if(e) CRT_fatalError("VSI_GetList", e);
+	e = Platform_vsiGetList(platform.world_id, platform.world_cksum,
+		&empty_list, worlds_list, list_size);
+	if(e) CRT_fatalError("VSI_GetList world", e);
 	for(size_t i = 0; i < worlds_list->instance_count; i++) {
 		pid_t pid = Platform_vsiListGetValue(worlds_list, i);
 		bool is_existing;

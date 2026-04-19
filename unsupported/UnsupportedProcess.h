@@ -25,4 +25,6 @@ bool Process_isExtraThreadProcess(const Process *this);
 
 char **Process_getKernelStackTrace(const Process *this);
 
+char **Process_getVirtualMemoryMappings(const Process *this);
+
 #endif

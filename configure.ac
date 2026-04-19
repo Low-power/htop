@@ -433,7 +433,7 @@ if test "$my_htop_platform" = "freebsd"; then
 		])
 	AC_CHECK_MEMBERS(
 		dnl Don't break this argument into multiple lines
-		[struct kinfo_proc.ki_jid, struct kinfo_proc.ki_fibnum, struct kinfo_proc.ki_rusage_ch],
+		[struct kinfo_proc.ki_jid, struct kinfo_proc.ki_fibnum, struct kinfo_proc.ki_rusage_ch, struct kinfo_vmentry.kve_offset, struct kinfo_vmentry.kve_vn_fsid, struct kinfo_vmentry.kve_vn_fileid],
 		[], [],
 		[
 			#include <sys/param.h>

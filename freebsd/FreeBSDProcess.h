@@ -5,7 +5,7 @@
 /*
 htop - freebsd/FreeBSDProcess.h
 (C) 2015 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -74,5 +74,7 @@ bool Process_isKernelProcess(const Process *this);
 bool Process_isExtraThreadProcess(const Process* this);
 
 char **Process_getKernelStackTrace(const Process *this);
+
+char **Process_getVirtualMemoryMappings(const Process *this);
 
 #endif

@@ -124,6 +124,7 @@ typedef struct Process_ {
 bool Process_isKernelProcess(const Process *);
 bool Process_isExtraThreadProcess(const Process *);
 char **Process_getKernelStackTrace(const Process *);
+char **Process_getVirtualMemoryMappings(const Process *);
 extern FieldData Process_fields[];
 extern ProcessPidColumn Process_pidColumns[];
 

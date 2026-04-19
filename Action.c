@@ -8,22 +8,23 @@ in the source distribution for its full text.
 
 #include "config.h"
 
-#include "Action.h"
-#include "Affinity.h"
-#include "AffinityPanel.h"
-#include "CategoriesPanel.h"
-#include "CRT.h"
-#include "ArgScreen.h"
-#include "EnvScreen.h"
-#include "KernelStackTraceScreen.h"
-#include "MainPanel.h"
-#include "OpenFilesScreen.h"
-#include "Process.h"
-#include "ScreenManager.h"
-#include "SignalsPanel.h"
-#include "StringUtils.h"
-#include "TraceScreen.h"
-#include "Platform.h"
+#include <Action.h>
+#include <Affinity.h>
+#include <AffinityPanel.h>
+#include <CategoriesPanel.h>
+#include <CRT.h>
+#include <ArgScreen.h>
+#include <EnvScreen.h>
+#include <KernelStackTraceScreen.h>
+#include <VirtualMemoryMappingsScreen.h>
+#include <MainPanel.h>
+#include <OpenFilesScreen.h>
+#include <Process.h>
+#include <ScreenManager.h>
+#include <SignalsPanel.h>
+#include <StringUtils.h>
+#include <TraceScreen.h>
+#include <Platform.h>
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
@@ -644,6 +645,17 @@ static Htop_Reaction show_kernel_stack_trace_screen(State *st) {
 	return HTOP_REFRESH | HTOP_REDRAW_BAR;
 }
 
+static Htop_Reaction show_virtual_memory_mappings_screen(State *st) {
+	const Process *proc = (const Process *)Panel_getSelected(st->panel);
+	if(!proc) return HTOP_OK;
+	VirtualMemoryMappingsScreen *screen = VirtualMemoryMappingsScreen_new(proc);
+	InfoScreen_run((InfoScreen *)screen);
+	VirtualMemoryMappingsScreen_delete((Object *)screen);
+	clear();
+	CRT_enableDelay();
+	return HTOP_REFRESH | HTOP_REDRAW_BAR;
+}
+
 
 void Action_setBindings(Htop_Action* keys) {
 #ifdef KEY_RESIZE
@@ -704,4 +716,5 @@ void Action_setBindings(Htop_Action* keys) {
    keys['A'] = show_arg_screen_action;
    keys['e'] = actionShowEnvScreen;
    keys['S'] = show_kernel_stack_trace_screen;
+   keys['v'] = show_virtual_memory_mappings_screen;
 }

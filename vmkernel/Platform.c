@@ -59,6 +59,8 @@ typedef struct {
 	uint32_t userworld_id;
 	uint32_t userworld_cartel_id;
 	uint32_t userworld_cartel_cmdline_id;
+	uint32_t userworld_cartel_mem_id;
+	uint32_t userworld_cartel_mem_mmaps_id;
 	uint32_t memory_id;
 	uint32_t memory_comprehensive_id;
 	uint32_t system_id;
@@ -93,6 +95,8 @@ typedef struct {
 	uint64_t userworld_cksum;
 	uint64_t userworld_cartel_cksum;
 	uint64_t userworld_cartel_cmdline_cksum;
+	uint64_t userworld_cartel_mem_cksum;
+	uint64_t userworld_cartel_mem_mmaps_cksum;
 	uint64_t memory_cksum;
 	uint64_t memory_comprehensive_cksum;
 	uint64_t system_cksum;
@@ -366,6 +370,12 @@ void Platform_init() {
    e = vsi_get_node_id_and_checksum(platform.userworld_cartel_id, "cmdline",
       &platform.userworld_cartel_cmdline_id, &platform.userworld_cartel_cmdline_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.cmdline", e);
+   e = vsi_get_node_id_and_checksum(platform.userworld_cartel_id, "mem",
+      &platform.userworld_cartel_mem_id, &platform.userworld_cartel_mem_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.mem", e);
+   e = vsi_get_node_id_and_checksum(platform.userworld_cartel_mem_id, "mmaps",
+      &platform.userworld_cartel_mem_mmaps_id, &platform.userworld_cartel_mem_mmaps_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo userworld.cartel.mem.mmaps", e);
    e = vsi_get_node_id_and_checksum(0, "memory", &platform.memory_id, &platform.memory_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo memory", e);
    e = vsi_get_node_id_and_checksum(platform.memory_id, "comprehensive",
@@ -630,35 +640,29 @@ static int vsi_get_6_5(uint32_t node_id, uint64_t node_cksum, const struct vsi_l
 
 static int (*vsi_get)(uint32_t, uint64_t, const struct vsi_list *, void *, size_t);
 
-static int vsi_get_list_5_0(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
-	struct vsi_list input_list = {
-		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
-	};
+static int vsi_get_list_5_0(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *input_list, struct vsi_list *output_list, size_t size) {
 	struct {
 		uint64_t checksum;
 		size_t output_size;
 	} extra_args[2] = {
 		{ node_cksum, size }, { node_cksum, size }
 	};
-	return syscall(SYS_VSI_GetList, node_id, 0, &input_list, input_list.param_size, list,
-		extra_args);
+	return syscall(SYS_VSI_GetList, node_id, 0, input_list, input_list->param_size,
+		output_list, extra_args);
 }
 
-static int vsi_get_list_6_5(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
-	struct vsi_list input_list = {
-		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
-	};
+static int vsi_get_list_6_5(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *input_list, struct vsi_list *output_list, size_t size) {
 	struct {
 		struct vsi_list *output_list;
 		size_t output_size;
 	} extra_args[2] = {
-		{ list, size }, { list, size }
+		{ output_list, size }, { output_list, size }
 	};
-	return syscall(SYS_VSI_GetList, node_id, 0, node_cksum, &input_list, input_list.param_size,
+	return syscall(SYS_VSI_GetList, node_id, 0, node_cksum, input_list, input_list->param_size,
 		extra_args);
 }
 
-static int (*vsi_get_list)(uint32_t, uint64_t, struct vsi_list *, size_t);
+static int (*vsi_get_list)(uint32_t, uint64_t, const struct vsi_list *, struct vsi_list *, size_t);
 
 #endif
 
@@ -766,23 +770,20 @@ int Platform_vsiGet(uint32_t node_id, uint64_t node_cksum, const struct vsi_list
 #endif
 }
 
-int Platform_vsiGetList(uint32_t node_id, uint64_t node_cksum, struct vsi_list *list, size_t size) {
+int Platform_vsiGetList(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *input_list, struct vsi_list *output_list, size_t size) {
 #ifdef __i386__
-	struct vsi_list input_list = {
-		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&input_list
-	};
 	struct {
 		uint64_t checksum;
 		size_t input_size;
 		struct vsi_list *output_list;
 		size_t output_size;
 	} extra_args[2] = {
-		{ node_cksum, input_list.param_size, list, size },
-		{ node_cksum, input_list.param_size, list, size }
+		{ node_cksum, input_list->param_size, output_list, size },
+		{ node_cksum, input_list->param_size, output_list, size }
 	};
-	return VMKSC(SYS_VSI_GetList, node_id, 0, &input_list, extra_args);
+	return VMKSC(SYS_VSI_GetList, node_id, 0, input_list, extra_args);
 #else
 	if(!vsi_get_list) check_vmkernel_version();
-	return vsi_get_list(node_id, node_cksum, list, size);
+	return vsi_get_list(node_id, node_cksum, input_list, output_list, size);
 #endif
 }

@@ -406,3 +406,7 @@ void DarwinProcess_setFromMachTaskInfo(DarwinProcess *dp, DarwinProcessList *dpl
 char **Process_getKernelStackTrace(const Process *this) {
 	return NULL;
 }
+
+char **Process_getVirtualMemoryMappings(const Process *this) {
+	return NULL;
+}

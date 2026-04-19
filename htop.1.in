@@ -1,4 +1,4 @@
-.TH "HTOP" "1" "2023" "@PACKAGE_STRING@" "Utils"
+.TH "HTOP" "1" "2026" "@PACKAGE_STRING@" "Utils"
 .SH "NAME"
 htop \- interactive process viewer
 .SH "SYNOPSIS"
@@ -119,6 +119,9 @@ Display environment variables of the selected process in a separated screen.
 .TP
 .B S
 Display kernel stack trace of the selected process in a separated screen.
+.TP
+.B v
+Display virtual memory mappings of the selected process in a separated screen.
 .TP
 .B F1, h, ?
 Go to the help screen

@@ -1,7 +1,7 @@
 /*
 htop - freebsd/FreeBSDProcess.c
 (C) 2015 Hisham H. Muhammad
-Copyright 2015-2025 Rivoreo
+Copyright 2015-2026 Rivoreo
 Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
@@ -336,6 +336,130 @@ ret_err_msg:
 		}
 	}
 	free(kiks_buffer);
+	v[i] = NULL;
+	return v;
+#else
+	return NULL;
+#endif
+}
+
+char **Process_getVirtualMemoryMappings(const Process *this) {
+#ifdef KERN_PROC_VMMAP
+#ifndef KVME_FLAG_SUPER
+#define KVME_FLAG_SUPER 0x8
+#endif
+#ifndef KVME_TYPE_SG
+#define KVME_TYPE_SG 7
+#endif
+#ifndef KVME_TYPE_MGTDEVICE
+#define KVME_TYPE_MGTDEVICE 8
+#endif
+	static const char *const vm_type_name_map[] = {
+		[KVME_TYPE_NONE] = "none",
+		[KVME_TYPE_DEFAULT] = "default",
+		[KVME_TYPE_VNODE] = "vnode",
+		[KVME_TYPE_SWAP] = "swap",
+		[KVME_TYPE_DEVICE] = "device",
+		[KVME_TYPE_PHYS] = "physical",
+		[KVME_TYPE_DEAD] = "dead",
+		[KVME_TYPE_SG] = "sg",
+		[KVME_TYPE_MGTDEVICE] = "mgtdevice",
+	};
+
+	char **v = xMalloc(2 * sizeof(char *));
+	int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_VMMAP, this->pid };
+	size_t buffer_size;
+retry_get_size:
+	if(sysctl(mib, 4, NULL, &buffer_size, NULL, 0) < 0) {
+ret_err_msg:
+		v[0] = strdup(strerror(errno));
+		if(v[0]) {
+			v[1] = NULL;
+		} else {
+			free(v);
+			v = NULL;
+		}
+		return v;
+	}
+	if(buffer_size < offsetof(struct kinfo_vmentry, kve_path) + 1) {
+		v[0] = xStrdup("No mapping entry");
+		v[1] = NULL;
+		return v;
+	}
+	void *buffer = malloc(buffer_size);
+	if(!buffer) goto ret_err_msg;
+	if(sysctl(mib, 4, buffer, &buffer_size, NULL, 0) < 0) {
+		int e = errno;
+		free(buffer);
+		if(e == ENOMEM) goto retry_get_size;
+		errno = e;
+		goto ret_err_msg;
+	}
+	const struct kinfo_vmentry *kive = buffer;
+	if(kive->kve_path >= (const char *)buffer + buffer_size || kive->kve_structsize <= 0) {
+		free(buffer);
+		v[0] = xStrdup("No mapping entry");
+		v[1] = NULL;
+		return v;
+	}
+	int i = 0;
+	do {
+		size_t line_len = 56;
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_OFFSET
+		line_len += 19;
+#endif
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_VN_FSID
+		line_len += 11;
+#endif
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_VN_FILEID
+		line_len += 21;
+#endif
+		size_t path_len = strlen(kive->kve_path);
+		line_len += path_len;
+		v[i] = xMalloc(line_len);
+		int len = snprintf(v[i], line_len, "0x%016llx 0x%016llx %c%c%c %c%c%c %-9s ",
+			(unsigned long long int)kive->kve_start, (unsigned long long int)kive->kve_end,
+			kive->kve_protection & KVME_PROT_READ ? 'r' : '-',
+			kive->kve_protection & KVME_PROT_WRITE ? 'w' : '-',
+			kive->kve_protection & KVME_PROT_EXEC ? 'x' : '-',
+			kive->kve_flags & KVME_FLAG_COW ? 'C' : '-',
+			kive->kve_flags & KVME_FLAG_NEEDS_COPY ? 'N' : '-',
+			kive->kve_flags & KVME_FLAG_SUPER ? 'S' : '-',
+			(size_t)kive->kve_type < sizeof vm_type_name_map / sizeof(char *) ?
+				vm_type_name_map[kive->kve_type] : "unknown");
+		assert(len == 56);
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_OFFSET
+		int offset_len = snprintf(v[i] + len, line_len - len, "0x%016llx ",
+			(unsigned long long int)kive->kve_offset);
+		assert(offset_len == 19);
+		len += offset_len;
+#endif
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_VN_FSID
+		if(kive->kve_type == KVME_TYPE_VNODE) {
+			int fsid_len = snprintf(v[i] + len, line_len - len, "0x%08x ",
+				(unsigned int)kive->kve_vn_fsid);
+			assert(fsid_len == 11);
+		} else {
+			memset(v[i] + len, ' ', 11);
+		}
+		len += 11;
+#endif
+#ifdef HAVE_STRUCT_KINFO_VMENTRY_KVE_VN_FILEID
+		if(kive->kve_type == KVME_TYPE_VNODE) {
+			int fi_len = snprintf(v[i] + len, line_len - len, "%18llu ",
+				(unsigned long long int)kive->kve_vn_fileid);
+			assert(fi_len <= 21);
+			len += fi_len;
+		} else {
+			memset(v[i] + len, ' ', 19);
+			len += 19;
+		}
+#endif
+		memcpy(v[i] + len, kive->kve_path, path_len + 1);
+		if(i++) v = xRealloc(v, (i + 1) * sizeof(char *));
+		kive = (const struct kinfo_vmentry *)((const char *)kive + kive->kve_structsize);
+	} while(kive->kve_path < (const char *)buffer + buffer_size && kive->kve_structsize > 0);
+	free(buffer);
 	v[i] = NULL;
 	return v;
 #else
