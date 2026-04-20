@@ -609,9 +609,6 @@ bool Platform_haveSwap() {
 
 int Platform_running_vmkernel_version;
 
-int Platform_vsi_int;
-int Platform_vsi_string;
-
 #ifndef __i386__
 
 static int vsi_get_5_0(uint32_t node_id, uint64_t node_cksum, const struct vsi_list *list, void *buffer, size_t size) {
@@ -681,32 +678,24 @@ static void check_vmkernel_version() {
 	Platform_running_vmkernel_version = major_version * 10 + minor_version;
 	switch(Platform_running_vmkernel_version) {
 		case VMKERNEL_VERSION_5_5:
-			Platform_vsi_int = 0;
-			Platform_vsi_string = 1;
 #ifndef __i386__
 			vsi_get = vsi_get_5_0;
 			vsi_get_list = vsi_get_list_5_0;
 #endif
 			break;
 		case VMKERNEL_VERSION_6_0:
-			Platform_vsi_int = 0;
-			Platform_vsi_string = 1;
 #ifndef __i386__
 			vsi_get = vsi_get_5_0;
 			vsi_get_list = vsi_get_list_5_0;
 #endif
 			break;
 		case VMKERNEL_VERSION_6_5:
-			Platform_vsi_int = 0;
-			Platform_vsi_string = 1;
 #ifndef __i386__
 			vsi_get = vsi_get_6_5;
 			vsi_get_list = vsi_get_list_6_5;
 #endif
 			break;
 		case VMKERNEL_VERSION_6_7:
-			Platform_vsi_int = 1;
-			Platform_vsi_string = 2;
 #ifndef __i386__
 			vsi_get = vsi_get_6_5;
 			vsi_get_list = vsi_get_list_6_5;
