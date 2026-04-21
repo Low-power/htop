@@ -11,20 +11,20 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <BatteryMeter.h>
+#include <SignalsPanel.h>
+
+#define PLATFORM_SUPPORT_PROCESS_O_STATE
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+
 #ifdef SAFE_TO_DEFINE_KERNEL
 #define _KERNEL
 #endif
 #ifdef SAFE_TO_DEFINE_KERNEL
 #undef _KERNEL
 #endif
-
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-
-#define PLATFORM_SUPPORT_PROCESS_O_STATE
-#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
 
 void Platform_init();
 
@@ -43,7 +43,7 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+void Platform_getLoadAverage(double *values);
 
 int Platform_getMaxPid();
 

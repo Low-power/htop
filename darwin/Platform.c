@@ -7,29 +7,31 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "Platform.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "UsersMeter.h"
-#include "DarwinProcessList.h"
+/*{
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <SignalsPanel.h>
+#include <CPUMeter.h>
+#include <BatteryMeter.h>
+#include <DarwinProcess.h>
+}*/
+
+#include "config.h"
+#include <Platform.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UptimeMeter.h>
+#include <UsersMeter.h>
+#include <DarwinProcessList.h>
 #include <mach/mach_init.h>	/* For vm_page_size */
 #include <signal.h>
 #include <stdlib.h>
-
-/*{
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "SignalsPanel.h"
-#include "CPUMeter.h"
-#include "BatteryMeter.h"
-#include "DarwinProcess.h"
-}*/
+#include <assert.h>
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
@@ -141,16 +143,19 @@ void Platform_setBindings(Htop_Action* keys) {
 
 const unsigned int Platform_numberOfFields = 100;
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   double results[3];
-   if(getloadavg(results, 3) == 3) {
-      *one = results[0];
-      *five = results[1];
-      *fifteen = results[2];
+void Platform_getLoadAverage(double *values) {
+   int mib[2] = { CTL_VM, VM_LOADAVG };
+   struct loadavg loadavg;
+   size_t size = sizeof loadavg;
+   assert(sizeof loadavg.ldavg / sizeof *loadavg.ldavg >= 3);
+   if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
+      values[0] = 0;
+      values[1] = 0;
+      values[2] = 0;
    } else {
-      *one = 0;
-      *five = 0;
-      *fifteen = 0;
+      values[0] = (double)loadavg.ldavg[0] / loadavg.fscale;
+      values[1] = (double)loadavg.ldavg[1] / loadavg.fscale;
+      values[2] = (double)loadavg.ldavg[2] / loadavg.fscale;
    }
 }
 

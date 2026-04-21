@@ -54,7 +54,7 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+void Platform_getLoadAverage(double *values);
 
 int Platform_getMaxPid();
 

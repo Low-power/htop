@@ -19,22 +19,23 @@ in the source distribution for its full text.
 #define PLATFORM_HAVE_BUFFERS_MEMORY_CLASS
 }*/
 
-#include "Platform.h"
-#include "LinuxProcess.h"
-#include "LinuxProcessList.h"
-#include "IOPriority.h"
-#include "IOPriorityPanel.h"
-#include "Battery.h"
-#include "Meter.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UsersMeter.h"
+#include "config.h"
+#include <Platform.h>
+#include <LinuxProcess.h>
+#include <LinuxProcessList.h>
+#include <IOPriority.h>
+#include <IOPriorityPanel.h>
+#include <Battery.h>
+#include <Meter.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <UptimeMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UsersMeter.h>
 #include <signal.h>
 #include <string.h>
 #include <math.h>
@@ -171,12 +172,12 @@ int Platform_getUptime() {
    return (int) floor(uptime);
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   *one = 0; *five = 0; *fifteen = 0;
+void Platform_getLoadAverage(double *values) {
    FILE *f = fopen(PROCDIR "/loadavg", "r");
-   if(!f) return;
-   fscanf(f, "%32lf %32lf %32lf", one, five, fifteen);
-   fclose(f);
+   int i = f ? fscanf(f, "%32lf %32lf %32lf", values, values + 1, values + 2) : 0;
+   if(f) fclose(f);
+   if(i == EOF) i = 0;
+   while(i < 3) values[i++] = 0;
 }
 
 int Platform_getMaxPid() {

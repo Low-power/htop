@@ -7,21 +7,30 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-#include "Platform.h"
-#include "Meter.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "SignalsPanel.h"
-#include "OpenBSDProcess.h"
-#include "OpenBSDProcessList.h"
+/*{
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <BatteryMeter.h>
+#include <SignalsPanel.h>
 
+#define PLATFORM_SUPPORT_PROCESS_O_STATE
+#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
+}*/
+
+#include "config.h"
+#include <Platform.h>
+#include <Meter.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <UptimeMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <SignalsPanel.h>
+#include <OpenBSDProcess.h>
+#include <OpenBSDProcessList.h>
 #ifdef SAFE_TO_DEFINE_KERNEL
 #define _KERNEL
 struct proc;
@@ -42,16 +51,7 @@ struct proc;
 #include <kvm.h>
 #include <limits.h>
 #include <math.h>
-
-/*{
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "BatteryMeter.h"
-#include "SignalsPanel.h"
-
-#define PLATFORM_SUPPORT_PROCESS_O_STATE
-#define PLATFORM_PRESENT_THREADS_AS_PROCESSES
-}*/
+#include <assert.h>
 
 void Platform_init() {
 }
@@ -132,19 +132,20 @@ MeterClass* Platform_meterTypes[] = {
    NULL
 };
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+void Platform_getLoadAverage(double *values) {
    int mib[2] = { CTL_VM, VM_LOADAVG };
    struct loadavg loadavg;
    size_t size = sizeof loadavg;
+   assert(sizeof loadavg.ldavg / sizeof *loadavg.ldavg >= 3);
    if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
-      *one = 0;
-      *five = 0;
-      *fifteen = 0;
-      return;
+      values[0] = 0;
+      values[1] = 0;
+      values[2] = 0;
+   } else {
+      values[0] = (double)loadavg.ldavg[0] / loadavg.fscale;
+      values[1] = (double)loadavg.ldavg[1] / loadavg.fscale;
+      values[2] = (double)loadavg.ldavg[2] / loadavg.fscale;
    }
-   *one     = (double)loadavg.ldavg[0] / loadavg.fscale;
-   *five    = (double)loadavg.ldavg[1] / loadavg.fscale;
-   *fifteen = (double)loadavg.ldavg[2] / loadavg.fscale;
 }
 
 int Platform_getMaxPid() {

@@ -150,21 +150,25 @@ int Platform_getUptime() {
 	return -1;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+void Platform_getLoadAverage(double *values) {
 #ifndef __PASE__
    unsigned long long int avenrun[3];
    int size = sizeof (avenrun);
-   if (getkerninfo(KINFO_GET_AVENRUN, (char*)avenrun, &size, 0) != -1) {
+   if (getkerninfo(KINFO_GET_AVENRUN, (char*)avenrun, &size, 0) < 0) {
+      values[0] = 0;
+      values[1] = 0;
+      values[2] = 0;
+   } else {
       // apply float scaling factor
-      *one = (double)avenrun [0] / 65536;
-      *five = (double)avenrun [1] / 65536;
-      *fifteen = (double)avenrun [2] / 65536;
+      values[0] = (double)avenrun [0] / 65536;
+      values[1] = (double)avenrun [1] / 65536;
+      values[2] = (double)avenrun [2] / 65536;
    }
 #else
    // IBM i doesn't generate load averages
-   *one = 0;
-   *five = 0;
-   *fifteen = 0;
+   values[0] = 0;
+   values[1] = 0;
+   values[2] = 0;
 #endif
 }
 

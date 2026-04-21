@@ -20,18 +20,19 @@ static inline mach_port_t get_host_port() {
 }
 }*/
 
-#include "Platform.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "UsersMeter.h"
-#include "HurdProcess.h"
-#include "HurdProcessList.h"
+#include "config.h"
+#include <Platform.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UptimeMeter.h>
+#include <UsersMeter.h>
+#include <HurdProcess.h>
+#include <HurdProcessList.h>
 #include <sys/mman.h>
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
@@ -126,21 +127,21 @@ int Platform_getUptime() {
 	return -1;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+void Platform_getLoadAverage(double *values) {
 	struct host_load_info load_info;
 	size_t size = sizeof load_info;
 	error_t e = host_info(get_host_port(), HOST_LOAD_INFO, (host_info_t)&load_info, &size);
 	if(e) {
-		*one = 0;
-		*five = 0;
-		*fifteen = 0;
+		values[0] = 0;
+		values[1] = 0;
+		values[2] = 0;
 	} else {
-		*one = load_info.avenrun[0];
-		*one /= LOAD_SCALE;
-		*five = load_info.avenrun[1];
-		*five /= LOAD_SCALE;
-		*fifteen = load_info.avenrun[2];
-		*fifteen /= LOAD_SCALE;
+		values[0] = load_info.avenrun[0];
+		values[0] /= LOAD_SCALE;
+		values[1] = load_info.avenrun[1];
+		values[1] /= LOAD_SCALE;
+		values[2] = load_info.avenrun[2];
+		values[2] /= LOAD_SCALE;
 	}
 }
 

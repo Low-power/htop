@@ -161,10 +161,10 @@ int Platform_getUptime() {
 	return system_time() / 1000000;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-	*one = 0;
-	*five = 0;
-	*fifteen = 0;
+void Platform_getLoadAverage(double *values) {
+	values[0] = 0;
+	values[1] = 0;
+	values[2] = 0;
 }
 
 int Platform_getMaxPid() {

@@ -21,7 +21,7 @@ static const int LoadAverageMeter_attributes[] = {
 int LoadMeter_attributes[] = { HTOP_LOAD_COLOR };
 
 static void LoadAverageMeter_updateValues(Meter* this, char* buffer, int size) {
-   Platform_getLoadAverage(&this->values[0], &this->values[1], &this->values[2]);
+   Platform_getLoadAverage(this->values);
    xSnprintf(buffer, size, "%.2f/%.2f/%.2f", this->values[0], this->values[1], this->values[2]);
 }
 
@@ -38,12 +38,11 @@ static void LoadAverageMeter_display(Object* cast, RichString* out) {
 }
 
 static void LoadMeter_updateValues(Meter* this, char* buffer, int size) {
-   double five, fifteen;
-   Platform_getLoadAverage(&this->values[0], &five, &fifteen);
-   if (this->values[0] > this->total) {
-      this->total = this->values[0];
-   }
-   xSnprintf(buffer, size, "%.2f", this->values[0]);
+   double values[3];
+   Platform_getLoadAverage(values);
+   this->values[0] = values[0];
+   if (values[0] > this->total) this->total = values[0];
+   xSnprintf(buffer, size, "%.2f", values[0]);
 }
 
 static void LoadMeter_display(Object* cast, RichString* out) {

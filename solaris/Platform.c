@@ -163,12 +163,10 @@ int Platform_getUptime() {
 	return -1;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   double plat_loadavg[LOADAVG_NSTATS];
-   if(getloadavg(plat_loadavg, LOADAVG_NSTATS) < 0) return;
-   *one = plat_loadavg[LOADAVG_1MIN];
-   *five = plat_loadavg[LOADAVG_5MIN];
-   *fifteen = plat_loadavg[LOADAVG_15MIN];
+void Platform_getLoadAverage(double *values) {
+   int i = getloadavg(values, 3);
+   if(i < 0) i = 0;
+   while(i < 3) values[i++] = 0;
 }
 
 int Platform_getMaxPid() {

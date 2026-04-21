@@ -179,6 +179,7 @@ static inline void Platform_vsiListSetValue(struct vsi_list *list, int i, uint64
 
 }*/
 
+#include "config.h"
 #include "vmk_error_codes.h"
 #include <Platform.h>
 #include <CPUMeter.h>
@@ -491,7 +492,7 @@ int Platform_getUptime() {
 	return e == VMK_OK ? (int)(uptime / 1000000) : -1;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
+void Platform_getLoadAverage(double *values) {
 	uint32_t vsi_node_ids[3] = {
 		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_id,
 		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_id,
@@ -502,7 +503,6 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_cksum,
 		platform.sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_cksum
 	};
-	double *store_dests[3] = { one, five, fifteen };
 
 	assert(platform.ncores > 0);
 	double divisor = platform.ncores * 100;
@@ -513,7 +513,7 @@ void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
 		struct cpu_load_history_info_in_pct load_info;
 		int e = Platform_vsiGet(vsi_node_ids[i], vsi_node_cksums[i], list,
 			&load_info, sizeof load_info);
-		*(store_dests[i]) = e ? 0 : load_info.avg_active / divisor;
+		values[i] = e ? 0 : load_info.avg_active / divisor;
 	}
 	free(list);
 }

@@ -30,19 +30,19 @@ typedef struct {
 }*/
 
 #include "config.h"
-#include "Platform.h"
-#include "Meter.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "UptimeMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UsersMeter.h"
-#include "FreeBSDProcess.h"
-#include "FreeBSDProcessList.h"
+#include <Platform.h>
+#include <Meter.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <UptimeMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UsersMeter.h>
+#include <FreeBSDProcess.h>
+#include <FreeBSDProcessList.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
@@ -60,6 +60,7 @@ typedef struct {
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
@@ -201,21 +202,20 @@ MeterClass* Platform_meterTypes[] = {
    NULL
 };
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   struct loadavg loadAverage;
+void Platform_getLoadAverage(double *values) {
    int mib[2] = { CTL_VM, VM_LOADAVG };
-   size_t size = sizeof(loadAverage);
-
-   int err = sysctl(mib, 2, &loadAverage, &size, NULL, 0);
-   if (err) {
-      *one = 0;
-      *five = 0;
-      *fifteen = 0;
-      return;
+   struct loadavg loadavg;
+   size_t size = sizeof loadavg;
+   assert(sizeof loadavg.ldavg / sizeof *loadavg.ldavg >= 3);
+   if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
+      values[0] = 0;
+      values[1] = 0;
+      values[2] = 0;
+   } else {
+      values[0] = (double)loadavg.ldavg[0] / loadavg.fscale;
+      values[1] = (double)loadavg.ldavg[1] / loadavg.fscale;
+      values[2] = (double)loadavg.ldavg[2] / loadavg.fscale;
    }
-   *one     = (double) loadAverage.ldavg[0] / loadAverage.fscale;
-   *five    = (double) loadAverage.ldavg[1] / loadAverage.fscale;
-   *fifteen = (double) loadAverage.ldavg[2] / loadAverage.fscale;
 }
 
 int Platform_getMaxPid() {

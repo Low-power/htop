@@ -14,16 +14,17 @@ in the source distribution for its full text.
 #include "InterixProcess.h"
 }*/
 
-#include "Platform.h"
-#include "CPUMeter.h"
-#include "MemoryMeter.h"
-#include "SwapMeter.h"
-#include "TasksMeter.h"
-#include "LoadAverageMeter.h"
-#include "ClockMeter.h"
-#include "HostnameMeter.h"
-#include "UptimeMeter.h"
-#include "UsersMeter.h"
+#include "config.h"
+#include <Platform.h>
+#include <CPUMeter.h>
+#include <MemoryMeter.h>
+#include <SwapMeter.h>
+#include <TasksMeter.h>
+#include <LoadAverageMeter.h>
+#include <ClockMeter.h>
+#include <HostnameMeter.h>
+#include <UptimeMeter.h>
+#include <UsersMeter.h>
 #include <signal.h>
 #include <stdio.h>
 
@@ -107,10 +108,10 @@ int Platform_getUptime() {
 	return -1;
 }
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen) {
-   *one = 0;
-   *five = 0;
-   *fifteen = 0;
+void Platform_getLoadAverage(double *values) {
+   values[0] = 0;
+   values[1] = 0;
+   values[2] = 0;
 }
 
 int Platform_getMaxPid() {

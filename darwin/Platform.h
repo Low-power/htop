@@ -11,12 +11,12 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "bsd/Platform.h"
-#include "Action.h"
-#include "SignalsPanel.h"
-#include "CPUMeter.h"
-#include "BatteryMeter.h"
-#include "DarwinProcess.h"
+#include <bsd/Platform.h>
+#include <Action.h>
+#include <SignalsPanel.h>
+#include <CPUMeter.h>
+#include <BatteryMeter.h>
+#include <DarwinProcess.h>
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
@@ -38,7 +38,7 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern const unsigned int Platform_numberOfFields;
 
-void Platform_getLoadAverage(double* one, double* five, double* fifteen);
+void Platform_getLoadAverage(double *values);
 
 int Platform_getMaxPid();
 
