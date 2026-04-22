@@ -437,8 +437,7 @@ static const struct key_help_entry helpLeft[] = {
    { " Digits: ", "incremental PID search", KEY_VI_MODE_INCOMPATIBLE },
    { "   F3 /: ", "incremental name search", KEY_VI_MODE_COMPATIBLE },
    { "   F4 \\: ","incremental name filtering", KEY_VI_MODE_COMPATIBLE },
-   { "   F5 t: ", "tree view", KEY_VI_MODE_COMPATIBLE },
-   //{ "      p: ", "toggle program path", KEY_VI_MODE_COMPATIBLE },
+   { "   F5 t: ", "toggle tree view", KEY_VI_MODE_COMPATIBLE },
    { "      u: ", "show processes of a single user", KEY_VI_MODE_COMPATIBLE },
 #ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
    { "      H: ", "hide/show thread processes", KEY_VI_MODE_COMPATIBLE },
@@ -463,14 +462,14 @@ static const struct key_help_entry helpRight[] = {
 #if defined HAVE_LIBHWLOC || defined HAVE_LINUX_AFFINITY || defined HAVE_KFREEBSD_CPUSET
    { "      a: ", "set CPU affinity", KEY_VI_MODE_COMPATIBLE },
 #endif
+   { "      A: ", "show process command arguments", KEY_VI_MODE_COMPATIBLE },
    { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },
 #ifdef PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
    { "      i: ", "set I/O priority", KEY_VI_MODE_COMPATIBLE },
 #endif
    { "    l o: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
    { "      o: ", "list open files with lsof(8)", KEY_VI_MODE_ONLY },
-   { "      s: ", "trace syscalls with truss(1) or", KEY_VI_MODE_COMPATIBLE },
-   { "         ", "strace(1)", KEY_VI_MODE_COMPATIBLE },
+   { "      s: ", "trace system calls", KEY_VI_MODE_COMPATIBLE },
    { "   F2 C: ", "setup", KEY_VI_MODE_COMPATIBLE },
    { " F1 h ?: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
    { "   F1 ?: ", "show this help screen", KEY_VI_MODE_ONLY },
