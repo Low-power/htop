@@ -56,6 +56,7 @@ typedef struct {
 	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_id;
 	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_id;
 	uint32_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_id;
+	uint32_t sched_systemswap_id;
 	uint32_t userworld_id;
 	uint32_t userworld_cartel_id;
 	uint32_t userworld_cartel_cmdline_id;
@@ -92,6 +93,7 @@ typedef struct {
 	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory1mininpct_cksum;
 	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory5mininpct_cksum;
 	uint64_t sched_groups_stats_cpustatsdir_cpuloadhistory_cpuloadhistory15mininpct_cksum;
+	uint64_t sched_systemswap_cksum;
 	uint64_t userworld_cksum;
 	uint64_t userworld_cartel_cksum;
 	uint64_t userworld_cartel_cmdline_cksum;
@@ -211,6 +213,28 @@ struct cpu_load_history_info_in_pct {
 	uint32_t active_quantiles[10];
 	uint32_t max_limited_quantiles[10];
 };
+
+// Size values are in kibibyte
+struct system_swap_status_32 {
+	uint8_t enabled;
+	uint8_t writeable;
+	uint32_t total_size;
+	uint32_t available_size;
+	uint32_t reserved_size;
+	uint32_t consumed_size;
+	char path[2050];
+} __attribute__((__packed__));
+
+// Size values are in kibibyte
+struct system_swap_status_64 {
+	uint8_t enabled;
+	uint8_t writeable;
+	uint64_t total_size;
+	uint64_t available_size;
+	uint64_t reserved_size;
+	uint64_t consumed_size;
+	char path[2050];
+} __attribute__((__packed__));
 
 #ifdef __i386__
 #define VMKSC_0(N) ({ int e; __asm__ __volatile__("int $0x90" : "=a"(e) : "a"(N) : "memory"); e; })
@@ -362,6 +386,9 @@ void Platform_init() {
          "VSI_GetNodeInfo sched.groups.stats.cpuStatsDir.cpuLoadHistory.cpuLoadHistory15MinInPct", e
       );
    }
+   e = vsi_get_node_id_and_checksum(platform.sched_id, "systemSwap",
+      &platform.sched_systemswap_id, &platform.sched_systemswap_cksum);
+   if(e) CRT_fatalError("VSI_GetNodeInfo sched.systemSwap", e);
    e = vsi_get_node_id_and_checksum(0, "userworld",
       &platform.userworld_id, &platform.userworld_cksum);
    if(e) CRT_fatalError("VSI_GetNodeInfo userworld", e);
@@ -591,7 +618,38 @@ void Platform_updateMemoryValues(Meter *meter) {
 }
 
 void Platform_updateSwapValues(Meter *meter) {
-	// TODO
+	struct vsi_list list = {
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
+	};
+	struct system_swap_status_32 stat32;
+	struct system_swap_status_64 stat64;
+	int e;
+	switch(Platform_running_vmkernel_version) {
+		case VMKERNEL_VERSION_5_5:
+		case VMKERNEL_VERSION_6_0:
+			e = Platform_vsiGet(platform.sched_systemswap_id,
+				platform.sched_systemswap_cksum, &list,
+				&stat32, sizeof stat32);
+			if(e) goto failure;
+			meter->total = stat32.total_size;
+			meter->values[0] = stat32.consumed_size;
+			break;
+		case VMKERNEL_VERSION_6_5:
+		case VMKERNEL_VERSION_6_7:
+			e = Platform_vsiGet(platform.sched_systemswap_id,
+				platform.sched_systemswap_cksum, &list,
+				&stat64, sizeof stat64);
+			if(e) goto failure;
+			meter->total = stat64.total_size;
+			meter->values[0] = stat64.consumed_size;
+			break;
+		failure:
+			meter->total = 0;
+			meter->values[0] = 0;
+			break;
+		default:
+			abort();
+	}
 }
 
 char **Platform_getProcessArgv(const Process *proc) {
@@ -603,8 +661,30 @@ char **Platform_getProcessEnvv(const Process *proc) {
 }
 
 bool Platform_haveSwap() {
-	// TODO
-	return false;
+	struct vsi_list list = {
+		.type_or_version = 1, .param_size = sizeof(struct vsi_list), .self_ptr = (uintptr_t)&list
+	};
+	struct system_swap_status_32 stat32;
+	struct system_swap_status_64 stat64;
+	int e;
+	switch(Platform_running_vmkernel_version) {
+		case VMKERNEL_VERSION_5_5:
+		case VMKERNEL_VERSION_6_0:
+			e = Platform_vsiGet(platform.sched_systemswap_id,
+				platform.sched_systemswap_cksum, &list,
+				&stat32, sizeof stat32);
+			if(e) return false;
+			return stat32.enabled;
+		case VMKERNEL_VERSION_6_5:
+		case VMKERNEL_VERSION_6_7:
+			e = Platform_vsiGet(platform.sched_systemswap_id,
+				platform.sched_systemswap_cksum, &list,
+				&stat64, sizeof stat64);
+			if(e) return false;
+			return stat64.enabled;
+		default:
+			abort();
+	}
 }
 
 int Platform_running_vmkernel_version;
