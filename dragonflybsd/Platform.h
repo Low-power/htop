@@ -50,8 +50,6 @@ void Platform_setBindings(Htop_Action* keys);
 
 extern MeterClass* Platform_meterTypes[];
 
-void Platform_getLoadAverage(double *values);
-
 int Platform_getMaxPid();
 
 double Platform_updateCPUValues(Meter *meter, int cpu);

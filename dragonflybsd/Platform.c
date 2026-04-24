@@ -48,14 +48,12 @@ typedef struct {
 #include <sys/resource.h>
 #include <sys/user.h>
 #include <sys/blist.h>
-#include <vm/vm_param.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <kvm.h>
 #include <limits.h>
 #include <time.h>
 #include <math.h>
-#include <assert.h>
 
 #ifndef CLAMP
 #define CLAMP(x,low,high) (((x)>(high))?(high):(((x)<(low))?(low):(x)))
@@ -168,22 +166,6 @@ MeterClass* Platform_meterTypes[] = {
    &BlankMeter_class,
    NULL
 };
-
-void Platform_getLoadAverage(double *values) {
-   int mib[2] = { CTL_VM, VM_LOADAVG };
-   struct loadavg loadavg;
-   size_t size = sizeof loadavg;
-   assert(sizeof loadavg.ldavg / sizeof *loadavg.ldavg >= 3);
-   if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
-      values[0] = 0;
-      values[1] = 0;
-      values[2] = 0;
-   } else {
-      values[0] = (double)loadavg.ldavg[0] / loadavg.fscale;
-      values[1] = (double)loadavg.ldavg[1] / loadavg.fscale;
-      values[2] = (double)loadavg.ldavg[2] / loadavg.fscale;
-   }
-}
 
 int Platform_getMaxPid() {
    return PID_MAX;

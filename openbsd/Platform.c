@@ -51,7 +51,6 @@ struct proc;
 #include <kvm.h>
 #include <limits.h>
 #include <math.h>
-#include <assert.h>
 
 void Platform_init() {
 }
@@ -131,22 +130,6 @@ MeterClass* Platform_meterTypes[] = {
    &BlankMeter_class,
    NULL
 };
-
-void Platform_getLoadAverage(double *values) {
-   int mib[2] = { CTL_VM, VM_LOADAVG };
-   struct loadavg loadavg;
-   size_t size = sizeof loadavg;
-   assert(sizeof loadavg.ldavg / sizeof *loadavg.ldavg >= 3);
-   if(sysctl(mib, 2, &loadavg, &size, NULL, 0) < 0) {
-      values[0] = 0;
-      values[1] = 0;
-      values[2] = 0;
-   } else {
-      values[0] = (double)loadavg.ldavg[0] / loadavg.fscale;
-      values[1] = (double)loadavg.ldavg[1] / loadavg.fscale;
-      values[2] = (double)loadavg.ldavg[2] / loadavg.fscale;
-   }
-}
 
 int Platform_getMaxPid() {
    // this is hard-coded in sys/sys/proc.h - no sysctl exists
