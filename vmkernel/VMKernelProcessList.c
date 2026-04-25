@@ -1032,6 +1032,10 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		}
 		if(!is_existing) {
 			proc->state = '?';
+			proc->ruid = -1;
+			proc->euid = -1;
+			proc->real_user = "?";
+			proc->effective_user = "?";
 			ProcessList_add(super, proc);
 		}
 		get_memory_stats(this, proc);
