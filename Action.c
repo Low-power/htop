@@ -422,58 +422,62 @@ static Htop_Reaction actionRedraw(State *st) {
    return HTOP_REFRESH | HTOP_REDRAW_BAR | HTOP_KEEP_FOLLOWING;
 }
 
+#define KEY_VI_MODE_INCOMPATIBLE 1
+#define KEY_VI_MODE_ONLY 2
+#define KEY_TREE_VIEW 4
+#define KEY_NON_TREE_VIEW 8
+
 struct key_help_entry {
 	const char *key;
 	const char *info;
-	enum {
-		KEY_VI_MODE_COMPATIBLE, KEY_VI_MODE_INCOMPATIBLE, KEY_VI_MODE_ONLY
-	} vi_mode_compatibility;
+	int flags;
 };
 
 static const struct key_help_entry helpLeft[] = {
    { " Digits: ", "repeat count for next key", KEY_VI_MODE_ONLY },
-   { " Arrows: ", "scroll process list", KEY_VI_MODE_COMPATIBLE },
+   { " Arrows: ", "scroll process list", 0 },
    { "h j k l: ", "scroll process list", KEY_VI_MODE_ONLY },
    { " Digits: ", "incremental PID search", KEY_VI_MODE_INCOMPATIBLE },
-   { "   F3 /: ", "incremental name search", KEY_VI_MODE_COMPATIBLE },
-   { "   F4 \\: ","incremental name filtering", KEY_VI_MODE_COMPATIBLE },
-   { "   F5 t: ", "toggle tree view", KEY_VI_MODE_COMPATIBLE },
-   { "      u: ", "show processes of a single user", KEY_VI_MODE_COMPATIBLE },
+   { "   F3 /: ", "incremental name search", 0 },
+   { "   F4 \\: ","incremental name filtering", 0 },
+   { "   F5 t: ", "toggle tree view", 0 },
+   { "      u: ", "show processes of a single user", 0 },
 #ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
-   { "      H: ", "hide/show thread processes", KEY_VI_MODE_COMPATIBLE },
+   { "      H: ", "hide/show thread processes", 0 },
 #endif
-   { "      K: ", "hide/show kernel processes", KEY_VI_MODE_COMPATIBLE },
-   { "      F: ", "cursor follows process", KEY_VI_MODE_COMPATIBLE },
-   { " F6 + -: ", "expand/collapse tree", KEY_VI_MODE_COMPATIBLE },
-   { "  P M T: ", "sort by CPU%, MEM% or TIME", KEY_VI_MODE_COMPATIBLE },
-   { "      I: ", "invert sort order", KEY_VI_MODE_COMPATIBLE },
-   { " F6 > .: ", "select sort column", KEY_VI_MODE_COMPATIBLE },
+   { "      K: ", "hide/show kernel processes", 0 },
+   { "      F: ", "cursor follows process", 0 },
+   { "      S: ", "show kernel stack trace", 0 },
+   { " F6 + -: ", "expand/collapse tree", KEY_TREE_VIEW },
+   { "  P M T: ", "sort by CPU%, MEM% or TIME", 0 },
+   { "      I: ", "invert sort order", 0 },
+   { " F6 > .: ", "select sort column", KEY_NON_TREE_VIEW },
    { NULL }
 };
 
 static const struct key_help_entry helpRight[] = {
-   { "  Space: ", "tag process", KEY_VI_MODE_COMPATIBLE },
-   { "      c: ", "tag process and its children", KEY_VI_MODE_COMPATIBLE },
-   { "      U: ", "untag all processes", KEY_VI_MODE_COMPATIBLE },
+   { "  Space: ", "tag process", 0 },
+   { "      c: ", "tag process and its children", 0 },
+   { "      U: ", "untag all processes", 0 },
    { "   F9 k: ", "kill process/tagged processes", KEY_VI_MODE_INCOMPATIBLE },
    { "     F9: ", "kill process/tagged processes", KEY_VI_MODE_ONLY },
-   { "   F7 ]: ", "higher priority (root only)", KEY_VI_MODE_COMPATIBLE },
-   { "   F8 [: ", "lower priority (+ nice)", KEY_VI_MODE_COMPATIBLE },
+   { "   F7 ]: ", "higher priority (root only)", 0 },
+   { "   F8 [: ", "lower priority (+ nice)", 0 },
 #if defined HAVE_LIBHWLOC || defined HAVE_LINUX_AFFINITY || defined HAVE_KFREEBSD_CPUSET
-   { "      a: ", "set CPU affinity", KEY_VI_MODE_COMPATIBLE },
+   { "      a: ", "set CPU affinity", 0 },
 #endif
-   { "      A: ", "show process command arguments", KEY_VI_MODE_COMPATIBLE },
-   { "      e: ", "show process environment", KEY_VI_MODE_COMPATIBLE },
+   { "      A: ", "show process command arguments", 0 },
+   { "      e: ", "show process environment", 0 },
 #ifdef PLATFORM_SUPPORT_USER_CONTROLLING_IO_PRIORITY
-   { "      i: ", "set I/O priority", KEY_VI_MODE_COMPATIBLE },
+   { "      i: ", "set I/O priority", 0 },
 #endif
    { "    l o: ", "list open files with lsof(8)", KEY_VI_MODE_INCOMPATIBLE },
    { "      o: ", "list open files with lsof(8)", KEY_VI_MODE_ONLY },
-   { "      s: ", "trace system calls", KEY_VI_MODE_COMPATIBLE },
-   { "   F2 C: ", "setup", KEY_VI_MODE_COMPATIBLE },
+   { "      s: ", "trace system calls", 0 },
+   { "   F2 C: ", "setup", 0 },
    { " F1 h ?: ", "show this help screen", KEY_VI_MODE_INCOMPATIBLE },
    { "   F1 ?: ", "show this help screen", KEY_VI_MODE_ONLY },
-   { "  F10 q: ", "quit", KEY_VI_MODE_COMPATIBLE },
+   { "  F10 q: ", "quit", 0 },
    { NULL }
 };
 
@@ -556,17 +560,11 @@ static Htop_Reaction actionHelp(State* st) {
    const struct key_help_entry *entry = helpLeft;
 #define FOR_EACH_ENTRY(EXPR) \
    do { \
-      switch(entry->vi_mode_compatibility) { \
-         case KEY_VI_MODE_COMPATIBLE: \
-            EXPR \
-            break; \
-         case KEY_VI_MODE_INCOMPATIBLE: \
-            if(!st->settings->vi_mode) EXPR \
-            break; \
-         case KEY_VI_MODE_ONLY: \
-            if(st->settings->vi_mode) EXPR \
-            break; \
-      } \
+      if((entry->flags & KEY_VI_MODE_INCOMPATIBLE) && st->settings->vi_mode) continue; \
+      if((entry->flags & KEY_VI_MODE_ONLY) && !st->settings->vi_mode) continue; \
+      if((entry->flags & KEY_TREE_VIEW) && !st->settings->treeView) continue; \
+      if((entry->flags & KEY_NON_TREE_VIEW) && st->settings->treeView) continue; \
+      EXPR \
    } while((++entry)->key)
    FOR_EACH_ENTRY(mvaddstr(y++, 9, entry->info););
    y = 9;

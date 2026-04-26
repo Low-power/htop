@@ -59,6 +59,11 @@ Htop_Reaction Action_setSortKey(Settings* settings, ProcessField sortKey);
 
 Htop_Reaction Action_follow(State* st);
 
+#define KEY_VI_MODE_INCOMPATIBLE 1
+#define KEY_VI_MODE_ONLY 2
+#define KEY_TREE_VIEW 4
+#define KEY_NON_TREE_VIEW 8
+
 
 void Action_setBindings(Htop_Action* keys);
 
