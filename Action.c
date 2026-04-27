@@ -6,34 +6,7 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-#include "config.h"
-
-#include <Action.h>
-#include <Affinity.h>
-#include <AffinityPanel.h>
-#include <CategoriesPanel.h>
-#include <CRT.h>
-#include <ArgScreen.h>
-#include <EnvScreen.h>
-#include <KernelStackTraceScreen.h>
-#include <VirtualMemoryMappingsScreen.h>
-#include <MainPanel.h>
-#include <OpenFilesScreen.h>
-#include <Process.h>
-#include <ScreenManager.h>
-#include <SignalsPanel.h>
-#include <StringUtils.h>
-#include <TraceScreen.h>
-#include <Platform.h>
-#include <math.h>
-#include <pwd.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <sys/param.h>
-#include <sys/time.h>
-
 /*{
-
 #include "IncSet.h"
 #include "Settings.h"
 #include "Header.h"
@@ -63,6 +36,32 @@ typedef struct State_ {
 
 typedef Htop_Reaction (*Htop_Action)(State *);
 }*/
+
+#include "config.h"
+#include <Action.h>
+#include <Affinity.h>
+#include <AffinityPanel.h>
+#include <CategoriesPanel.h>
+#include <CRT.h>
+#include <ArgScreen.h>
+#include <EnvScreen.h>
+#include <KernelStackTraceScreen.h>
+#include <VirtualMemoryMappingsScreen.h>
+#include <MainPanel.h>
+#include <OpenFilesScreen.h>
+#include <Process.h>
+#include <ScreenManager.h>
+#include <SignalsPanel.h>
+#include <StringUtils.h>
+#include <TraceScreen.h>
+#include <Platform.h>
+#include <math.h>
+#include <pwd.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <sys/param.h>
+#include <sys/time.h>
+#include <assert.h>
 
 Object* Action_pickFromVector(State* st, Panel* list, int x, bool followProcess) {
    Panel* panel = st->panel;
@@ -426,6 +425,7 @@ static Htop_Reaction actionRedraw(State *st) {
 #define KEY_VI_MODE_ONLY 2
 #define KEY_TREE_VIEW 4
 #define KEY_NON_TREE_VIEW 8
+#define KEY_FOR_THREAD 16
 
 struct key_help_entry {
 	const char *key;
@@ -443,7 +443,7 @@ static const struct key_help_entry helpLeft[] = {
    { "   F5 t: ", "toggle tree view", 0 },
    { "      u: ", "show processes of a single user", 0 },
 #ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
-   { "      H: ", "hide/show thread processes", 0 },
+   { "      H: ", "hide/show thread processes", KEY_FOR_THREAD },
 #endif
    { "      K: ", "hide/show kernel processes", 0 },
    { "      F: ", "cursor follows process", 0 },
@@ -557,35 +557,44 @@ static Htop_Reaction actionHelp(State* st) {
    mvaddch(8, 68, 'Z');
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    int y = 9;
+#ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
+   int thread_y = -1;
+#define RECORD_THREAD_ENTRY_Y if(entry->flags & KEY_FOR_THREAD) thread_y = y
+#else
+#define RECORD_THREAD_ENTRY_Y
+#endif
    const struct key_help_entry *entry = helpLeft;
-#define FOR_EACH_ENTRY(EXPR) \
+#define FOR_EACH_ENTRY(X,KEY) \
    do { \
       if((entry->flags & KEY_VI_MODE_INCOMPATIBLE) && st->settings->vi_mode) continue; \
       if((entry->flags & KEY_VI_MODE_ONLY) && !st->settings->vi_mode) continue; \
       if((entry->flags & KEY_TREE_VIEW) && !st->settings->treeView) continue; \
       if((entry->flags & KEY_NON_TREE_VIEW) && st->settings->treeView) continue; \
-      EXPR \
+      RECORD_THREAD_ENTRY_Y; \
+      mvaddstr(y++, (X), entry->KEY); \
    } while((++entry)->key)
-   FOR_EACH_ENTRY(mvaddstr(y++, 9, entry->info););
+   FOR_EACH_ENTRY(9, info);
    y = 9;
    entry = helpRight;
-   FOR_EACH_ENTRY(mvaddstr(y++, 49, entry->info););
+   FOR_EACH_ENTRY(49, info);
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
    y = 9;
    entry = helpLeft;
-   FOR_EACH_ENTRY(mvaddstr(y++, 0, entry->key););
+   FOR_EACH_ENTRY(0, key);
    y = 9;
    entry = helpRight;
-   FOR_EACH_ENTRY(mvaddstr(y++, 40, entry->key););
+   FOR_EACH_ENTRY(40, key);
 #undef FOR_EACH_ENTRY
-   attrset(CRT_colors[HTOP_PROCESS_THREAD_COLOR]);
+#undef RECORD_THREAD_ENTRY_Y
 #ifdef PLATFORM_PRESENT_THREADS_AS_PROCESSES
-   mvaddstr(st->settings->vi_mode ? 16 : 15, 19, "thread");
+   assert(thread_y > 9);
+   attrset(CRT_colors[HTOP_PROCESS_THREAD_COLOR]);
+   mvaddstr(thread_y, 19, "thread");
 #endif
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
 
    attrset(CRT_colors[HTOP_HELP_BOLD_COLOR]);
-   mvaddstr(23,0, "Press any key to return.");
+   if(LINES > 23) mvaddstr(LINES - 1, 0, "Press any key to return.");
    attrset(CRT_colors[HTOP_DEFAULT_COLOR]);
    refresh();
    CRT_readKey();

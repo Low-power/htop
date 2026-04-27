@@ -10,7 +10,6 @@ Released under the GNU GPL, see the COPYING file
 in the source distribution for its full text.
 */
 
-
 #include "IncSet.h"
 #include "Settings.h"
 #include "Header.h"
@@ -63,6 +62,7 @@ Htop_Reaction Action_follow(State* st);
 #define KEY_VI_MODE_ONLY 2
 #define KEY_TREE_VIEW 4
 #define KEY_NON_TREE_VIEW 8
+#define KEY_FOR_THREAD 16
 
 
 void Action_setBindings(Htop_Action* keys);
