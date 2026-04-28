@@ -33,6 +33,7 @@ typedef struct {
 	uint32_t vcpu_count;
 	uint64_t time_usec;
 	bool is_kernel_process;
+	bool is_vmm_process;
 } VMKernelProcess;
 }*/
 

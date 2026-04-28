@@ -560,28 +560,33 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 		const VMKernelCPUStatistics *stats = pl->cpu_stats + (cpu ? cpu - 1 : 0);
 		total_percent = stats->total_used_period / (double)pl->interval_usec * 100;
 		meter->values[CPU_METER_NORMAL] =
-			(stats->total_used_period - stats->kernel_nw_period - stats->wdt_period) /
+			(stats->total_used_period - stats->kernel_nw_period - stats->wdt_period - stats->vmm_period) /
 				(double)pl->interval_usec * 100;
 		if(use_detailed_cpu_time) {
 			meter->values[CPU_METER_KERNEL] = stats->kernel_nw_period / (double)pl->interval_usec * 100;
 			meter->values[CPU_METER_SOFTIRQ] = stats->wdt_period / (double)pl->interval_usec * 100;
-			Meter_setItemCount(meter, 5);
+			meter->values[CPU_METER_GUEST] = stats->vmm_period / (double)pl->interval_usec * 100;
+			Meter_setItemCount(meter, 7);
 		} else {
 			meter->values[CPU_METER_KERNEL] =
 				(stats->kernel_nw_period + stats->wdt_period) / (double)pl->interval_usec * 100;
-			Meter_setItemCount(meter, 3);
+			meter->values[3] = stats->vmm_period / (double)pl->interval_usec * 100;
+			Meter_setItemCount(meter, 4);
 		}
 	} else {
 		double total_time = 0;
 		double total_user_time = 0;
 		double total_kernel_nw_time = 0;
 		double total_wdt_time = 0;
+		double total_vmm_time = 0;
 		for(int i = 0; i < pl->super.cpuCount; i++) {
 			const VMKernelCPUStatistics *stats = pl->cpu_stats + i;
 			total_time += stats->total_used_period;
-			total_user_time += stats->total_used_period - stats->kernel_nw_period;
+			total_user_time += stats->total_used_period -
+				stats->kernel_nw_period - stats->wdt_period - stats->vmm_period;
 			total_kernel_nw_time += stats->kernel_nw_period;
 			total_wdt_time += stats->wdt_period;
+			total_vmm_time += stats->vmm_period;
 		}
 		total_percent = total_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
 		meter->values[CPU_METER_NORMAL] =
@@ -592,12 +597,16 @@ double Platform_updateCPUValues(Meter *meter, int cpu) {
 					(double)pl->interval_usec * 100;
 			meter->values[CPU_METER_SOFTIRQ] =
 				total_wdt_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
-			Meter_setItemCount(meter, 5);
+			meter->values[CPU_METER_GUEST] =
+				total_vmm_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
+			Meter_setItemCount(meter, 7);
 		} else {
 			meter->values[CPU_METER_KERNEL] =
 				(total_kernel_nw_time + total_wdt_time) /
 					(double)pl->super.cpuCount / (double)pl->interval_usec * 100;
-			Meter_setItemCount(meter, 3);
+			meter->values[3] =
+				total_vmm_time / (double)pl->super.cpuCount / (double)pl->interval_usec * 100;
+			Meter_setItemCount(meter, 4);
 		}
 	}
 	return total_percent;

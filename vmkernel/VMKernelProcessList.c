@@ -16,6 +16,7 @@ typedef struct {
 	uint32_t total_used_period;
 	uint32_t wdt_period;
 	uint32_t kernel_nw_period;
+	uint32_t vmm_period;
 } VMKernelCPUStatistics;
 
 typedef struct {
@@ -467,6 +468,7 @@ static void get_global_cpu_stats(VMKernelProcessList *this) {
 			htop_cpu_stats->wdt_time = info.wdt_time;
 			htop_cpu_stats->kernel_nw_time = info.system_time;
 		}
+		htop_cpu_stats->vmm_period = 0;
 	}
 	free(list);
 }
@@ -488,6 +490,7 @@ static bool get_world_info(const VMKernelProcessList *this, Process *proc) {
 	vmk_proc->cartel_group_id = info.cartel_group_id;
 	proc->session = info.session_id;
 	vmk_proc->is_kernel_process = info.flags & WORLD_SYSTEM;
+	vmk_proc->is_vmm_process = info.flags & WORLD_VMM;
 	return true;
 }
 
@@ -982,6 +985,9 @@ static void get_vcpu_stats(const VMKernelProcessList *this, VMKernelProcess *pro
 		free(list);
 		if(e) proc->vcpu_count = 0;
 	}
+	if(proc->is_vmm_process && proc->super.processor >= 0) {
+		this->cpu_stats[proc->super.processor].vmm_period += diff;
+	}
 }
 
 void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
@@ -1064,4 +1070,11 @@ void ProcessList_goThroughEntries(ProcessList *super, bool skip_processes) {
 		proc->updated = true;
 	}
 	free(worlds_list);
+
+	for(int i = 0; i < this->super.cpuCount; i++) {
+		VMKernelCPUStatistics *cpu_stats = this->cpu_stats + i;
+		uint32_t user_period = cpu_stats->total_used_period -
+			cpu_stats->wdt_period - cpu_stats->kernel_nw_period;
+		if(cpu_stats->vmm_period > user_period) cpu_stats->vmm_period = user_period;
+	}
 }
