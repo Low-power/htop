@@ -44,15 +44,20 @@ Changes from original version
 * Consistent process state names
 * Optional case-insensitive sorting
 * GNU/Hurd support
-* Kernel stack tracing of processes for Linux-based and kFreeBSD-based
-  platforms
+* Kernel stack tracing of processes for Linux-based, kFreeBSD-based and
+  ESXi platforms
 * Haiku support
-* Disk statistics mode for Linux-based and kFreeBSD-based platforms (option `--disk`)
+* Disk statistics mode for Linux-based and kFreeBSD-based platforms (option
+  `--disk`)
 * Mac OS X Tiger powerpc support
 * Meter bars can display overlapped values correctly
 * User session count meter
 * Improved columns selection panel without interaction issues
-* Accurate memory usage reporting for kFreeBSD-based platforms
+* Accurate memory usage reporting for kFreeBSD-based platforms as well as
+  DragonFly BSD and Darwin
+* VMware ESXi support
+* Virtual memory mappings listing of processes for Linux-based, kFreeBSD-based
+  and ESXi platforms
 
 See the commit log for more.
 
@@ -136,3 +141,10 @@ Currently only tested on **Cygwin 1.7.18**.
 Support is incomplete, many features won't work.
 
 **Interix 3.5** and later versions are supported.
+
+### VMware ESXi
+
+Supports **VMkernel** versions **5.5**, **6.0**, **6.5** and **6.7**.
+
+Build for this platform by passing `--with-vmkernel` to **configure**, with a
+toolchain targeting GNU/Linux.
