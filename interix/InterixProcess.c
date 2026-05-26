@@ -159,7 +159,7 @@ void InterixProcess_writeField(const Process *super, RichString *str, ProcessFie
 
 bool Process_isKernelProcess(const Process *this) {
 	const InterixProcess *p = (const InterixProcess *)this;
-	return p->native_pid == 0 || p->native_pid == 4 || p->native_pid == 8;
+	return p->native_pid == 0 || p->native_pid == 2 || p->native_pid == 4 || p->native_pid == 8;
 }
 
 bool Process_isExtraThreadProcess(const Process *this) {
