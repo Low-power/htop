@@ -49,6 +49,7 @@ DiskList *DiskList_new(const Settings *settings) {
 	DiskList_init(&disk_list->super, Class(FreeBSDDisk), settings);
 	disk_list->previous_stats = geom_stats_snapshot_get();
 	if(!disk_list->previous_stats) CRT_fatalError("geom_stats_snapshot_get", 0);
+	memset(&disk_list->tree, 0, sizeof disk_list->tree);
 	disk_list->tree_mtime = -1;
 	return (DiskList *)disk_list;
 }
@@ -57,6 +58,7 @@ void DiskList_delete(DiskList *super) {
 	DiskList_done(super);
 	FreeBSDDiskList *this = (FreeBSDDiskList *)super;
 	geom_stats_snapshot_free(this->previous_stats);
+	geom_deletetree(&this->tree);
 	free(this);
 }
 
@@ -158,6 +160,7 @@ void DiskList_internalScan(DiskList *super, double unused_interval) {
 	long double interval = (ts.tv_sec - prev_ts.tv_sec) +
 		(long double)(ts.tv_nsec - prev_ts.tv_nsec) / 1000000000;
 	if(this->tree_mtime == (time_t)-1 || ts.tv_sec - this->tree_mtime > 60) {
+		geom_deletetree(&this->tree);
 		int e = geom_gettree(&this->tree);
 		if(e) CRT_fatalError("geom_gettree", e);
 		this->tree_mtime = ts.tv_sec;
